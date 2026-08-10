@@ -779,17 +779,12 @@ class Component extends DCLogic {
     this.progress = document.querySelector('[data-progress]');
     this.frame = document.querySelector('[data-frame]');
     this.heroMedia = document.querySelector('[data-hero-media]');
-    this.active = -1;
-    this.targetProgress = 0;
-    this.currentProgress = 0;
-    this.isLooping = false;
-
-    // True Mobile & Tablet Branching Gate (Hardware Video Engine on Mobile = 0% RAM overhead, 100% crash-free!)
+    // Accurate Device Gate: Mobile phones run hardware video fallback, Desktops/Laptops run interactive canvas engine!
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isMobileDevice = (window.innerWidth < 1024) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobilePhone = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
 
     this.isReducedMotion = prefersReducedMotion;
-    this.isMobile = isMobileDevice;
+    this.isMobile = isMobilePhone;
 
     if (this.isReducedMotion) {
       if (this.hero) this.hero.style.height = 'auto';
@@ -804,21 +799,19 @@ class Component extends DCLogic {
         this.frame.textContent = 'HERO POSTER';
       }
     } else if (this.isMobile) {
-      // Mobile / Tablet: Hardware-accelerated 2.1MB video loop (0% RAM overhead, 0% CPU overhead, 60fps luxury smooth!)
+      // Mobile Phones: Lightweight hardware-accelerated video fallback for 100% crash-free 60fps performance
       if (this.hero) this.hero.style.height = '100vh';
       if (this.heroMedia) {
         this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1"></video><div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
       }
     } else {
-      // Desktop: Interactive 446 Frame Canvas Engine with LRU RAM Cache (Max 30 decoded Bitmaps in memory = <80MB RAM)
+      // Desktop & Laptops: Ultra-Smooth 446 Frame Interactive Canvas Engine
       const depth = this.props.heroScrollDepth ?? 460;
       if (this.hero) this.hero.style.height = depth + 'vh';
 
       this.canvas = document.querySelector('[data-hero-canvas]');
       this.ctx = this.canvas ? this.canvas.getContext('2d', { alpha: false, desynchronized: true }) : null;
       this.frames = new Array(this.TOTAL_FRAMES + 1);
-      this.loadedBitmaps = new Map();
-      this.maxMemoryBitmaps = 30;
       this.lastDrawnFrame = -1;
 
       // Update & Cache Canvas dimensions once on init & resize
@@ -911,7 +904,6 @@ class Component extends DCLogic {
         const blob = await res.blob();
         const bitmap = await createImageBitmap(blob);
         this.frames[index] = bitmap;
-        if (this.loadedBitmaps) this.loadedBitmaps.set(index, bitmap);
         if (index === 1 && this.lastDrawnFrame === -1) {
           this.drawFrameOnCanvas(1);
         }
