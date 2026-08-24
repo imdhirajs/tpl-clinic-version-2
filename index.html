@@ -948,8 +948,10 @@ class Component extends DCLogic {
         });
       }
 
-      // Fast Sequential Preloading: load contiguous frames 1..500 in exact order for zero-stutter playback
-      this.preloadAllFramesSequential(12);
+      // Apple 3-Tier Level-of-Detail (LOD) Sprite Atlas Preloader
+      this.TOTAL_SPRITES = Math.ceil(this.TOTAL_FRAMES / 16); // 63
+      this.sprites = {};
+      this.preloadAppleSpritesLOD();
 
       this.initScrollEngine();
     }
@@ -1030,94 +1032,110 @@ class Component extends DCLogic {
     }
   }
 
-  preloadAllFramesSequential(concurrency = 32) {
-    const pass0 = [];
-    const pass1 = [];
-
-    // Pass 0: Keyframes every 2nd frame (1, 3, 5... 999) for fast timeline coverage
-    for (let i = 1; i <= this.TOTAL_FRAMES; i += 2) {
-      pass0.push(i);
-    }
-    // Pass 1: Intermediate odd frames
-    for (let i = 2; i <= this.TOTAL_FRAMES; i += 2) {
-      pass1.push(i);
-    }
-
-    const fetchFrame = async (index) => {
-      if (this.destroyed || this.frames[index]) return;
-      const src = `assets/hero-frames-4k-webp/frame-${String(index).padStart(4, '0')}.webp?v=4k_native`;
+  preloadAppleSpritesLOD() {
+    const fetchSprite = async (spriteIndex) => {
+      if (this.destroyed || this.sprites[spriteIndex]) return;
+      const src = `assets/hero-sprites/sprite-${String(spriteIndex).padStart(3, '0')}.webp?v=apple_v2`;
       try {
         const img = new Image();
         img.src = src;
         if (img.decode) {
           await img.decode();
         }
-        this.frames[index] = img;
-        if (index === 1 && this.lastDrawnFrame === -1) {
+        this.sprites[spriteIndex] = img;
+        if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
           this.drawFrameOnCanvas(1);
         }
       } catch (err) {
         const img = new Image();
-        img.onload = () => { this.frames[index] = img; };
+        img.onload = () => { this.sprites[spriteIndex] = img; };
         img.src = src;
       }
     };
 
-    const processQueue = async (queue) => {
+    // Tier 1 (Instant Paint < 0.1s): Load Sprite 1 immediately (Frames 1-16)
+    fetchSprite(1).then(() => {
+      this.drawFrameOnCanvas(1);
+    });
+
+    // Tier 2 (Keyframe Stream < 1.0s): Load keyframe sprites (every 3rd sprite sheet)
+    const tier2KeyframeSprites = [];
+    for (let i = 1; i <= this.TOTAL_SPRITES; i += 3) {
+      if (i !== 1) tier2KeyframeSprites.push(i);
+    }
+
+    // Tier 3 (Full Background Queue < 2.5s): Load remaining sprite sheets
+    const tier3RemainingSprites = [];
+    for (let i = 1; i <= this.TOTAL_SPRITES; i++) {
+      if (i % 3 !== 1) tier3RemainingSprites.push(i);
+    }
+
+    const processQueue = async (queue, concurrency = 6) => {
       const workers = Array(concurrency).fill(null).map(async () => {
         while (queue.length > 0 && !this.destroyed) {
-          const index = queue.shift();
-          if (!index) break;
-          await fetchFrame(index);
+          const sIdx = queue.shift();
+          if (!sIdx) break;
+          await fetchSprite(sIdx);
         }
       });
       await Promise.all(workers);
     };
 
     (async () => {
-      await processQueue(pass0);
-      await processQueue(pass1);
+      await processQueue(tier2KeyframeSprites, 8);
+      await processQueue(tier3RemainingSprites, 6);
     })();
   }
 
-  findNearestLoadedFrame(requested) {
-    if (this.frames[requested]) return requested;
-    // Search backward first up to 40 frames for the most recent valid visual state
-    for (let delta = 1; delta <= 40; delta++) {
-      if (requested - delta >= 1 && this.frames[requested - delta]) return requested - delta;
+  findNearestLoadedSprite(spriteIndex) {
+    if (this.sprites[spriteIndex]) return spriteIndex;
+    for (let delta = 1; delta <= 20; delta++) {
+      if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
+      if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
-    // Search forward up to 40 frames
-    for (let delta = 1; delta <= 40; delta++) {
-      if (requested + delta <= this.TOTAL_FRAMES && this.frames[requested + delta]) return requested + delta;
-    }
-    return this.lastDrawnFrame > 0 ? this.lastDrawnFrame : 1;
+    return 1;
   }
 
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
-    const frameIndex = this.findNearestLoadedFrame(frameNum);
 
-    const img = this.frames[frameIndex];
-    if (!img) return;
+    // Calculate exact sprite sheet grid coordinate
+    const targetSpriteIndex = Math.ceil(frameNum / 16);
+    const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
+    const spriteImg = this.sprites[spriteIndex];
 
-    this.ctx.drawImage(img, this.offsetX, this.offsetY, this.drawW, this.drawH);
-    this.lastDrawnFrame = frameIndex;
+    if (!spriteImg) return;
+
+    // If exact sprite is loaded, use exact frame cell coordinate
+    let cellCol = 0, cellRow = 0;
+    if (spriteIndex === targetSpriteIndex) {
+      const idxInSprite = (frameNum - 1) % 16;
+      cellCol = idxInSprite % 4;
+      cellRow = Math.floor(idxInSprite / 4);
+    }
+
+    const sx = cellCol * 960;
+    const sy = cellRow * 540;
+    const sw = 960;
+    const sh = 540;
+
+    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    this.lastDrawnFrame = frameNum;
   }
 
   fetchUrgentFrameChunk(centerFrame) {
     if (!this.loadingUrgent) this.loadingUrgent = {};
-    const minF = Math.max(1, centerFrame - 15);
-    const maxF = Math.min(this.TOTAL_FRAMES, centerFrame + 25);
-    for (let i = minF; i <= maxF; i++) {
-      if (!this.frames[i] && !this.loadingUrgent[i]) {
-        this.loadingUrgent[i] = true;
-        const src = `assets/hero-frames-4k-webp/frame-${String(i).padStart(4, '0')}.webp?v=4k_native`;
+    const spriteIndex = Math.ceil(centerFrame / 16);
+    for (let s = Math.max(1, spriteIndex - 1); s <= Math.min(this.TOTAL_SPRITES, spriteIndex + 2); s++) {
+      if (!this.sprites[s] && !this.loadingUrgent[s]) {
+        this.loadingUrgent[s] = true;
+        const src = `assets/hero-sprites/sprite-${String(s).padStart(3, '0')}.webp?v=apple_v2`;
         const img = new Image();
         img.src = src;
         if (img.decode) {
-          img.decode().then(() => { this.frames[i] = img; }).catch(() => { this.frames[i] = img; });
+          img.decode().then(() => { this.sprites[s] = img; }).catch(() => { this.sprites[s] = img; });
         } else {
-          img.onload = () => { this.frames[i] = img; };
+          img.onload = () => { this.sprites[s] = img; };
         }
       }
     }
