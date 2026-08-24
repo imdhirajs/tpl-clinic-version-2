@@ -948,10 +948,9 @@ class Component extends DCLogic {
         });
       }
 
-      // Apple 3-Tier Level-of-Detail (LOD) Sprite Atlas Preloader
-      this.TOTAL_SPRITES = Math.ceil(this.TOTAL_FRAMES / 16); // 63
-      this.sprites = {};
-      this.preloadAppleSpritesLOD();
+      // Full Native 4K UHD / 1080p WebP Preloader
+      this.frames = new Array(this.TOTAL_FRAMES + 1);
+      this.preloadNative4KFrames();
 
       this.initScrollEngine();
     }
@@ -997,7 +996,7 @@ class Component extends DCLogic {
     const cssHeight = window.innerHeight;
     if (cssWidth <= 0 || cssHeight <= 0) return;
 
-    // Full 1:1 Retina Display Pixel Ratio for crystal clear 1080p rendering (no 1.5x bilinear blur)
+    // Full 1:1 Native Retina 4K Display Pixel Ratio
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
     const targetW = Math.round(cssWidth * dpr);
@@ -1011,8 +1010,7 @@ class Component extends DCLogic {
     this.targetH = targetH;
     this.canvasAspect = targetW / targetH;
 
-    // Cache pre-computed draw rect to avoid recomputing every frame (1920:1080 source aspect)
-    // Anchored strictly to top-center (offsetY = 0) so top of video frame is NEVER cropped
+    // 16:9 source aspect, anchored to top-center (offsetY = 0)
     const imgAspect = 16 / 9;
     if (this.canvasAspect > imgAspect) {
       this.drawW = targetW;
@@ -1032,94 +1030,82 @@ class Component extends DCLogic {
     }
   }
 
-  preloadAppleSpritesLOD() {
-    const fetchSprite = async (spriteIndex) => {
-      if (this.destroyed || this.sprites[spriteIndex]) return;
-      const src = `assets/hero-sprites/sprite-${String(spriteIndex).padStart(3, '0')}.webp?v=apple_v2`;
+  preloadNative4KFrames() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const use4K = (dpr >= 1.75 || window.innerWidth >= 1920);
+    const folder = use4K ? 'assets/hero-frames-4k-webp' : 'assets/hero-frames-1080p';
+
+    const fetchFrame = async (frameIndex) => {
+      if (this.destroyed || this.frames[frameIndex]) return;
+      const src = `${folder}/frame-${String(frameIndex).padStart(4, '0')}.webp`;
       try {
         const img = new Image();
         img.src = src;
         if (img.decode) {
           await img.decode();
         }
-        this.sprites[spriteIndex] = img;
-        if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+        this.frames[frameIndex] = img;
+        if (frameIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
           this.drawFrameOnCanvas(1);
         }
       } catch (err) {
         const img = new Image();
-        img.onload = () => { this.sprites[spriteIndex] = img; };
+        img.onload = () => { this.frames[frameIndex] = img; };
         img.src = src;
       }
     };
 
-    // Tier 1 (Instant Paint < 0.1s): Load Sprite 1 immediately (Frames 1-16)
-    fetchSprite(1).then(() => {
+    // Tier 1 (Instant Paint < 0.05s): Load Frame 1 immediately
+    fetchFrame(1).then(() => {
       this.drawFrameOnCanvas(1);
     });
 
-    // Tier 2 (Keyframe Stream < 1.0s): Load keyframe sprites (every 3rd sprite sheet)
-    const tier2KeyframeSprites = [];
-    for (let i = 1; i <= this.TOTAL_SPRITES; i += 3) {
-      if (i !== 1) tier2KeyframeSprites.push(i);
+    // Tier 2 (Keyframe Stride < 0.5s): Load every 4th frame for instant timeline availability
+    const tier2Keyframes = [];
+    for (let i = 1; i <= this.TOTAL_FRAMES; i += 4) {
+      if (i !== 1) tier2Keyframes.push(i);
     }
 
-    // Tier 3 (Full Background Queue < 2.5s): Load remaining sprite sheets
-    const tier3RemainingSprites = [];
-    for (let i = 1; i <= this.TOTAL_SPRITES; i++) {
-      if (i % 3 !== 1) tier3RemainingSprites.push(i);
+    // Tier 3 (Full Density Queue): Load remaining intermediate frames
+    const tier3Remaining = [];
+    const tier2Set = new Set(tier2Keyframes);
+    for (let i = 1; i <= this.TOTAL_FRAMES; i++) {
+      if (i !== 1 && !tier2Set.has(i)) tier3Remaining.push(i);
     }
 
-    const processQueue = async (queue, concurrency = 6) => {
+    const processQueue = async (queue, concurrency = 12) => {
       const workers = Array(concurrency).fill(null).map(async () => {
         while (queue.length > 0 && !this.destroyed) {
-          const sIdx = queue.shift();
-          if (!sIdx) break;
-          await fetchSprite(sIdx);
+          const fIdx = queue.shift();
+          if (!fIdx) break;
+          await fetchFrame(fIdx);
         }
       });
       await Promise.all(workers);
     };
 
     (async () => {
-      await processQueue(tier2KeyframeSprites, 8);
-      await processQueue(tier3RemainingSprites, 6);
+      await processQueue(tier2Keyframes, 12);
+      await processQueue(tier3Remaining, 10);
     })();
   }
 
-  findNearestLoadedSprite(spriteIndex) {
-    if (this.sprites[spriteIndex]) return spriteIndex;
-    for (let delta = 1; delta <= 20; delta++) {
-      if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
-      if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
+  findNearestLoadedFrame(requested) {
+    if (this.frames[requested]) return requested;
+    for (let delta = 1; delta <= 30; delta++) {
+      if (requested - delta >= 1 && this.frames[requested - delta]) return requested - delta;
+      if (requested + delta <= this.TOTAL_FRAMES && this.frames[requested + delta]) return requested + delta;
     }
     return 1;
   }
 
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
+    const frameIndex = this.findNearestLoadedFrame(frameNum);
+    const img = this.frames[frameIndex];
+    if (!img) return;
 
-    // Calculate exact sprite sheet grid coordinate
-    const targetSpriteIndex = Math.ceil(frameNum / 16);
-    const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
-    const spriteImg = this.sprites[spriteIndex];
-
-    if (!spriteImg) return;
-
-    // If exact sprite is loaded, use exact frame cell coordinate
-    let cellCol = 0, cellRow = 0;
-    if (spriteIndex === targetSpriteIndex) {
-      const idxInSprite = (frameNum - 1) % 16;
-      cellCol = idxInSprite % 4;
-      cellRow = Math.floor(idxInSprite / 4);
-    }
-
-    const sx = cellCol * 960;
-    const sy = cellRow * 540;
-    const sw = 960;
-    const sh = 540;
-
-    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    this.ctx.drawImage(img, 0, 0, img.naturalWidth || img.width, img.naturalHeight || img.height, this.offsetX, this.offsetY, this.drawW, this.drawH);
     this.lastDrawnFrame = frameNum;
   }
 
