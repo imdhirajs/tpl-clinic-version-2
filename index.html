@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=4k_native" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -230,12 +230,12 @@
     </div>
   </div>
 
-  <section id="top" data-hero="1" style="position:relative;height:1000vh;background:#081359">
+  <section id="top" data-hero="1" style="position:relative;height:800vh;background:#081359">
     <div style="position:sticky;top:0;height:100vh;overflow:hidden;background:#081359">
 
       <!-- Full-bleed Background Hero Media Canvas (100% Clean & Unobscured) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp') center/cover no-repeat"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=4k_native') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -301,7 +301,7 @@
 
       <!-- High-Contrast Floating Frame HUD Counter -->
       <div style="position:absolute;bottom:24px;left:36px;z-index:10;pointer-events:none">
-        <span data-frame="1" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.26em;color:#081359;background:rgba(255,255,255,0.85);padding:6px 14px;border:1px solid rgba(184,146,93,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:inline-block;box-shadow:0 4px 15px rgba(8,19,89,0.06)">FRAME 0001 / 0500</span>
+        <span data-frame="1" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.26em;color:#081359;background:rgba(255,255,255,0.85);padding:6px 14px;border:1px solid rgba(184,146,93,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:inline-block;box-shadow:0 4px 15px rgba(8,19,89,0.06)">FRAME 0001 / 1000</span>
       </div>
 
       <!-- Interactive Clickable Floating Service Hotspot Card -->
@@ -747,12 +747,12 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;heroScrollDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:460,&quot;min&quot;:260,&quot;max&quot;:720,&quot;step&quot;:20,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showTechnologyIndex&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;heroScrollDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1400,&quot;min&quot;:400,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showTechnologyIndex&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
 class Component extends DCLogic {
   state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
-    this.TOTAL_FRAMES = 500;
+    this.TOTAL_FRAMES = 1000;
     this.hero = document.querySelector('[data-hero]');
     this.nav = document.querySelector('[data-nav]');
     this.consultSection = document.querySelector('#consultation');
@@ -762,9 +762,19 @@ class Component extends DCLogic {
     this.railItems = Array.from(document.querySelectorAll('[data-rail-item]'));
     this.railBars = Array.from(document.querySelectorAll('[data-rail-bar]'));
 
+    // Cache Nav sub-elements to prevent DOM queries inside 120fps render loop
+    if (this.nav) {
+      this.logoImg = this.nav.querySelector('[data-logo-img="1"]');
+      this.navLinks = Array.from(this.nav.querySelectorAll('[data-nav-link="1"]'));
+      this.whatsappLink = this.nav.querySelector('a[href*="wa.me"]');
+      this.navBtn = this.nav.querySelector('[data-btn]');
+      this.toggleBtn = this.nav.querySelector('.tpl-mobile-toggle');
+    }
+    this.currentNavState = null;
+
     // Bind click events on Sequence Rail items to scrub directly to target video frames!
     if (this.railItems && this.railItems.length > 0) {
-      const beatTargetFrames = [1, 43, 115, 205, 335, 435, 480];
+      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960];
       this.railItems.forEach((item, idx) => {
         item.style.cursor = 'pointer';
         item.addEventListener('click', () => {
@@ -781,6 +791,24 @@ class Component extends DCLogic {
         });
       });
     }
+
+    // Bind smooth scroll handlers for all internal anchor links site-wide
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', (e) => {
+        const href = anchor.getAttribute('href');
+        if (!href || href === '#') return;
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          e.preventDefault();
+          if (this.lenis) {
+            this.lenis.scrollTo(targetEl, { offset: -60, duration: 1.2 });
+          } else {
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+          }
+          this.setState({ mobileMenuOpen: false, megaMenuOpen: false });
+        }
+      });
+    });
     this.intro = document.querySelector('[data-hero-intro]');
     this.heroCopy = document.querySelector('[data-hero-copy]');
     this.rail = document.querySelector('[data-rail]');
@@ -799,10 +827,10 @@ class Component extends DCLogic {
     this.currentProgress = 0;
     this.isLooping = false;
 
-    // Scroll-synced service hotspots — mapped directly to exact visual beats in 500-frame Hero V6 sequence
+    // Scroll-synced service hotspots — mapped directly to exact visual beats in 1000-frame Hero V7 sequence
     this.HOTSPOTS = [
       {
-        min: 21, max: 80,
+        min: 40, max: 160,
         tag: '02 — CONSULTATION',
         title: 'Doctor-Led Consultation & Mapping',
         subtitle: 'Bespoke diagnostic treatment mapping & scalp/facial analysis',
@@ -810,7 +838,7 @@ class Component extends DCLogic {
         url: 'https://www.tplclinic.com/contact'
       },
       {
-        min: 81, max: 150,
+        min: 161, max: 300,
         tag: '03 — PRP METHOD',
         title: 'The PRP Diagnostic Method',
         subtitle: 'High-concentration autologous growth factor fraction spun in-clinic',
@@ -818,7 +846,7 @@ class Component extends DCLogic {
         url: 'https://www.tplclinic.com/services'
       },
       {
-        min: 151, max: 260,
+        min: 301, max: 520,
         tag: '04 — BODY QUALITY',
         title: 'Subdermal Skin Remodelling',
         subtitle: 'Morpheus8® Burst & radiofrequency body skin tightening',
@@ -826,7 +854,7 @@ class Component extends DCLogic {
         url: 'https://www.tplclinic.com/body'
       },
       {
-        min: 261, max: 410,
+        min: 521, max: 820,
         tag: '05 — HAIR RESTORATION',
         title: 'Follicular Restoration & Invisible Hair Transplant™',
         subtitle: 'Doctor-led PRP, Exosomes & precision FUE graft placement',
@@ -834,7 +862,7 @@ class Component extends DCLogic {
         url: 'https://www.tplclinic.com/hair'
       },
       {
-        min: 411, max: 460,
+        min: 821, max: 920,
         tag: '06 — CLINICAL FORMULATIONS',
         title: 'Physician Products & Serums',
         subtitle: 'Active regenerative formulations for daily maintenance',
@@ -842,7 +870,7 @@ class Component extends DCLogic {
         url: 'https://www.tplclinic.com/services'
       },
       {
-        min: 461, max: 500,
+        min: 921, max: 1000,
         tag: '07 — MAYFAIR CLINIC',
         title: 'TPL Regenerative Excellence',
         subtitle: '22 Seymour Street, Mayfair London',
@@ -861,7 +889,7 @@ class Component extends DCLogic {
     if (this.isReducedMotion) {
       if (this.hero) this.hero.style.height = 'auto';
       if (this.heroMedia) {
-        this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1" />';
+        this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" />';
       }
       if (this.intro) {
         this.intro.style.opacity = '1';
@@ -876,14 +904,14 @@ class Component extends DCLogic {
       // Mobile Phones: Lightweight hardware-accelerated video fallback for 100% crash-free 60fps performance
       if (this.hero) this.hero.style.height = '100vh';
       if (this.heroMedia) {
-        this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1"></video><div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
+        this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1"></video><div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
       }
       if (this.hotspotCard) this.hotspotCard.style.display = 'none';
       this.renderStaticHotspotRow();
     } else {
       // Desktop & Laptops: Ultra-Smooth 500 Frame Interactive Canvas Engine
       // Desktop & Laptops: Ultra-Smooth 500 Frame Interactive Canvas Engine
-      const depth = this.props.heroScrollDepth ?? 1000;
+      const depth = this.props.heroScrollDepth ?? 800;
       if (this.hero) this.hero.style.height = depth + 'vh';
 
       this.canvas = document.querySelector('[data-hero-canvas]');
@@ -898,13 +926,13 @@ class Component extends DCLogic {
       // Initialize Lenis Smooth Scroll with butter-smooth easing & momentum
       if (typeof window.Lenis !== 'undefined') {
         this.lenis = new window.Lenis({
-          duration: 1.2,
+          duration: 1.4,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           direction: 'vertical',
           gestureDirection: 'vertical',
           smoothWheel: true,
-          wheelMultiplier: 1.0,
-          touchMultiplier: 1.5,
+          wheelMultiplier: 0.9,
+          touchMultiplier: 1.1,
         });
 
         const lenisRaf = (time) => {
@@ -982,12 +1010,13 @@ class Component extends DCLogic {
     this.canvasAspect = targetW / targetH;
 
     // Cache pre-computed draw rect to avoid recomputing every frame (1920:1080 source aspect)
+    // Anchored strictly to top-center (offsetY = 0) so top of video frame is NEVER cropped
     const imgAspect = 16 / 9;
     if (this.canvasAspect > imgAspect) {
       this.drawW = targetW;
       this.drawH = Math.round(targetW / imgAspect);
       this.offsetX = 0;
-      this.offsetY = Math.round((targetH - this.drawH) / 2);
+      this.offsetY = 0;
     } else {
       this.drawH = targetH;
       this.drawW = Math.round(targetH * imgAspect);
@@ -1001,62 +1030,97 @@ class Component extends DCLogic {
     }
   }
 
-  preloadAllFramesSequential(concurrency = 12) {
-    const queue = [];
-    for (let i = 1; i <= this.TOTAL_FRAMES; i++) {
-      queue.push(i);
+  preloadAllFramesSequential(concurrency = 32) {
+    const pass0 = [];
+    const pass1 = [];
+
+    // Pass 0: Keyframes every 2nd frame (1, 3, 5... 999) for fast timeline coverage
+    for (let i = 1; i <= this.TOTAL_FRAMES; i += 2) {
+      pass0.push(i);
+    }
+    // Pass 1: Intermediate odd frames
+    for (let i = 2; i <= this.TOTAL_FRAMES; i += 2) {
+      pass1.push(i);
     }
 
     const fetchFrame = async (index) => {
-      if (this.destroyed) return;
-      const src = `assets/hero-frames-webp/frame-${String(index).padStart(4, '0')}.webp`;
+      if (this.destroyed || this.frames[index]) return;
+      const src = `assets/hero-frames-4k-webp/frame-${String(index).padStart(4, '0')}.webp?v=4k_native`;
       try {
-        const res = await fetch(src);
-        const blob = await res.blob();
-        const bitmap = await createImageBitmap(blob);
-        this.frames[index] = bitmap;
+        const img = new Image();
+        img.src = src;
+        if (img.decode) {
+          await img.decode();
+        }
+        this.frames[index] = img;
         if (index === 1 && this.lastDrawnFrame === -1) {
           this.drawFrameOnCanvas(1);
         }
       } catch (err) {
-        // Fallback for network glitches
+        const img = new Image();
+        img.onload = () => { this.frames[index] = img; };
+        img.src = src;
       }
     };
 
-    const worker = async () => {
-      while (queue.length > 0 && !this.destroyed) {
-        const index = queue.shift();
-        if (!index) break;
-        await fetchFrame(index);
-      }
+    const processQueue = async (queue) => {
+      const workers = Array(concurrency).fill(null).map(async () => {
+        while (queue.length > 0 && !this.destroyed) {
+          const index = queue.shift();
+          if (!index) break;
+          await fetchFrame(index);
+        }
+      });
+      await Promise.all(workers);
     };
 
-    for (let i = 0; i < concurrency; i++) {
-      worker();
-    }
+    (async () => {
+      await processQueue(pass0);
+      await processQueue(pass1);
+    })();
   }
 
   findNearestLoadedFrame(requested) {
     if (this.frames[requested]) return requested;
-    let delta = 1;
-    while (delta < this.TOTAL_FRAMES) {
+    // Search backward first up to 40 frames for the most recent valid visual state
+    for (let delta = 1; delta <= 40; delta++) {
       if (requested - delta >= 1 && this.frames[requested - delta]) return requested - delta;
-      if (requested + delta <= this.TOTAL_FRAMES && this.frames[requested + delta]) return requested + delta;
-      delta++;
     }
-    return requested;
+    // Search forward up to 40 frames
+    for (let delta = 1; delta <= 40; delta++) {
+      if (requested + delta <= this.TOTAL_FRAMES && this.frames[requested + delta]) return requested + delta;
+    }
+    return this.lastDrawnFrame > 0 ? this.lastDrawnFrame : 1;
   }
 
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
     const frameIndex = this.findNearestLoadedFrame(frameNum);
-    if (frameIndex === this.lastDrawnFrame) return;
 
-    const bitmap = this.frames[frameIndex];
-    if (!bitmap) return;
+    const img = this.frames[frameIndex];
+    if (!img) return;
 
-    this.ctx.drawImage(bitmap, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    this.ctx.drawImage(img, this.offsetX, this.offsetY, this.drawW, this.drawH);
     this.lastDrawnFrame = frameIndex;
+  }
+
+  fetchUrgentFrameChunk(centerFrame) {
+    if (!this.loadingUrgent) this.loadingUrgent = {};
+    const minF = Math.max(1, centerFrame - 15);
+    const maxF = Math.min(this.TOTAL_FRAMES, centerFrame + 25);
+    for (let i = minF; i <= maxF; i++) {
+      if (!this.frames[i] && !this.loadingUrgent[i]) {
+        this.loadingUrgent[i] = true;
+        const src = `assets/hero-frames-4k-webp/frame-${String(i).padStart(4, '0')}.webp?v=4k_native`;
+        const img = new Image();
+        img.src = src;
+        if (img.decode) {
+          img.decode().then(() => { this.frames[i] = img; }).catch(() => { this.frames[i] = img; });
+        } else {
+          img.onload = () => { this.frames[i] = img; };
+        }
+      }
+    }
   }
 
   initScrollEngine() {
@@ -1065,6 +1129,10 @@ class Component extends DCLogic {
       const vh = window.innerHeight;
       const total = this.hero.offsetHeight - vh;
       this.targetProgress = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
+      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(this.targetProgress * (this.TOTAL_FRAMES - 1)) + 1));
+      if (!this.frames[targetFrame]) {
+        this.fetchUrgentFrameChunk(targetFrame);
+      }
 
       // Resume RAF lerp loop if paused
       if (!this.isLooping) {
@@ -1091,7 +1159,7 @@ class Component extends DCLogic {
         return;
       }
 
-      const lerpFactor = 0.14; // Smooth, liquid-like dampening matching 60fps/120fps refresh rates
+      const lerpFactor = 0.09; // Liquid momentum for butter-smooth 1000-frame 60fps video scrub
       const diff = this.targetProgress - this.currentProgress;
 
       if (Math.abs(diff) > 0.00005) {
@@ -1132,88 +1200,88 @@ class Component extends DCLogic {
     if (this.isReducedMotion) return;
     if (!this.hero) return;
 
-    // Smart Glassmorphism Header
+    // Smart Glassmorphism Header (State-cached to prevent reflow lag)
     if (this.nav) {
       const navHeight = 80;
       const vh = window.innerHeight;
       const heroFinishedScroll = (this.hero.offsetHeight - vh) - 40;
       const isPastHero = window.scrollY >= heroFinishedScroll;
 
-      const consultRect = this.consultSection ? this.consultSection.getBoundingClientRect() : null;
-      const footerRect = this.footerSection ? this.footerSection.getBoundingClientRect() : null;
+      let navState = 'transparent';
+      if (isPastHero) {
+        const consultTop = this.consultSection ? this.consultSection.offsetTop : 99999;
+        const consultBottom = consultTop + (this.consultSection ? this.consultSection.offsetHeight : 0);
+        const footerTop = this.footerSection ? this.footerSection.offsetTop : 99999;
+        const footerBottom = footerTop + (this.footerSection ? this.footerSection.offsetHeight : 0);
 
-      const isOverConsultation = consultRect ? (consultRect.top <= navHeight && consultRect.bottom >= 0) : false;
-      const isOverFooter = footerRect ? (footerRect.top <= navHeight && footerRect.bottom >= 0) : false;
-      const isOverDarkSection = isOverConsultation || isOverFooter;
+        const currentY = window.scrollY + navHeight;
+        const isOverConsultation = (currentY >= consultTop && window.scrollY <= consultBottom);
+        const isOverFooter = (currentY >= footerTop && window.scrollY <= footerBottom);
 
-      const logoImg = this.nav.querySelector('[data-logo-img="1"]');
-      const navLinks = this.nav.querySelectorAll('[data-nav-link="1"]');
-      const whatsappLink = this.nav.querySelector('a[href*="wa.me"]');
-      const btn = this.nav.querySelector('[data-btn]');
-      const toggleBtn = this.nav.querySelector('.tpl-mobile-toggle');
-
-      if (isOverDarkSection) {
-        // State 1: Over Dark Navy Sections (#consultation & footer) -> Luminous White & Gold Theme
-        this.nav.classList.remove('is-light');
-        this.nav.style.background = 'rgba(8, 19, 89, 0.92)';
-        this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
-        this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
-        this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.35)';
-        this.nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
-        this.nav.style.padding = '14px 64px';
-
-        if (logoImg) logoImg.style.filter = 'drop-shadow(0 3px 14px rgba(184,146,93,0.55)) brightness(1.1)';
-
-        navLinks.forEach(link => { link.style.color = '#ffffff'; });
-        if (whatsappLink) whatsappLink.style.color = '#ffffff';
-        if (toggleBtn) toggleBtn.style.color = '#ffffff';
-
-        if (btn) {
-          btn.style.background = '#B8925D';
-          btn.style.color = '#ffffff';
-          btn.style.borderColor = '#B8925D';
+        if (isOverConsultation || isOverFooter) {
+          navState = 'dark';
+        } else {
+          navState = 'light';
         }
-      } else if (!isPastHero) {
-        // State 2: Over Hero Section Canvas -> Transparent Royal Navy Theme
-        this.nav.classList.remove('is-light');
-        this.nav.style.background = 'rgba(8, 19, 89, 0)';
-        this.nav.style.backdropFilter = 'none';
-        this.nav.style.webkitBackdropFilter = 'none';
-        this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0)';
-        this.nav.style.boxShadow = 'none';
-        this.nav.style.padding = '20px 64px';
+      }
 
-        if (logoImg) logoImg.style.filter = 'drop-shadow(0 3px 12px rgba(8,19,89,0.22))';
+      if (navState !== this.currentNavState) {
+        this.currentNavState = navState;
 
-        navLinks.forEach(link => { link.style.color = '#081359'; });
-        if (whatsappLink) whatsappLink.style.color = '#081359';
-        if (toggleBtn) toggleBtn.style.color = '#081359';
+        if (navState === 'dark') {
+          this.nav.classList.remove('is-light');
+          this.nav.style.background = 'rgba(8, 19, 89, 0.92)';
+          this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.35)';
+          this.nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+          this.nav.style.padding = '14px 64px';
 
-        if (btn) {
-          btn.style.background = '#081359';
-          btn.style.color = '#ffffff';
-          btn.style.borderColor = '#081359';
-        }
-      } else {
-        // State 3: Over Light Middle Sections -> Glassmorphism Light Theme
-        this.nav.classList.add('is-light');
-        this.nav.style.background = 'rgba(255, 255, 255, 0.9)';
-        this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
-        this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
-        this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.3)';
-        this.nav.style.boxShadow = '0 10px 30px rgba(8, 19, 89, 0.08)';
-        this.nav.style.padding = '14px 64px';
+          if (this.logoImg) this.logoImg.style.filter = 'drop-shadow(0 3px 14px rgba(184,146,93,0.55)) brightness(1.1)';
+          if (this.navLinks) this.navLinks.forEach(link => { link.style.color = '#ffffff'; });
+          if (this.whatsappLink) this.whatsappLink.style.color = '#ffffff';
+          if (this.toggleBtn) this.toggleBtn.style.color = '#ffffff';
+          if (this.navBtn) {
+            this.navBtn.style.background = '#B8925D';
+            this.navBtn.style.color = '#ffffff';
+            this.navBtn.style.borderColor = '#B8925D';
+          }
+        } else if (navState === 'transparent') {
+          this.nav.classList.remove('is-light');
+          this.nav.style.background = 'rgba(8, 19, 89, 0)';
+          this.nav.style.backdropFilter = 'none';
+          this.nav.style.webkitBackdropFilter = 'none';
+          this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0)';
+          this.nav.style.boxShadow = 'none';
+          this.nav.style.padding = '20px 64px';
 
-        if (logoImg) logoImg.style.filter = 'drop-shadow(0 3px 12px rgba(8,19,89,0.2))';
+          if (this.logoImg) this.logoImg.style.filter = 'drop-shadow(0 3px 12px rgba(8,19,89,0.22))';
+          if (this.navLinks) this.navLinks.forEach(link => { link.style.color = '#081359'; });
+          if (this.whatsappLink) this.whatsappLink.style.color = '#081359';
+          if (this.toggleBtn) this.toggleBtn.style.color = '#081359';
+          if (this.navBtn) {
+            this.navBtn.style.background = '#081359';
+            this.navBtn.style.color = '#ffffff';
+            this.navBtn.style.borderColor = '#081359';
+          }
+        } else if (navState === 'light') {
+          this.nav.classList.add('is-light');
+          this.nav.style.background = 'rgba(255, 255, 255, 0.9)';
+          this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.3)';
+          this.nav.style.boxShadow = '0 10px 30px rgba(8, 19, 89, 0.08)';
+          this.nav.style.padding = '14px 64px';
 
-        navLinks.forEach(link => { link.style.color = '#081359'; });
-        if (whatsappLink) whatsappLink.style.color = '#081359';
-        if (toggleBtn) toggleBtn.style.color = '#081359';
-
-        if (btn) {
-          btn.style.background = '#081359';
-          btn.style.color = '#ffffff';
-          btn.style.borderColor = '#081359';
+          if (this.logoImg) this.logoImg.style.filter = 'drop-shadow(0 3px 12px rgba(8,19,89,0.2))';
+          if (this.navLinks) this.navLinks.forEach(link => { link.style.color = '#081359'; });
+          if (this.whatsappLink) this.whatsappLink.style.color = '#081359';
+          if (this.toggleBtn) this.toggleBtn.style.color = '#081359';
+          if (this.navBtn) {
+            this.navBtn.style.background = '#081359';
+            this.navBtn.style.color = '#ffffff';
+            this.navBtn.style.borderColor = '#081359';
+          }
         }
       }
     }
@@ -1236,12 +1304,12 @@ class Component extends DCLogic {
     // Sync Vertical Sequence Rail Highlighting with exact 7-beat video sequence
     if (this.railItems && this.railItems.length > 0) {
       let activeIdx = 0;
-      if (targetFrame > 20 && targetFrame <= 80) activeIdx = 1;       // 02 CONSULTATION (Frame 43!)
-      else if (targetFrame > 80 && targetFrame <= 150) activeIdx = 2;  // 03 PRP METHOD
-      else if (targetFrame > 150 && targetFrame <= 260) activeIdx = 3; // 04 BODY QUALITY
-      else if (targetFrame > 260 && targetFrame <= 410) activeIdx = 4; // 05 HAIR RESTORATION (Unified male scalp & FUE subject!)
-      else if (targetFrame > 410 && targetFrame <= 460) activeIdx = 5; // 06 FORMULATIONS
-      else if (targetFrame > 460) activeIdx = 6;                      // 07 MAYFAIR CODA
+      if (targetFrame > 40 && targetFrame <= 160) activeIdx = 1;       // 02 CONSULTATION
+      else if (targetFrame > 160 && targetFrame <= 300) activeIdx = 2;  // 03 PRP METHOD
+      else if (targetFrame > 300 && targetFrame <= 520) activeIdx = 3; // 04 BODY QUALITY
+      else if (targetFrame > 520 && targetFrame <= 820) activeIdx = 4; // 05 HAIR RESTORATION
+      else if (targetFrame > 820 && targetFrame <= 920) activeIdx = 5; // 06 FORMULATIONS
+      else if (targetFrame > 920) activeIdx = 6;                      // 07 MAYFAIR CODA
 
       this.railItems.forEach((item, idx) => {
         const bar = this.railBars[idx];
