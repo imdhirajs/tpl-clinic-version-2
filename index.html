@@ -1035,59 +1035,74 @@ class Component extends DCLogic {
     const use4K = (dpr >= 1.75 || window.innerWidth >= 1920);
     const folder = use4K ? 'assets/hero-frames-4k-webp' : 'assets/hero-frames-1080p';
 
-    const fetchFrame = async (frameIndex) => {
-      if (this.destroyed || this.frames[frameIndex]) return;
+    this.inFlight = new Set();
+    this.scrollTimeout = null;
+
+    this.fetchSingleFrame = (frameIndex, priority = 'low') => {
+      if (this.destroyed || this.frames[frameIndex] || this.inFlight.has(frameIndex)) return Promise.resolve();
+      this.inFlight.add(frameIndex);
       const src = `${folder}/frame-${String(frameIndex).padStart(4, '0')}.webp`;
-      try {
+      
+      return new Promise((resolve) => {
         const img = new Image();
-        img.src = src;
-        if (img.decode) {
-          await img.decode();
+        if (priority === 'high' && 'fetchPriority' in img) {
+          img.fetchPriority = 'high';
         }
-        this.frames[frameIndex] = img;
-        if (frameIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
-          this.drawFrameOnCanvas(1);
-        }
-      } catch (err) {
-        const img = new Image();
-        img.onload = () => { this.frames[frameIndex] = img; };
+        img.onload = () => {
+          this.frames[frameIndex] = img;
+          this.inFlight.delete(frameIndex);
+          if (frameIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+            this.drawFrameOnCanvas(1);
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          this.inFlight.delete(frameIndex);
+          resolve();
+        };
         img.src = src;
+      });
+    };
+
+    // Tier 1 (Instant Paint < 0.05s): Load Frames 1-15 with High Priority
+    for (let i = 1; i <= 15; i++) {
+      this.fetchSingleFrame(i, 'high');
+    }
+
+    // Tier 2 (Non-blocking Idle Stream): Load remaining keyframes & density gently
+    const keyframes = [];
+    for (let i = 1; i <= this.TOTAL_FRAMES; i += 4) keyframes.push(i);
+
+    const remaining = [];
+    const keyframeSet = new Set(keyframes);
+    for (let i = 1; i <= this.TOTAL_FRAMES; i++) {
+      if (!keyframeSet.has(i)) remaining.push(i);
+    }
+
+    const queue = [...keyframes, ...remaining];
+
+    const processIdleQueue = () => {
+      if (this.destroyed || queue.length === 0) return;
+
+      // When user is actively scrolling, pause background preloading to give 100% CPU/Network bandwidth to scroll!
+      if (this.isScrolling || this.inFlight.size >= 3) {
+        setTimeout(processIdleQueue, 80);
+        return;
+      }
+
+      const nextIdx = queue.shift();
+      if (nextIdx) {
+        this.fetchSingleFrame(nextIdx, 'low').then(() => {
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(processIdleQueue, { timeout: 150 });
+          } else {
+            setTimeout(processIdleQueue, 10);
+          }
+        });
       }
     };
 
-    // Tier 1 (Instant Paint < 0.05s): Load Frame 1 immediately
-    fetchFrame(1).then(() => {
-      this.drawFrameOnCanvas(1);
-    });
-
-    // Tier 2 (Keyframe Stride < 0.5s): Load every 4th frame for instant timeline availability
-    const tier2Keyframes = [];
-    for (let i = 1; i <= this.TOTAL_FRAMES; i += 4) {
-      if (i !== 1) tier2Keyframes.push(i);
-    }
-
-    // Tier 3 (Full Density Queue): Load remaining intermediate frames
-    const tier3Remaining = [];
-    const tier2Set = new Set(tier2Keyframes);
-    for (let i = 1; i <= this.TOTAL_FRAMES; i++) {
-      if (i !== 1 && !tier2Set.has(i)) tier3Remaining.push(i);
-    }
-
-    const processQueue = async (queue, concurrency = 12) => {
-      const workers = Array(concurrency).fill(null).map(async () => {
-        while (queue.length > 0 && !this.destroyed) {
-          const fIdx = queue.shift();
-          if (!fIdx) break;
-          await fetchFrame(fIdx);
-        }
-      });
-      await Promise.all(workers);
-    };
-
-    (async () => {
-      await processQueue(tier2Keyframes, 12);
-      await processQueue(tier3Remaining, 10);
-    })();
+    setTimeout(processIdleQueue, 50);
   }
 
   findNearestLoadedFrame(requested) {
@@ -1110,19 +1125,13 @@ class Component extends DCLogic {
   }
 
   fetchUrgentFrameChunk(centerFrame) {
-    if (!this.loadingUrgent) this.loadingUrgent = {};
-    const spriteIndex = Math.ceil(centerFrame / 16);
-    for (let s = Math.max(1, spriteIndex - 1); s <= Math.min(this.TOTAL_SPRITES, spriteIndex + 2); s++) {
-      if (!this.sprites[s] && !this.loadingUrgent[s]) {
-        this.loadingUrgent[s] = true;
-        const src = `assets/hero-sprites/sprite-${String(s).padStart(3, '0')}.webp?v=apple_v2`;
-        const img = new Image();
-        img.src = src;
-        if (img.decode) {
-          img.decode().then(() => { this.sprites[s] = img; }).catch(() => { this.sprites[s] = img; });
-        } else {
-          img.onload = () => { this.sprites[s] = img; };
-        }
+    if (this.destroyed) return;
+    // Priority fetch ±15 frames around current scroll position
+    const start = Math.max(1, centerFrame - 5);
+    const end = Math.min(this.TOTAL_FRAMES, centerFrame + 15);
+    for (let i = start; i <= end; i++) {
+      if (!this.frames[i] && !this.inFlight.has(i)) {
+        this.fetchSingleFrame(i, 'high');
       }
     }
   }
@@ -1130,6 +1139,14 @@ class Component extends DCLogic {
   initScrollEngine() {
     this.onScroll = () => {
       if (!this.hero) return;
+
+      // Mark scrolling active so background queue pauses
+      this.isScrolling = true;
+      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = setTimeout(() => {
+        this.isScrolling = false;
+      }, 150);
+
       const vh = window.innerHeight;
       const total = this.hero.offsetHeight - vh;
       this.targetProgress = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
