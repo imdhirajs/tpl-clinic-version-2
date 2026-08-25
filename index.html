@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=4k_native" fetchpriority="high">
+<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v8_4k" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -235,7 +235,7 @@
 
       <!-- Full-bleed Background Hero Media Canvas (100% Clean & Unobscured) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=4k_native') top center/cover no-repeat"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -909,8 +909,7 @@ class Component extends DCLogic {
       if (this.hotspotCard) this.hotspotCard.style.display = 'none';
       this.renderStaticHotspotRow();
     } else {
-      // Desktop & Laptops: Ultra-Smooth 500 Frame Interactive Canvas Engine
-      // Desktop & Laptops: Ultra-Smooth 500 Frame Interactive Canvas Engine
+      // Desktop & Laptops: Ultra-Smooth Interactive Canvas Engine
       const depth = this.props.heroScrollDepth ?? 800;
       if (this.hero) this.hero.style.height = depth + 'vh';
 
@@ -922,6 +921,16 @@ class Component extends DCLogic {
 
       // Update & Cache Canvas dimensions once on init & resize
       this.updateCanvasDimensions();
+
+      // Instant 4K UHD Crisp Frame 1 Paint (3840x2160 native resolution)
+      const initialPoster = new Image();
+      initialPoster.onload = () => {
+        this.frames[1] = initialPoster;
+        if (this.lastDrawnFrame <= 1) {
+          this.drawFrameOnCanvas(1);
+        }
+      };
+      initialPoster.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
       // Initialize Lenis Smooth Scroll with butter-smooth easing & momentum
       if (typeof window.Lenis !== 'undefined') {
@@ -948,10 +957,9 @@ class Component extends DCLogic {
         });
       }
 
-      // Hybrid Dual-Engine: Sprite Atlas (0-Lag 100% Instant Base) + Native 4K UHD Upgrade
-      this.TOTAL_SPRITES = Math.ceil(this.TOTAL_FRAMES / 16); // 63
+      // Hybrid Engine: 1080p HD Sprite Fallback (250 HD sheets, 4 frames/sheet 1920x1080) + Native 4K UHD Upgrade
+      this.TOTAL_SPRITES = Math.ceil(this.TOTAL_FRAMES / 4); // 250 HD sprites
       this.sprites = {};
-      this.frames = new Array(this.TOTAL_FRAMES + 1);
 
       this.preloadAppleSpritesLOD();
       this.preloadNative4KFrames();
@@ -1035,55 +1043,84 @@ class Component extends DCLogic {
   }
 
   preloadAppleSpritesLOD() {
-    const fetchSprite = async (spriteIndex) => {
+    const fetchSprite = async (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return;
-      const src = `assets/hero-sprites/sprite-${String(spriteIndex).padStart(3, '0')}.webp?v=apple_v3`;
+      const src = `assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd`;
       try {
         const img = new Image();
+        if (priority === 'high' && 'fetchPriority' in img) {
+          img.fetchPriority = 'high';
+        }
         img.src = src;
         if (img.decode) {
           await img.decode();
         }
         this.sprites[spriteIndex] = img;
         if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
-          this.drawFrameOnCanvas(1);
+          if (!this.frames[1]) {
+            this.drawFrameOnCanvas(1);
+          }
         }
       } catch (err) {
         const img = new Image();
-        img.onload = () => { this.sprites[spriteIndex] = img; };
+        img.onload = () => {
+          this.sprites[spriteIndex] = img;
+          if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+            if (!this.frames[1]) {
+              this.drawFrameOnCanvas(1);
+            }
+          }
+        };
         img.src = src;
       }
     };
 
-    // Tier 1 (Instant Paint < 0.05s): Load Sprites 1, 2, 3 immediately
-    Promise.all([fetchSprite(1), fetchSprite(2), fetchSprite(3)]).then(() => {
-      this.drawFrameOnCanvas(1);
-    });
+    // 1. Immediately fetch Sprite 1 (Frames 1-4) on millisecond 0
+    fetchSprite(1, 'high');
 
-    // Tier 2 (Ultra-fast Stream < 1.0s): Stream remaining 60 sprite sheets with 8 workers
-    const queue = [];
-    for (let i = 4; i <= this.TOTAL_SPRITES; i++) queue.push(i);
+    // 2. Preload initial ~10% scroll range (Sprites 2 to 15) eagerly
+    const initialQueue = [];
+    for (let i = 2; i <= 15; i++) initialQueue.push(i);
 
-    const processQueue = async (q, concurrency = 8) => {
-      const workers = Array(concurrency).fill(null).map(async () => {
-        while (q.length > 0 && !this.destroyed) {
-          const sIdx = q.shift();
-          if (!sIdx) break;
-          await fetchSprite(sIdx);
+    const processInitial = async () => {
+      for (const sIdx of initialQueue) {
+        if (this.destroyed) break;
+        await fetchSprite(sIdx, 'high');
+      }
+
+      // 3. Method 08 Progressive Preloader: Stream remaining sprites (16 to 250)
+      // Pauses when user is actively scrolling so network is 100% free for visible frames!
+      const remainingQueue = [];
+      for (let i = 16; i <= this.TOTAL_SPRITES; i++) remainingQueue.push(i);
+
+      const processBackground = async () => {
+        if (this.destroyed || remainingQueue.length === 0) return;
+        
+        if (this.isScrolling) {
+          setTimeout(processBackground, 200); // Method 08: Pause background queue while user scrolls!
+          return;
         }
-      });
-      await Promise.all(workers);
+
+        const nextSprite = remainingQueue.shift();
+        if (nextSprite) {
+          await fetchSprite(nextSprite, 'low');
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(processBackground, { timeout: 300 });
+          } else {
+            setTimeout(processBackground, 40);
+          }
+        }
+      };
+
+      setTimeout(processBackground, 200);
     };
 
-    processQueue(queue, 8);
+    setTimeout(processInitial, 50);
   }
 
   preloadNative4KFrames() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    const use4K = (dpr >= 1.75 || window.innerWidth >= 1920);
-    const folder = use4K ? 'assets/hero-frames-4k-webp' : 'assets/hero-frames-1080p';
-
     this.inFlight = new Set();
+    const folder = 'assets/hero-frames-1080p';
 
     this.fetchSingleFrame = (frameIndex, priority = 'low') => {
       if (this.destroyed || this.frames[frameIndex] || this.inFlight.has(frameIndex)) return Promise.resolve();
@@ -1098,6 +1135,9 @@ class Component extends DCLogic {
         img.onload = () => {
           this.frames[frameIndex] = img;
           this.inFlight.delete(frameIndex);
+          if (frameIndex === this.lastDrawnFrame || (frameIndex === 1 && this.lastDrawnFrame <= 1)) {
+            this.drawFrameOnCanvas(frameIndex);
+          }
           resolve();
         };
         img.onerror = () => {
@@ -1108,31 +1148,10 @@ class Component extends DCLogic {
       });
     };
 
-    // Load keyframes (every 5th frame) gently during idle CPU time
-    const keyframes = [];
-    for (let i = 1; i <= this.TOTAL_FRAMES; i += 5) keyframes.push(i);
-
-    const processIdleQueue = () => {
-      if (this.destroyed || keyframes.length === 0) return;
-
-      if (this.isScrolling || this.inFlight.size >= 2) {
-        setTimeout(processIdleQueue, 100);
-        return;
-      }
-
-      const nextIdx = keyframes.shift();
-      if (nextIdx) {
-        this.fetchSingleFrame(nextIdx, 'low').then(() => {
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(processIdleQueue, { timeout: 200 });
-          } else {
-            setTimeout(processIdleQueue, 20);
-          }
-        });
-      }
-    };
-
-    setTimeout(processIdleQueue, 200);
+    // Immediately fetch initial high-res frames (1 to 5)
+    for (let i = 1; i <= 5; i++) {
+      this.fetchSingleFrame(i, 'high');
+    }
   }
 
   findNearestLoadedSprite(spriteIndex) {
@@ -1147,7 +1166,7 @@ class Component extends DCLogic {
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
 
-    // 1. If exact native 4K frame is in memory, draw full 4K UHD image!
+    // 1. If exact native frame is in memory, draw full high-res image!
     if (this.frames && this.frames[frameNum]) {
       const img = this.frames[frameNum];
       this.ctx.drawImage(img, 0, 0, img.naturalWidth || img.width, img.naturalHeight || img.height, this.offsetX, this.offsetY, this.drawW, this.drawH);
@@ -1155,8 +1174,8 @@ class Component extends DCLogic {
       return;
     }
 
-    // 2. Otherwise draw from preloaded 63 Sprite Sheets (Instant 0-Lag Guaranteed Fallback)
-    const targetSpriteIndex = Math.ceil(frameNum / 16);
+    // 2. Otherwise draw from preloaded HD Sprite Sheets (1920x1080 per frame in 2x2 grid)
+    const targetSpriteIndex = Math.ceil(frameNum / 4);
     const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
     const spriteImg = this.sprites[spriteIndex];
 
@@ -1164,15 +1183,15 @@ class Component extends DCLogic {
 
     let cellCol = 0, cellRow = 0;
     if (spriteIndex === targetSpriteIndex) {
-      const idxInSprite = (frameNum - 1) % 16;
-      cellCol = idxInSprite % 4;
-      cellRow = Math.floor(idxInSprite / 4);
+      const idxInSprite = (frameNum - 1) % 4;
+      cellCol = idxInSprite % 2;
+      cellRow = Math.floor(idxInSprite / 2);
     }
 
-    const sx = cellCol * 960;
-    const sy = cellRow * 540;
-    const sw = 960;
-    const sh = 540;
+    const sx = cellCol * 1920;
+    const sy = cellRow * 1080;
+    const sw = 1920;
+    const sh = 1080;
 
     this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
     this.lastDrawnFrame = frameNum;
@@ -1180,13 +1199,12 @@ class Component extends DCLogic {
 
   fetchUrgentFrameChunk(centerFrame) {
     if (this.destroyed) return;
-    // Priority fetch ±10 native 4K frames around current scroll position
-    const start = Math.max(1, centerFrame - 3);
-    const end = Math.min(this.TOTAL_FRAMES, centerFrame + 10);
-    for (let i = start; i <= end; i++) {
-      if (!this.frames[i] && !this.inFlight.has(i)) {
-        this.fetchSingleFrame(i, 'high');
-      }
+    const spriteIdx = Math.ceil(centerFrame / 4);
+    if (!this.sprites[spriteIdx]) {
+      const src = `assets/hero-sprites-hd/sprite-hd-${String(spriteIdx).padStart(3, '0')}.webp?v=v8_hd`;
+      const img = new Image();
+      img.onload = () => { this.sprites[spriteIdx] = img; };
+      img.src = src;
     }
   }
 
@@ -1203,17 +1221,15 @@ class Component extends DCLogic {
 
       const vh = window.innerHeight;
       const total = this.hero.offsetHeight - vh;
-      this.targetProgress = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
-      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(this.targetProgress * (this.TOTAL_FRAMES - 1)) + 1));
-      if (!this.frames[targetFrame]) {
+      const p = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
+      
+      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
+      if (!this.sprites[Math.ceil(targetFrame / 4)]) {
         this.fetchUrgentFrameChunk(targetFrame);
       }
 
-      // Resume RAF lerp loop if paused
-      if (!this.isLooping) {
-        this.isLooping = true;
-        this.startLerpLoop();
-      }
+      // Unified Single-Driver Render: Render frame directly on Lenis scroll tick
+      this.renderFrame(p);
     };
 
     this.onResize = () => {
@@ -1225,30 +1241,6 @@ class Component extends DCLogic {
     window.addEventListener('touchmove', this.onScroll, { passive: true });
     window.addEventListener('resize', this.onResize);
     this.onScroll();
-  }
-
-  startLerpLoop() {
-    const loop = () => {
-      if (this.destroyed) {
-        this.isLooping = false;
-        return;
-      }
-
-      const lerpFactor = 0.09; // Liquid momentum for butter-smooth 1000-frame 60fps video scrub
-      const diff = this.targetProgress - this.currentProgress;
-
-      if (Math.abs(diff) > 0.00005) {
-        this.currentProgress += diff * lerpFactor;
-        this.renderFrame(this.currentProgress);
-        this.rafId = requestAnimationFrame(loop);
-      } else {
-        this.currentProgress = this.targetProgress;
-        this.renderFrame(this.currentProgress);
-        this.isLooping = false; // Steady state reached: pause RAF loop when idle
-      }
-    };
-
-    this.rafId = requestAnimationFrame(loop);
   }
 
   componentWillUnmount() {
