@@ -1181,7 +1181,10 @@ class Component extends DCLogic {
         const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-90,f-webp`;
         const img = new Image();
         if ('fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = () => {
+        img.onload = async () => {
+          if (img.decode) {
+            try { await img.decode(); } catch(e) {}
+          }
           this.sprites[sIdx] = img;
         };
         img.src = src;
