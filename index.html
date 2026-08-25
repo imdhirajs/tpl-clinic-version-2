@@ -233,10 +233,9 @@
   <section id="top" data-hero="1" style="position:relative;height:800vh;background:#081359">
     <div style="position:sticky;top:0;height:100vh;overflow:hidden;background:#081359">
 
-      <!-- Full-bleed Background Hero Media Container (100% Crisp Original Video Quality via ImageKit CDN) -->
+      <!-- Full-bleed Background Hero Media Canvas (100% 60fps Frame-Exact Precision) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <video data-hero-video="1" src="https://ik.imagekit.io/dhiraj1995/assets/hero-scrub-1080p.mp4" poster="assets/hero-poster/hero-poster.webp?v=v8_4k" playsinline muted preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1;display:block"></video>
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;display:none;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -953,9 +952,8 @@ class Component extends DCLogic {
         };
         this.animId = requestAnimationFrame(lenisRaf);
 
-        this.lenis.on('scroll', () => {
-          if (this.onScroll) this.onScroll();
-        });
+        // Lenis manages smooth page scroll position; window scroll handles engine progress
+        this.lenis.on('scroll', () => {});
       }
 
       // Hybrid Engine: 1080p HD Sprite Fallback (250 HD sheets, 4 frames/sheet 1920x1080) + Native 4K UHD Upgrade
@@ -1212,6 +1210,10 @@ class Component extends DCLogic {
   }
 
   initScrollEngine() {
+    this.targetProgress = 0;
+    this.currentProgress = 0;
+    this.isLooping = false;
+
     this.onScroll = () => {
       if (!this.hero) return;
 
@@ -1224,15 +1226,18 @@ class Component extends DCLogic {
 
       const vh = window.innerHeight;
       const total = this.hero.offsetHeight - vh;
-      const p = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
+      this.targetProgress = Math.min(1, Math.max(0, (window.scrollY - this.hero.offsetTop) / Math.max(1, total)));
       
-      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
+      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(this.targetProgress * (this.TOTAL_FRAMES - 1)) + 1));
       if (!this.sprites[Math.ceil(targetFrame / 4)]) {
         this.fetchUrgentFrameChunk(targetFrame);
       }
 
-      // Unified Single-Driver Render: Render frame directly on Lenis scroll tick
-      this.renderFrame(p);
+      // Resume smooth RAF lerp loop if paused
+      if (!this.isLooping) {
+        this.isLooping = true;
+        this.startLerpLoop();
+      }
     };
 
     this.onResize = () => {
@@ -1244,6 +1249,29 @@ class Component extends DCLogic {
     window.addEventListener('touchmove', this.onScroll, { passive: true });
     window.addEventListener('resize', this.onResize);
     this.onScroll();
+  }
+
+  startLerpLoop() {
+    const loop = () => {
+      if (this.destroyed) {
+        this.isLooping = false;
+        return;
+      }
+
+      const diff = this.targetProgress - this.currentProgress;
+
+      if (Math.abs(diff) > 0.00008) {
+        this.currentProgress += diff * 0.12; // Liquid momentum for butter-smooth 60fps canvas scrub
+        this.renderFrame(this.currentProgress);
+        this.rafId = requestAnimationFrame(loop);
+      } else {
+        this.currentProgress = this.targetProgress;
+        this.renderFrame(this.currentProgress);
+        this.isLooping = false;
+      }
+    };
+
+    this.rafId = requestAnimationFrame(loop);
   }
 
   componentWillUnmount() {
@@ -1365,13 +1393,7 @@ class Component extends DCLogic {
       this.frame.textContent = 'FRAME ' + String(targetFrame).padStart(4, '0') + ' / ' + String(this.TOTAL_FRAMES).padStart(4, '0');
     }
 
-    this.videoEl = this.videoEl || document.querySelector('[data-hero-video]');
-    if (this.videoEl && this.videoEl.duration) {
-      const targetTime = p * this.videoEl.duration;
-      if (Math.abs(this.videoEl.currentTime - targetTime) > 0.02) {
-        this.videoEl.currentTime = targetTime;
-      }
-    } else if (!this.isMobile && this.canvas) {
+    if (!this.isMobile && this.canvas) {
       if (targetFrame !== this.lastDrawnFrame) {
         this.drawFrameOnCanvas(targetFrame);
       }
