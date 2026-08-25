@@ -1190,7 +1190,8 @@ class Component extends DCLogic {
       return;
     }
 
-    const idxInSprite = (frameNum - 1) % 4;
+    // Method 08 Monotonic Hold: Use exact sub-frame for target sprite, or hold cell 3 for fallback sprite
+    const idxInSprite = (spriteIndex === targetSpriteIndex) ? ((frameNum - 1) % 4) : 3;
     const cellCol = idxInSprite % 2;
     const cellRow = Math.floor(idxInSprite / 2);
 
