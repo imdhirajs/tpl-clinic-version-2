@@ -1074,23 +1074,28 @@ class Component extends DCLogic {
       });
     };
 
-    // Parallel HTTP/2 Batch Streamer (6 concurrent downloads per batch)
+    // Parallel HTTP/2 Batch Streamer (5 concurrent downloads per batch)
     const loadBatch = async (startIndex, endIndex, priority = 'high') => {
-      for (let i = startIndex; i <= endIndex; i += 6) {
+      for (let i = startIndex; i <= endIndex; i += 5) {
         if (this.destroyed) break;
         const promises = [];
-        for (let j = i; j < Math.min(i + 6, endIndex + 1); j++) {
+        for (let j = i; j < Math.min(i + 5, endIndex + 1); j++) {
           promises.push(fetchSprite(j, priority));
         }
         await Promise.all(promises);
       }
     };
 
-    // Millisecond 0: Eagerly fetch initial 25 sprites (Frames 1-100) in parallel
-    loadBatch(1, 25, 'high').then(() => {
-      if (!this.destroyed) {
-        // Stream remaining sprites (26 to 250) in parallel background batches
-        loadBatch(26, this.TOTAL_SPRITES, 'low');
+    // Millisecond 0: Fetch initial 15 sprites (60 frames) so page finishes loading in 1-2s!
+    loadBatch(1, 15, 'high').then(() => {
+      if (this.destroyed) return;
+      const startBackgroundStream = () => {
+        loadBatch(16, this.TOTAL_SPRITES, 'low');
+      };
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(startBackgroundStream, { timeout: 1000 });
+      } else {
+        setTimeout(startBackgroundStream, 300);
       }
     });
   }
