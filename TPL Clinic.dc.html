@@ -1057,54 +1057,83 @@ class Component extends DCLogic {
     };
     this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
-    const fetchSprite = (spriteIndex, priority = 'low') => {
-      if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
-      return new Promise((resolve) => {
-        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-90,f-webp`;
+    const fetchSprite = async (spriteIndex, priority = 'low') => {
+      if (this.destroyed || this.sprites[spriteIndex]) return;
+      const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-90,f-webp`;
+      try {
         const img = new Image();
-        if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
+        if (priority === 'high' && 'fetchPriority' in img) {
+          img.fetchPriority = 'high';
+        }
+        img.src = src;
+        if (img.decode) {
+          await img.decode();
+        }
+        this.sprites[spriteIndex] = img;
+        if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+          this.drawFrameOnCanvas(1);
+        }
+      } catch (err) {
+        const img = new Image();
         img.onload = () => {
           this.sprites[spriteIndex] = img;
           if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
             this.drawFrameOnCanvas(1);
           }
-          resolve();
         };
-        img.onerror = () => resolve();
         img.src = src;
-      });
+      }
     };
 
-    const streamSprites = async () => {
-      // 1. Millisecond 0: Eagerly fetch initial 15 sprites (60 frames) for 1s instant load!
-      const initialPromises = [];
-      for (let s = 1; s <= 15; s++) {
-        initialPromises.push(fetchSprite(s, 'high'));
-      }
-      await Promise.all(initialPromises);
+    // 1. Immediately fetch Sprite 1 (Frames 1-4) on millisecond 0
+    fetchSprite(1, 'high');
 
-      if (this.destroyed) return;
+    // 2. Preload initial ~10% scroll range (Sprites 2 to 15) eagerly
+    const initialQueue = [];
+    for (let i = 2; i <= 15; i++) initialQueue.push(i);
 
-      // 2. Stream remaining sprites (16 to 250) in non-blocking parallel batches
-      for (let s = 16; s <= this.TOTAL_SPRITES; s += 6) {
+    const processInitial = async () => {
+      for (const sIdx of initialQueue) {
         if (this.destroyed) break;
-        const batch = [];
-        for (let j = s; j < Math.min(s + 6, this.TOTAL_SPRITES + 1); j++) {
-          batch.push(fetchSprite(j, 'low'));
-        }
-        await Promise.all(batch);
+        await fetchSprite(sIdx, 'high');
       }
+
+      // 3. Method 08 Progressive Preloader: Stream remaining sprites (16 to 250)
+      // Pauses when user is actively scrolling so network is 100% free for visible frames!
+      const remainingQueue = [];
+      for (let i = 16; i <= this.TOTAL_SPRITES; i++) remainingQueue.push(i);
+
+      const processBackground = async () => {
+        if (this.destroyed || remainingQueue.length === 0) return;
+        
+        if (this.isScrolling) {
+          setTimeout(processBackground, 200); // Pause background queue while user scrolls!
+          return;
+        }
+
+        const nextSprite = remainingQueue.shift();
+        if (nextSprite) {
+          await fetchSprite(nextSprite, 'low');
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(processBackground, { timeout: 300 });
+          } else {
+            setTimeout(processBackground, 40);
+          }
+        }
+      };
+
+      setTimeout(processBackground, 200);
     };
 
-    streamSprites();
+    setTimeout(processInitial, 50);
   }
 
   findNearestLoadedSprite(spriteIndex) {
     if (this.sprites[spriteIndex]) return spriteIndex;
-    // Method 08 Monotonic Hold: Search BACKWARD ONLY so sequence never jumps into future!
-    for (let delta = 1; delta < spriteIndex; delta++) {
-      const prevIndex = spriteIndex - delta;
-      if (prevIndex >= 1 && this.sprites[prevIndex]) return prevIndex;
+    // Monotonic Hold: Search BACKWARD FIRST so sequence never snaps into future
+    for (let delta = 1; delta <= 30; delta++) {
+      if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
+      if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
     return null;
   }
