@@ -1083,47 +1083,25 @@ class Component extends DCLogic {
       }
     };
 
-    // 1. Immediately fetch Sprite 1 (Frames 1-4) on millisecond 0
-    fetchSprite(1, 'high');
+    // Millisecond 0: Eagerly fetch initial 20 sprites (80 frames) in parallel
+    const initialPromises = [];
+    for (let s = 1; s <= 20; s++) {
+      initialPromises.push(fetchSprite(s, 'high'));
+    }
 
-    // 2. Preload initial ~10% scroll range (Sprites 2 to 15) eagerly
-    const initialQueue = [];
-    for (let i = 2; i <= 15; i++) initialQueue.push(i);
+    Promise.all(initialPromises).then(async () => {
+      if (this.destroyed) return;
 
-    const processInitial = async () => {
-      for (const sIdx of initialQueue) {
+      // Rapidly stream remaining sprites (21 to 250) in parallel background batches of 6
+      for (let s = 21; s <= this.TOTAL_SPRITES; s += 6) {
         if (this.destroyed) break;
-        await fetchSprite(sIdx, 'high');
+        const batch = [];
+        for (let j = s; j < Math.min(s + 6, this.TOTAL_SPRITES + 1); j++) {
+          batch.push(fetchSprite(j, 'low'));
+        }
+        await Promise.all(batch);
       }
-
-      // 3. Method 08 Progressive Preloader: Stream remaining sprites (16 to 250)
-      // Pauses when user is actively scrolling so network is 100% free for visible frames!
-      const remainingQueue = [];
-      for (let i = 16; i <= this.TOTAL_SPRITES; i++) remainingQueue.push(i);
-
-      const processBackground = async () => {
-        if (this.destroyed || remainingQueue.length === 0) return;
-        
-        if (this.isScrolling) {
-          setTimeout(processBackground, 200); // Pause background queue while user scrolls!
-          return;
-        }
-
-        const nextSprite = remainingQueue.shift();
-        if (nextSprite) {
-          await fetchSprite(nextSprite, 'low');
-          if ('requestIdleCallback' in window) {
-            requestIdleCallback(processBackground, { timeout: 300 });
-          } else {
-            setTimeout(processBackground, 40);
-          }
-        }
-      };
-
-      setTimeout(processBackground, 200);
-    };
-
-    setTimeout(processInitial, 50);
+    });
   }
 
   findNearestLoadedSprite(spriteIndex) {
