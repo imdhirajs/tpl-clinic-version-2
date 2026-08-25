@@ -1166,9 +1166,10 @@ class Component extends DCLogic {
 
   findNearestLoadedSprite(spriteIndex) {
     if (this.sprites[spriteIndex]) return spriteIndex;
-    for (let delta = 1; delta <= 30; delta++) {
-      if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
-      if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
+    // Method 08 Monotonic Hold: Search BACKWARD ONLY so sequence never jumps into future and snaps backward
+    for (let delta = 1; delta < spriteIndex; delta++) {
+      const prevIndex = spriteIndex - delta;
+      if (prevIndex >= 1 && this.sprites[prevIndex]) return prevIndex;
     }
     return null;
   }
@@ -1218,13 +1219,18 @@ class Component extends DCLogic {
 
   fetchUrgentFrameChunk(centerFrame) {
     if (this.destroyed) return;
-    const spriteIdx = Math.ceil(centerFrame / 4);
-    if (!this.sprites[spriteIdx]) {
-      const baseUrl = this.CDN_BASE_URL || '';
-      const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(spriteIdx).padStart(3, '0')}.webp?v=v8_hd`;
-      const img = new Image();
-      img.onload = () => { this.sprites[spriteIdx] = img; };
-      img.src = src;
+    const centerSprite = Math.ceil(centerFrame / 4);
+    for (let sIdx = Math.max(1, centerSprite - 1); sIdx <= Math.min(this.TOTAL_SPRITES, centerSprite + 2); sIdx++) {
+      if (!this.sprites[sIdx]) {
+        const baseUrl = this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/';
+        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-95,f-webp`;
+        const img = new Image();
+        if ('fetchPriority' in img) img.fetchPriority = 'high';
+        img.onload = () => {
+          this.sprites[sIdx] = img;
+        };
+        img.src = src;
+      }
     }
   }
 
