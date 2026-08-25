@@ -963,8 +963,6 @@ class Component extends DCLogic {
       this.sprites = {};
 
       this.preloadAppleSpritesLOD();
-      this.preloadNative4KFrames();
-
       this.initScrollEngine();
     }
 
@@ -1187,39 +1185,6 @@ class Component extends DCLogic {
           this.sprites[sIdx] = img;
         };
         img.src = src;
-      }
-    }
-  }
-
-  preloadNative4KFrames() {
-    this.frames4K = {};
-    this.inFlight4K = new Set();
-    
-    // Auto-detect Mac Retina & 4K Ultra-HD Displays (devicePixelRatio >= 1.5)
-    this.isHighDPR = (window.devicePixelRatio || 1) >= 1.5 || window.innerWidth >= 1440;
-
-    if (this.isHighDPR) {
-      const CDN_BASE = 'https://ik.imagekit.io/dhiraj1995/';
-      this.fetch4KFrame = (frameIndex, priority = 'low') => {
-        // Nearest 4K landmark frame (every 4th frame = 253 master keyframes)
-        const landmarkFrame = Math.max(1, Math.min(1011, Math.floor((frameIndex - 1) / 4) * 4 + 1));
-        if (this.destroyed || this.frames4K[landmarkFrame] || this.inFlight4K.has(landmarkFrame)) return;
-        this.inFlight4K.add(landmarkFrame);
-
-        const src = `${CDN_BASE}assets/hero-frames-4k/frame-${String(landmarkFrame).padStart(4, '0')}-4k.webp?tr=q-95,f-webp`;
-        const img = new Image();
-        if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = () => {
-          this.frames4K[landmarkFrame] = img;
-          this.inFlight4K.delete(landmarkFrame);
-        };
-        img.onerror = () => { this.inFlight4K.delete(landmarkFrame); };
-        img.src = src;
-      };
-
-      // Immediately fetch initial 4K master frames on startup
-      for (let i = 1; i <= 25; i += 4) {
-        this.fetch4KFrame(i, 'high');
       }
     }
   }
