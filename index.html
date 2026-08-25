@@ -1043,9 +1043,10 @@ class Component extends DCLogic {
   }
 
   preloadAppleSpritesLOD() {
+    this.CDN_BASE_URL = 'https://cdn.jsdelivr.net/gh/imdhirajs/tpl-clinic-version-2@main/';
     const fetchSprite = async (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return;
-      const src = `assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd`;
+      const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd`;
       try {
         const img = new Image();
         if (priority === 'high' && 'fetchPriority' in img) {
@@ -1201,7 +1202,8 @@ class Component extends DCLogic {
     if (this.destroyed) return;
     const spriteIdx = Math.ceil(centerFrame / 4);
     if (!this.sprites[spriteIdx]) {
-      const src = `assets/hero-sprites-hd/sprite-hd-${String(spriteIdx).padStart(3, '0')}.webp?v=v8_hd`;
+      const baseUrl = this.CDN_BASE_URL || '';
+      const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(spriteIdx).padStart(3, '0')}.webp?v=v8_hd`;
       const img = new Image();
       img.onload = () => { this.sprites[spriteIdx] = img; };
       img.src = src;
