@@ -1045,59 +1045,113 @@ class Component extends DCLogic {
 
   preloadAppleSpritesLOD() {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
+    this.frames = {};
+    this.inFlightFrames = new Set();
 
     // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
     this.posterImg = new Image();
     if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
     this.posterImg.onload = () => {
-      if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.sprites[1]) {
+      if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.frames[1]) {
         this.drawFrameOnCanvas(1);
       }
     };
     this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
-    const fetchSprite = (spriteIndex, priority = 'low') => {
-      if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
+    this.fetchMasterFrame = (frameIndex, priority = 'low') => {
+      const landmarkFrame = Math.max(1, Math.min(1011, Math.floor((frameIndex - 1) / 4) * 4 + 1));
+      if (this.destroyed || this.frames[landmarkFrame] || this.inFlightFrames.has(landmarkFrame)) return Promise.resolve();
+      
+      this.inFlightFrames.add(landmarkFrame);
       return new Promise((resolve) => {
-        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-95,f-webp`;
+        const src = `${this.CDN_BASE_URL}assets/hero-frames-4k/frame-${String(landmarkFrame).padStart(4, '0')}-4k.webp?tr=q-85,w-1920,f-webp`;
         const img = new Image();
         if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
         img.onload = () => {
-          this.sprites[spriteIndex] = img;
-          if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+          this.frames[landmarkFrame] = img;
+          this.inFlightFrames.delete(landmarkFrame);
+          if (landmarkFrame === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
             this.drawFrameOnCanvas(1);
           }
           resolve();
         };
-        img.onerror = () => resolve();
+        img.onerror = () => {
+          this.inFlightFrames.delete(landmarkFrame);
+          resolve();
+        };
         img.src = src;
       });
     };
 
-    // Parallel HTTP/2 Batch Streamer (5 concurrent downloads per batch)
-    const loadBatch = async (startIndex, endIndex, priority = 'high') => {
-      for (let i = startIndex; i <= endIndex; i += 5) {
-        if (this.destroyed) break;
-        const promises = [];
-        for (let j = i; j < Math.min(i + 5, endIndex + 1); j++) {
-          promises.push(fetchSprite(j, priority));
-        }
-        await Promise.all(promises);
-      }
-    };
-
-    // Millisecond 0: Fetch initial 15 sprites (60 frames) so page finishes loading in 1-2s!
-    loadBatch(1, 15, 'high').then(() => {
+    // Millisecond 0: Fetch initial 10 master keyframes (~250KB total) so page finishes loading in 0.5s!
+    const initialKeyframes = [1, 5, 9, 13, 17, 21, 25, 29, 33, 37];
+    Promise.all(initialKeyframes.map(f => this.fetchMasterFrame(f, 'high'))).then(() => {
       if (this.destroyed) return;
-      const startBackgroundStream = () => {
-        loadBatch(16, this.TOTAL_SPRITES, 'low');
+      
+      // Stream remaining keyframes in background idle batches
+      const streamRemaining = async () => {
+        for (let f = 41; f <= this.TOTAL_FRAMES; f += 4) {
+          if (this.destroyed) break;
+          await this.fetchMasterFrame(f, 'low');
+        }
       };
+
       if ('requestIdleCallback' in window) {
-        requestIdleCallback(startBackgroundStream, { timeout: 1000 });
+        requestIdleCallback(streamRemaining, { timeout: 1000 });
       } else {
-        setTimeout(startBackgroundStream, 300);
+        setTimeout(streamRemaining, 300);
       }
     });
+  }
+
+  findNearestLoadedKeyframe(frameNum) {
+    const targetKeyframe = Math.floor((frameNum - 1) / 4) * 4 + 1;
+    if (this.frames[targetKeyframe]) return targetKeyframe;
+
+    // Monotonic Backward-Only Hold: Search BACKWARD so sequence never jumps into future!
+    for (let f = targetKeyframe - 4; f >= 1; f -= 4) {
+      if (this.frames[f]) return f;
+    }
+    return null;
+  }
+
+  drawSingleFrame(frameNum) {
+    const keyframe = this.findNearestLoadedKeyframe(frameNum);
+    const frameImg = keyframe !== null ? this.frames[keyframe] : null;
+
+    if (!frameImg) {
+      // Method 08: Never Draw Nothing! Draw Poster Image fallback if frame is not yet ready
+      if (this.posterImg && this.posterImg.complete && (this.posterImg.naturalWidth || this.posterImg.width)) {
+        const pw = this.posterImg.naturalWidth || this.posterImg.width;
+        const ph = this.posterImg.naturalHeight || this.posterImg.height;
+        this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
+      }
+      return;
+    }
+
+    const fw = frameImg.naturalWidth || frameImg.width || 1920;
+    const fh = frameImg.naturalHeight || frameImg.height || 1080;
+    this.ctx.drawImage(frameImg, 0, 0, fw, fh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+  }
+
+  drawFrameOnCanvas(frameNum) {
+    if (!this.canvas || !this.ctx || !this.targetW) return;
+
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
+
+    this.drawSingleFrame(frameNum);
+    this.lastDrawnFrame = frameNum;
+  }
+
+  fetchUrgentFrameChunk(centerFrame) {
+    if (this.destroyed || !this.fetchMasterFrame) return;
+    const targetKeyframe = Math.floor((centerFrame - 1) / 4) * 4 + 1;
+    for (let f = Math.max(1, targetKeyframe - 8); f <= Math.min(this.TOTAL_FRAMES, targetKeyframe + 12); f += 4) {
+      if (!this.frames[f]) {
+        this.fetchMasterFrame(f, 'high');
+      }
+    }
   }
 
   preloadNative4KFrames() {
@@ -1133,75 +1187,6 @@ class Component extends DCLogic {
     }
   }
 
-  findNearestLoadedSprite(spriteIndex) {
-    if (this.sprites[spriteIndex]) return spriteIndex;
-    // Method 08 Monotonic Hold: Search BACKWARD ONLY so sequence never jumps into future and snaps backward
-    for (let delta = 1; delta < spriteIndex; delta++) {
-      const prevIndex = spriteIndex - delta;
-      if (prevIndex >= 1 && this.sprites[prevIndex]) return prevIndex;
-    }
-    return null;
-  }
-
-  drawSingleFrame(frameNum) {
-    // 100% Uniform HD Sprite Sheet Pipeline (Guarantees zero resolution-switching jitter or frame shake)
-    const targetSpriteIndex = Math.ceil(frameNum / 4);
-    const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
-    const spriteImg = spriteIndex !== null ? this.sprites[spriteIndex] : null;
-
-    if (!spriteImg) {
-      // Method 08: Never Draw Nothing! Draw Poster Image fallback if sprite is not yet ready
-      if (this.posterImg && this.posterImg.complete && (this.posterImg.naturalWidth || this.posterImg.width)) {
-        const pw = this.posterImg.naturalWidth || this.posterImg.width;
-        const ph = this.posterImg.naturalHeight || this.posterImg.height;
-        this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
-      }
-      return;
-    }
-
-    // Method 08 Monotonic Hold: Use exact sub-frame for target sprite, or hold cell 3 for fallback sprite
-    const idxInSprite = (spriteIndex === targetSpriteIndex) ? ((frameNum - 1) % 4) : 3;
-    const cellCol = idxInSprite % 2;
-    const cellRow = Math.floor(idxInSprite / 2);
-
-    const sx = cellCol * 1920;
-    const sy = cellRow * 1080;
-    const sw = 1920;
-    const sh = 1080;
-
-    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
-  }
-
-  drawFrameOnCanvas(frameNum) {
-    if (!this.canvas || !this.ctx || !this.targetW) return;
-
-    this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = 'high';
-
-    // 4K Auto-fetch trigger while scrolling
-    if (this.isHighDPR && this.fetch4KFrame) {
-      this.fetch4KFrame(frameNum, 'low');
-    }
-
-    this.drawSingleFrame(frameNum);
-    this.lastDrawnFrame = frameNum;
-  }
-
-  fetchUrgentFrameChunk(centerFrame) {
-    if (this.destroyed) return;
-    const centerSprite = Math.ceil(centerFrame / 4);
-    for (let sIdx = Math.max(1, centerSprite - 1); sIdx <= Math.min(this.TOTAL_SPRITES, centerSprite + 2); sIdx++) {
-      if (!this.sprites[sIdx]) {
-        const baseUrl = this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/';
-        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-95,f-webp`;
-        const img = new Image();
-        if ('fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = () => {
-          this.sprites[sIdx] = img;
-        };
-        img.src = src;
-      }
-    }
   }
 
   initScrollEngine() {
