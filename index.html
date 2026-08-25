@@ -1045,6 +1045,17 @@ class Component extends DCLogic {
 
   preloadAppleSpritesLOD() {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
+
+    // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
+    this.posterImg = new Image();
+    if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
+    this.posterImg.onload = () => {
+      if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.sprites[1]) {
+        this.drawFrameOnCanvas(1);
+      }
+    };
+    this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
+
     const fetchSprite = async (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return;
       const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-95,f-webp`;
@@ -1159,16 +1170,24 @@ class Component extends DCLogic {
       if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
       if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
-    return 1;
+    return null;
   }
 
   drawSingleFrame(frameNum) {
     // 100% Uniform HD Sprite Sheet Pipeline (Guarantees zero resolution-switching jitter or frame shake)
     const targetSpriteIndex = Math.ceil(frameNum / 4);
     const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
-    const spriteImg = this.sprites[spriteIndex];
+    const spriteImg = spriteIndex !== null ? this.sprites[spriteIndex] : null;
 
-    if (!spriteImg) return;
+    if (!spriteImg) {
+      // Method 08: Never Draw Nothing! Draw Poster Image fallback if sprite is not yet ready
+      if (this.posterImg && this.posterImg.complete && (this.posterImg.naturalWidth || this.posterImg.width)) {
+        const pw = this.posterImg.naturalWidth || this.posterImg.width;
+        const ph = this.posterImg.naturalHeight || this.posterImg.height;
+        this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
+      }
+      return;
+    }
 
     const idxInSprite = (frameNum - 1) % 4;
     const cellCol = idxInSprite % 2;
