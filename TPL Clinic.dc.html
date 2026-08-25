@@ -1045,7 +1045,7 @@ class Component extends DCLogic {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
     const fetchSprite = async (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return;
-      const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd`;
+      const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-95,f-webp`;
       try {
         const img = new Image();
         if (priority === 'high' && 'fetchPriority' in img) {
@@ -1181,18 +1181,17 @@ class Component extends DCLogic {
 
     if (!spriteImg) return;
 
-    let cellCol = 0, cellRow = 0;
-    if (spriteIndex === targetSpriteIndex) {
-      const idxInSprite = (frameNum - 1) % 4;
-      cellCol = idxInSprite % 2;
-      cellRow = Math.floor(idxInSprite / 2);
-    }
+    const idxInSprite = (frameNum - 1) % 4;
+    const cellCol = idxInSprite % 2;
+    const cellRow = Math.floor(idxInSprite / 2);
 
     const sx = cellCol * 1920;
     const sy = cellRow * 1080;
     const sw = 1920;
     const sh = 1080;
 
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
     this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
     this.lastDrawnFrame = frameNum;
   }
