@@ -233,9 +233,10 @@
   <section id="top" data-hero="1" style="position:relative;height:800vh;background:#081359">
     <div style="position:sticky;top:0;height:100vh;overflow:hidden;background:#081359">
 
-      <!-- Full-bleed Background Hero Media Canvas (100% Clean & Unobscured) -->
+      <!-- Full-bleed Background Hero Media Container (100% Crisp Original Video Quality via ImageKit CDN) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
+        <video data-hero-video="1" src="https://ik.imagekit.io/dhiraj1995/assets/hero-scrub-1080p.mp4" poster="assets/hero-poster/hero-poster.webp?v=v8_4k" playsinline muted preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1;display:block"></video>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;display:none;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -1043,7 +1044,7 @@ class Component extends DCLogic {
   }
 
   preloadAppleSpritesLOD() {
-    this.CDN_BASE_URL = 'https://cdn.jsdelivr.net/gh/imdhirajs/tpl-clinic-version-2@main/';
+    this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
     const fetchSprite = async (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return;
       const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd`;
@@ -1364,7 +1365,13 @@ class Component extends DCLogic {
       this.frame.textContent = 'FRAME ' + String(targetFrame).padStart(4, '0') + ' / ' + String(this.TOTAL_FRAMES).padStart(4, '0');
     }
 
-    if (!this.isMobile && this.canvas) {
+    this.videoEl = this.videoEl || document.querySelector('[data-hero-video]');
+    if (this.videoEl && this.videoEl.duration) {
+      const targetTime = p * this.videoEl.duration;
+      if (Math.abs(this.videoEl.currentTime - targetTime) > 0.02) {
+        this.videoEl.currentTime = targetTime;
+      }
+    } else if (!this.isMobile && this.canvas) {
       if (targetFrame !== this.lastDrawnFrame) {
         this.drawFrameOnCanvas(targetFrame);
       }
