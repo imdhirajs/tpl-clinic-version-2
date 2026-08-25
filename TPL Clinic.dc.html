@@ -1163,21 +1163,7 @@ class Component extends DCLogic {
   }
 
   drawSingleFrame(frameNum) {
-    // 1. Exact 4K Ultra-HD Frame (if present for exact frame index)
-    if (this.frames4K && this.frames4K[frameNum]) {
-      const img = this.frames4K[frameNum];
-      this.ctx.drawImage(img, 0, 0, img.naturalWidth || img.width, img.naturalHeight || img.height, this.offsetX, this.offsetY, this.drawW, this.drawH);
-      return;
-    }
-
-    // 2. 1080p Single Frame
-    if (this.frames && this.frames[frameNum]) {
-      const img = this.frames[frameNum];
-      this.ctx.drawImage(img, 0, 0, img.naturalWidth || img.width, img.naturalHeight || img.height, this.offsetX, this.offsetY, this.drawW, this.drawH);
-      return;
-    }
-
-    // 3. Preloaded HD Sprite Sheets (1:1 Frame-Exact Grid Mapping for every frame 1 to 1011)
+    // 100% Uniform HD Sprite Sheet Pipeline (Guarantees zero resolution-switching jitter or frame shake)
     const targetSpriteIndex = Math.ceil(frameNum / 4);
     const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
     const spriteImg = this.sprites[spriteIndex];
