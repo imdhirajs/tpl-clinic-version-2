@@ -1055,48 +1055,41 @@ class Component extends DCLogic {
     };
     this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
-    const fetchSprite = async (spriteIndex, priority = 'low') => {
-      if (this.destroyed || this.sprites[spriteIndex]) return;
-      const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?tr=q-90,f-webp`;
-      try {
+    const fetchSprite = (spriteIndex, priority = 'low') => {
+      if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
+      return new Promise((resolve) => {
+        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd&tr=q-90,f-webp`;
         const img = new Image();
-        if (priority === 'high' && 'fetchPriority' in img) {
-          img.fetchPriority = 'high';
-        }
-        img.src = src;
-        if (img.decode) {
-          await img.decode();
-        }
-        this.sprites[spriteIndex] = img;
-        if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
-          this.drawFrameOnCanvas(1);
-        }
-      } catch (err) {
-        const img = new Image();
-        img.onload = () => {
+        if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
+        img.onload = async () => {
+          if (img.decode) {
+            try { await img.decode(); } catch(e) {}
+          }
           this.sprites[spriteIndex] = img;
           if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
             this.drawFrameOnCanvas(1);
           }
+          resolve();
         };
+        img.onerror = () => resolve();
         img.src = src;
-      }
+      });
     };
 
-    // Millisecond 0: Eagerly fetch initial 20 sprites (80 frames) in parallel
+    // Millisecond 0: Eagerly fetch initial 25 sprites (100 frames) in parallel
     const initialPromises = [];
-    for (let s = 1; s <= 20; s++) {
+    for (let s = 1; s <= 25; s++) {
       initialPromises.push(fetchSprite(s, 'high'));
     }
 
     Promise.all(initialPromises).then(async () => {
       if (this.destroyed) return;
 
-      // Rapidly stream remaining sprites (21 to 250) in parallel background batches of 6
-      for (let s = 21; s <= this.TOTAL_SPRITES; s += 6) {
+      // Rapidly stream remaining sprites (26 to 250) in parallel background batches of 8
+      for (let s = 26; s <= this.TOTAL_SPRITES; s += 8) {
         if (this.destroyed) break;
         const batch = [];
-        for (let j = s; j < Math.min(s + 6, this.TOTAL_SPRITES + 1); j++) {
+        for (let j = s; j < Math.min(s + 8, this.TOTAL_SPRITES + 1); j++) {
           batch.push(fetchSprite(j, 'low'));
         }
         await Promise.all(batch);
