@@ -1181,43 +1181,20 @@ class Component extends DCLogic {
       return Math.min(Math.max(raw, 0), 1);
     };
 
-    this.tick = () => {
-      if (this.destroyed) {
-        this.ticking = false;
-        return;
-      }
-
-      // Method 10 Bare-Metal Lerp (0.14) for 100% butter-smooth 60fps / 120fps motion
-      const diff = this.targetProgress - this.currentProgress;
-
-      if (Math.abs(diff) > 0.00008) {
-        this.currentProgress += diff * 0.14;
-        this.renderFrame(this.currentProgress);
-        this.rafId = requestAnimationFrame(this.tick);
-      } else {
-        this.currentProgress = this.targetProgress;
-        this.renderFrame(this.currentProgress);
-        this.ticking = false;
-      }
-    };
-
     this.onScroll = () => {
       if (!this.hero) return;
       this.isScrolling = true;
       if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
       this.scrollTimeout = setTimeout(() => { this.isScrolling = false; }, 150);
 
-      this.targetProgress = this.getScrollProgress();
-
-      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(this.targetProgress * (this.TOTAL_FRAMES - 1)) + 1));
-      if (!this.sprites[Math.ceil(targetFrame / 4)]) {
+      const p = this.getScrollProgress();
+      const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
+      const targetSpriteIndex = Math.ceil(targetFrame / 4);
+      if (!this.sprites[targetSpriteIndex]) {
         this.fetchUrgentFrameChunk(targetFrame);
       }
 
-      if (!this.ticking) {
-        this.ticking = true;
-        this.rafId = requestAnimationFrame(this.tick);
-      }
+      this.renderFrame(p);
     };
 
     this.onResize = () => {
