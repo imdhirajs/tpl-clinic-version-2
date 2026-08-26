@@ -1076,13 +1076,32 @@ class Component extends DCLogic {
       });
     };
 
+    // Method 08: Preload Gate Progress Bar (Guarantees 1st scroll is 100% as smooth as 2nd scroll)
+    let pBar = document.getElementById('tpl-preload-bar');
+    if (!pBar) {
+      pBar = document.createElement('div');
+      pBar.id = 'tpl-preload-bar';
+      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.2s ease, opacity 0.4s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
+      document.body.appendChild(pBar);
+    }
+
     // Millisecond 0: Eagerly fetch initial 25 sprites (100 frames) in parallel
+    let loadedCount = 0;
     const initialPromises = [];
     for (let s = 1; s <= 25; s++) {
-      initialPromises.push(fetchSprite(s, 'high'));
+      initialPromises.push(
+        fetchSprite(s, 'high').then(() => {
+          loadedCount++;
+          if (pBar) pBar.style.width = Math.round((loadedCount / 25) * 100) + '%';
+        })
+      );
     }
 
     Promise.all(initialPromises).then(async () => {
+      if (pBar) {
+        pBar.style.width = '100%';
+        setTimeout(() => { pBar.style.opacity = '0'; }, 300);
+      }
       if (this.destroyed) return;
 
       // Rapidly stream remaining sprites (26 to 250) in parallel background batches of 8
