@@ -1190,7 +1190,17 @@ class Component extends DCLogic {
           let settled = false;
           const once = () => { if (!settled) { settled = true; publish(); } };
           img.decode().then(once, once);
-          setTimeout(once, 200);
+          // Stall-guard ONLY — it must never pre-empt a healthy decode.
+          // Measured decode of one 3840x2160 sheet on this pipeline:
+          //   AVIF q-85  median 124ms, max 195ms
+          //   WebP master median  99ms, max 110ms
+          // The previous 200ms guard sat right on top of that distribution, so
+          // sheets were publishing UNDECODED and the first drawImage paid the
+          // decode synchronously on the scroll path - a 124-195ms freeze, 7-12
+          // dropped frames, exactly the stutter this whole change set exists to
+          // remove. 3s is far outside the normal range and still bounds the
+          // hidden-tab case where decode() is deferred indefinitely.
+          setTimeout(once, 3000);
         } else publish();
       };
       img.onerror = () => {
