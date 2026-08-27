@@ -1,8 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- SEO / social. The page previously had an EMPTY <title> and no description,
+     canonical, favicon or OG tags at all: the browser tab showed a bare URL and
+     pasting the link into WhatsApp/LinkedIn produced a blank card. For a clinic
+     whose link gets shared by hand, that card IS the first impression. -->
+<title>TPL Clinic — Platelet Rich Plasma &amp; Regenerative Aesthetics, Mayfair London</title>
+<meta name="description" content="TPL Clinic is the UK's first clinic built entirely around Platelet Rich Plasma — doctor-led regenerative medicine combined with advanced technology, in Mayfair, London.">
+<link rel="canonical" href="https://tpl-clinic-version-2.netlify.app/">
+<meta name="theme-color" content="#081359">
+<meta name="robots" content="index,follow">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TPL Clinic">
+<meta property="og:title" content="TPL Clinic — Platelet Rich Plasma, Mayfair London">
+<meta property="og:description" content="The UK's first clinic built entirely around Platelet Rich Plasma. Doctor-led regenerative medicine in Mayfair.">
+<meta property="og:url" content="https://tpl-clinic-version-2.netlify.app/">
+<meta property="og:image" content="https://tpl-clinic-version-2.netlify.app/assets/hero-poster/hero-poster.webp">
+<meta property="og:image:width" content="3840">
+<meta property="og:image:height" content="2160">
+<meta property="og:locale" content="en_GB">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TPL Clinic — Platelet Rich Plasma, Mayfair London">
+<meta name="twitter:description" content="The UK's first clinic built entirely around Platelet Rich Plasma. Doctor-led regenerative medicine in Mayfair.">
+<meta name="twitter:image" content="https://tpl-clinic-version-2.netlify.app/assets/hero-poster/hero-poster.webp">
+
+<link rel="icon" href="assets/logo/tpl-logo.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/logo/tpl-logo.png">
+
 <!-- Open the ImageKit socket during HTML parse: saves DNS+TCP+TLS (~150-300ms cold) -->
 <link rel="preconnect" href="https://ik.imagekit.io" crossorigin>
 <link rel="dns-prefetch" href="https://ik.imagekit.io">
@@ -28,6 +57,22 @@
 </style>
 </head>
 <body>
+<!-- Netlify Forms registration stub.
+     The visible enquiry form is rendered by the DC runtime, and Netlify only
+     detects forms by parsing deployed HTML at build time - so this hidden twin
+     is what registers "consultation" and its fields. The live handler POSTs to
+     it. Without this the button only ever flipped a "submitted" flag and every
+     enquiry was silently discarded. -->
+<form name="consultation" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="firstName">
+  <input type="text" name="lastName">
+  <input type="email" name="email">
+  <input type="tel" name="phone">
+  <input type="text" name="area">
+  <textarea name="message"></textarea>
+  <input type="text" name="consent">
+  <input type="text" name="bot-field">
+</form>
 <x-dc>
 <helmet>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -114,6 +159,41 @@
     .tpl-desktop-nav { display: none !important; }
     .tpl-mobile-toggle { display: flex !important; }
     header[data-nav="1"] { padding: 16px 20px !important; }
+
+    /* On a 375px viewport the header laid out as logo(72) + Book Consultation(198)
+       + Menu(70) + padding(40) = 380px, pushing the hamburger to right:417 —
+       42px off-screen and completely unreachable, so mobile visitors had no way
+       into the menu at all. Let the CTA shrink and pin the toggle so it can
+       never be the element that overflows. */
+    header[data-nav="1"] { gap: 8px !important; }
+    header[data-nav="1"] [data-btn] {
+      flex: 0 1 auto !important;
+      min-width: 0 !important;
+      padding: 12px 14px !important;
+      font-size: 9.5px !important;
+      letter-spacing: .14em !important;
+      white-space: nowrap;
+    }
+    .tpl-mobile-toggle {
+      flex: 0 0 auto !important;
+      margin-left: auto !important;
+      min-width: 44px; min-height: 44px;   /* WCAG 2.5.8 minimum tap target */
+      justify-content: flex-end;
+    }
+  }
+
+  /* Narrow phones: the wordmark on the CTA is what breaks the row, so drop it
+     to the short label rather than letting anything leave the viewport. */
+  @media (max-width: 419px) {
+    header[data-nav="1"] [data-btn] {
+      font-size: 9px !important;
+      padding: 11px 10px !important;
+      letter-spacing: .1em !important;
+    }
+    .tpl-mobile-toggle span:first-child { display: none !important; }  /* hide "Menu" text, keep the icon */
+  }
+
+  @media (max-width: 1023px) {
     section { padding-left: 20px !important; padding-right: 20px !important; }
     [data-rail="1"], [data-frame="1"] { display: none !important; }
     [data-hero-intro="1"] {
@@ -249,7 +329,7 @@
 
       <!-- Full-bleed Background Hero Media Canvas (100% 60fps Frame-Exact Precision) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat" role="img" aria-label="Arrival sequence at TPL Clinic, Mayfair — reception, consultation and treatment rooms"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -701,7 +781,10 @@
           <input type="checkbox" checked="{{ consent }}" onChange="{{ onConsent }}" style="margin-top:3px;width:14px;height:14px;accent-color:#B8925D" />
           <span style="font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:#5E5E5E">I consent to TPL Clinic contacting me regarding my enquiry.</span>
         </label>
-        <button onClick="{{ onSubmit }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">Send Enquiry →</button>
+        <sc-if value="{{ formError }}">
+          <div role="alert" aria-live="polite" style="margin-top:18px;padding:12px 14px;border:1px solid #B8925D;background:rgba(184,146,93,.09);font-family:Jost,sans-serif;font-size:12.5px;line-height:1.5;color:#081359">{{ formError }}</div>
+        </sc-if>
+        <button onClick="{{ onSubmit }}" disabled="{{ sending }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">{{ sendLabel }}</button>
       </div>
     </div>
   </section>
@@ -763,7 +846,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;heroScrollDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1400,&quot;min&quot;:400,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showTechnologyIndex&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
 class Component extends DCLogic {
-  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
+  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, sending:false, formError:'', mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
     this.TOTAL_FRAMES = 1000;
@@ -923,7 +1006,29 @@ class Component extends DCLogic {
       // Mobile Phones: Lightweight hardware-accelerated video fallback for 100% crash-free 60fps performance
       if (this.hero) this.hero.style.height = '100vh';
       if (this.heroMedia) {
-        this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1"></video><div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
+        // The previous file was encoded mp4v (MPEG-4 Part 2), which browsers
+        // dropped: it failed with DEMUXER_ERROR_NO_SUPPORTED_STREAMS, so every
+        // phone visitor ever has seen the poster and no motion. Re-encoded to
+        // H.264 and trimmed to a 12s loop (5.6MB rather than 20.6MB for the
+        // full 42s) because this is a decorative background on cellular data.
+        //
+        // Skipped entirely on a metered/slow connection or Save-Data: a static
+        // poster beats several MB of background video the visitor is paying for.
+        const conn = navigator.connection || {};
+        const stingy = conn.saveData === true ||
+          ['slow-2g', '2g', '3g'].indexOf(conn.effectiveType) !== -1;
+        const scrim = '<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
+        if (stingy) {
+          this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" />' + scrim;
+        } else {
+          this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile-h264.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline preload="metadata" aria-label="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1"></video>' + scrim;
+          // If it still cannot play on this device, fall back rather than
+          // leaving a black box.
+          const mv = this.heroMedia.querySelector('video');
+          if (mv) mv.addEventListener('error', () => {
+            this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" />' + scrim;
+          });
+        }
       }
       if (this.hotspotCard) this.hotspotCard.style.display = 'none';
       this.renderStaticHotspotRow();
@@ -1825,6 +1930,8 @@ class Component extends DCLogic {
       email: this.state.email, phone: this.state.phone,
       area: this.state.area, message: this.state.message,
       consent: this.state.consent, submitted: this.state.submitted,
+      sending: this.state.sending, formError: this.state.formError,
+      sendLabel: this.state.sending ? 'Sending…' : 'Send Enquiry →',
       mobileMenuOpen: this.state.mobileMenuOpen,
       megaMenuOpen: this.state.megaMenuOpen,
       onToggleMobileMenu: () => this.setState({ mobileMenuOpen: !this.state.mobileMenuOpen }),
@@ -1835,7 +1942,41 @@ class Component extends DCLogic {
       onEmail: this.set('email'), onPhone: this.set('phone'),
       onArea: this.set('area'), onMessage: this.set('message'),
       onConsent: e => this.setState({ consent: e.target.checked }),
-      onSubmit: () => this.setState({ submitted: true }),
+      onSubmit: async () => {
+        const st = this.state;
+        // Validate before claiming success - the old handler showed a thank-you
+        // for an empty form.
+        if (!st.firstName.trim() || !st.email.trim() || !st.consent) {
+          this.setState({ formError: 'Please add your name, email and consent before sending.' });
+          return;
+        }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email.trim())) {
+          this.setState({ formError: 'That email address does not look right.' });
+          return;
+        }
+        this.setState({ formError: '', sending: true });
+        const body = new URLSearchParams({
+          'form-name': 'consultation',
+          firstName: st.firstName, lastName: st.lastName, email: st.email,
+          phone: st.phone, area: st.area, message: st.message,
+          consent: st.consent ? 'yes' : 'no'
+        }).toString();
+        try {
+          const res = await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          this.setState({ sending: false, submitted: true });
+        } catch (e) {
+          // Never pretend it sent. Give them a route that cannot fail.
+          this.setState({
+            sending: false,
+            formError: 'Could not send just now — please WhatsApp us on +44 20 7998 7077 and we will pick it up straight away.'
+          });
+        }
+      },
       onClose: () => this.setState({ submitted: false, firstName:"", lastName:"", email:"", phone:"", message:"", consent:false })
     };
   }
