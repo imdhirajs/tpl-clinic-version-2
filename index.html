@@ -49,6 +49,23 @@
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
+  /* UNSCOPED, document-level. The big stylesheet lives inside <x-dc> and the DC
+     runtime rewrites those selectors for scoping, which is why
+     `.tpl-mobile-drawer.is-open` never won over the base rule: verified in two
+     browsers that the element matched the selector, the rule carried the right
+     values and higher specificity, and the computed style still came back
+     closed in the same tick. Declaring it out here — outside the scoped block —
+     puts it beyond that rewrite. Without this the mobile menu cannot open at
+     all, which on a phone means the site has no navigation. */
+  .tpl-mobile-drawer.is-open,
+  html.tpl-menu-open .tpl-mobile-drawer {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+  }
+  html:not(.tpl-menu-open) .tpl-mobile-drawer:not(.is-open) { pointer-events: none !important; }
+
   html.lenis, html.lenis body { height: auto; }
   .lenis.lenis-smooth { scroll-behavior: auto !important; }
   .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
@@ -193,8 +210,118 @@
     .tpl-mobile-toggle span:first-child { display: none !important; }  /* hide "Menu" text, keep the icon */
   }
 
+  /* ------------------------------------------------------------------
+     PHONE LAYOUT (<=640px)
+
+     Every grid on this page is declared as an INLINE style, so none of
+     them responded to the old mobile query at all — the desktop column
+     counts survived onto a 375px screen and produced columns of
+     35px / 23px / 12.75px. Text cannot lay out in those, which is why
+     the page read as broken on a phone. Inline styles can only be beaten
+     with !important, hence the heavy hand here.
+     ------------------------------------------------------------------ */
+  @media (max-width: 640px) {
+    /* Collapse every multi-column grid to a single readable column. */
+    section [style*="grid-template-columns"],
+    footer  [style*="grid-template-columns"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 20px !important;
+    }
+    /* Small numeric/step tiles read fine two-up and look sparse stacked. */
+    [data-steps] , [data-stats] {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    /* Nothing may exceed its column. Long treatment names and inline
+       lists were the source of the off-screen spans in #technology. */
+    section *, footer * { min-width: 0 !important; max-width: 100% !important; }
+    /* NO blanket height rule on images. Every image on this page sits in an
+       aspect-ratio box with object-fit:cover and height:100% already; forcing
+       height:auto collapsed each one to its natural height and left a slab of
+       empty card below it. (The selector was also invalid — `:not()` with a
+       descendant combinator is Selectors-4 and unreliable.) */
+    section img[style*="object-fit"], footer img[style*="object-fit"] {
+      height: 100% !important; width: 100% !important;
+    }
+    [data-hero-media], [data-hero-media] img, [data-hero-media] video {
+      width: 100% !important; height: 100% !important; max-width: none !important;
+      inset: 0 !important;
+    }
+
+    /* Typography: desktop display sizes overflow a 375px line box. */
+    h1 { font-size: clamp(30px, 8.6vw, 40px) !important; line-height: 1.12 !important; }
+    h2 { font-size: clamp(24px, 6.8vw, 32px) !important; line-height: 1.18 !important; }
+    h3 { font-size: clamp(18px, 5vw, 22px) !important; line-height: 1.25 !important; }
+    p, li, a, span, div { overflow-wrap: anywhere; }
+
+    /* Give every section breathing room instead of desktop's tall padding. */
+    section { padding-top: 56px !important; padding-bottom: 56px !important; }
+
+    /* Tap targets: WCAG 2.5.8 asks for 24px minimum, 44px is the comfortable
+       iOS/Material figure. 23 controls were under it. */
+    button, [role="button"], input, select, textarea { min-height: 44px; }
+    /* Only give standalone controls a tap floor — applying it to every inline
+       <a> stretched links inside body copy and blew the header CTA up to 68px. */
+    [data-btn], .tpl-mobile-toggle, nav a, footer a {
+      min-height: 44px; display: inline-flex; align-items: center;
+    }
+    [data-nav] [data-btn] { min-height: 40px !important; line-height: 1 !important; }
+
+    /* The header sits transparent over the hero image, so its contrast depends
+       entirely on whatever pixels happen to be behind it. Over this reception
+       shot the navy wordmark lands on near-white and reads, but that is luck,
+       not design — and the solid CTA block floated with nothing anchoring it.
+       A soft top scrim guarantees legibility over any frame. */
+    /* Applied to the header itself rather than a ::before: the render loop
+       writes an inline background on [data-nav] every scroll tick, and a
+       negative-z pseudo-element under that is fragile. box-shadow paints the
+       scrim without touching the inline background the JS owns. */
+    [data-nav] {
+      position: fixed !important;
+      box-shadow: 0 0 0 100vmax rgba(255,255,255,0) inset,
+                  0 -18px 26px -12px rgba(255,255,255,.55) inset;
+      backdrop-filter: blur(10px) saturate(140%) !important;
+      -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+      background: rgba(255,255,255,.82) !important;
+      border-bottom: 1px solid rgba(184,146,93,.22) !important;
+    }
+    [data-nav] [data-btn] {
+      padding: 10px 12px !important;
+      font-size: 9px !important;
+      letter-spacing: .12em !important;
+      align-self: center !important;
+    }
+    /* Two 1.5px rules at 4px apart read as one smudge on a phone. */
+    .tpl-mobile-toggle div { gap: 5px !important; width: 22px !important; }
+    .tpl-mobile-toggle div span { height: 2px !important; }
+
+    /* Forms must never be narrower than the column or iOS zooms on focus
+       for any font-size below 16px. */
+    input, select, textarea {
+      width: 100% !important;
+      font-size: 16px !important;
+      box-sizing: border-box !important;
+    }
+  }
+
+  /* Tablet: two columns is right here, the desktop 3-4 column grids are not. */
+  @media (min-width: 641px) and (max-width: 1023px) {
+    section [style*="grid-template-columns"],
+    footer  [style*="grid-template-columns"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 24px !important;
+    }
+  }
+
   @media (max-width: 1023px) {
     section { padding-left: 20px !important; padding-right: 20px !important; }
+    /* ...but never the hero: it is a full-bleed media section, and the 20px
+       inset was what produced the background-coloured bars down both edges
+       and a 56px gap above the image. */
+    section#top, [data-hero] {
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
     [data-rail="1"], [data-frame="1"] { display: none !important; }
     [data-hero-intro="1"] {
       left: 20px !important;
@@ -202,6 +329,17 @@
       bottom: 24px !important;
       max-width: 100% !important;
     }
+  }
+
+  @media (max-width: 640px) {
+    /* The intro block measured 308px tall and ran 32px past the fold. Tighten
+       it so the whole promise is readable without scrolling. */
+    [data-hero-intro="1"] {
+      bottom: 20px !important;
+      max-height: 62vh !important;
+    }
+    [data-hero-intro="1"] h1 { font-size: clamp(26px, 7.6vw, 34px) !important; margin: 0 0 10px !important; }
+    [data-hero-intro="1"] p  { font-size: 13.5px !important; line-height: 1.5 !important; margin: 0 0 12px !important; }
   }
 </style>
 </helmet>
@@ -849,6 +987,44 @@ class Component extends DCLogic {
   state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, sending:false, formError:'', mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
+    // MOBILE MENU.
+    //
+    // Below 1024px the drawer is the ONLY navigation, and it did not open at
+    // all: `{{ mobileMenuOpen ? 'is-open' : '' }}` never flips (verified with a
+    // real click in two browsers). Two further things ruled out the obvious
+    // workarounds — the runtime REPLACES the header/drawer nodes on re-render,
+    // so listeners attached to them are discarded and a className set on them
+    // is rewritten away; and those nodes do not exist yet at componentDidMount.
+    //
+    // So: delegate the click off `document` (survives node replacement) and
+    // hold the open state as a class on <html>, which the runtime does not
+    // manage. The matching rule lives in the unscoped <head> stylesheet.
+    if (!document.documentElement.dataset.tplMenuBound) {
+      document.documentElement.dataset.tplMenuBound = '1';
+      const root = document.documentElement;
+      const setMenu = (open) => {
+        root.classList.toggle('tpl-menu-open', open);
+        const b = document.querySelector('.tpl-mobile-toggle');
+        if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+        root.style.overflow = open ? 'hidden' : '';
+        if (this.lenis) { open ? this.lenis.stop() : this.lenis.start(); }
+      };
+      document.addEventListener('click', (e) => {
+        if (e.target.closest && e.target.closest('.tpl-mobile-toggle')) {
+          e.preventDefault();
+          setMenu(!root.classList.contains('tpl-menu-open'));
+          return;
+        }
+        // Any link or button inside the open drawer closes it.
+        if (root.classList.contains('tpl-menu-open') &&
+            e.target.closest && e.target.closest('.tpl-mobile-drawer a, .tpl-mobile-drawer button')) {
+          setMenu(false);
+        }
+      }, true);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+      this.setMenu = setMenu;
+    }
+
     this.TOTAL_FRAMES = 1000;
     // Beat targets, rail thresholds and hotspot ranges below are authored in
     // 1000-frame space; routing them through FRAME_SCALE keeps a future frame
@@ -870,6 +1046,7 @@ class Component extends DCLogic {
       this.whatsappLink = this.nav.querySelector('a[href*="wa.me"]');
       this.navBtn = this.nav.querySelector('[data-btn]');
       this.toggleBtn = this.nav.querySelector('.tpl-mobile-toggle');
+
     }
     this.currentNavState = null;
 
@@ -1006,29 +1183,23 @@ class Component extends DCLogic {
       // Mobile Phones: Lightweight hardware-accelerated video fallback for 100% crash-free 60fps performance
       if (this.hero) this.hero.style.height = '100vh';
       if (this.heroMedia) {
-        // The previous file was encoded mp4v (MPEG-4 Part 2), which browsers
-        // dropped: it failed with DEMUXER_ERROR_NO_SUPPORTED_STREAMS, so every
-        // phone visitor ever has seen the poster and no motion. Re-encoded to
-        // H.264 and trimmed to a 12s loop (5.6MB rather than 20.6MB for the
-        // full 42s) because this is a decorative background on cellular data.
+        // PHONE HERO — sharpness, not motion.
         //
-        // Skipped entirely on a metered/slow connection or Save-Data: a static
-        // poster beats several MB of background video the visitor is paying for.
-        const conn = navigator.connection || {};
-        const stingy = conn.saveData === true ||
-          ['slow-2g', '2g', '3g'].indexOf(conn.effectiveType) !== -1;
+        // A 16:9 source under object-fit:cover in a full-height PORTRAIT box is
+        // scaled to match the box HEIGHT, so on a 375x812 phone at dpr3 it is
+        // blown up to 4330px wide. Measured upscale from each candidate:
+        //     960x540  video   x4.51  (what shipped — visibly blurry)
+        //     1280x720 video   x3.38
+        //     1920x1080 video  x2.26
+        //     3840x2160 poster x1.13  (sharp)
+        // No mobile-weight video can win that: staying sharp would need a ~4K
+        // source. So the phone gets a purpose-made 9:16 crop of the 3840px
+        // poster (1215x2160, 61KB) — sharp at dpr3, correctly framed rather
+        // than severely zoomed, and a fraction of the video's bytes on cellular.
         const scrim = '<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
-        if (stingy) {
-          this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" />' + scrim;
-        } else {
-          this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile-h264.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline preload="metadata" aria-label="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1"></video>' + scrim;
-          // If it still cannot play on this device, fall back rather than
-          // leaving a black box.
-          const mv = this.heroMedia.querySelector('video');
-          if (mv) mv.addEventListener('error', () => {
-            this.heroMedia.innerHTML = '<img src="assets/hero-poster/hero-poster.webp" alt="TPL Clinic reception, Mayfair" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1" />' + scrim;
-          });
-        }
+        this.heroMedia.innerHTML =
+          '<img src="assets/hero-poster/hero-poster-portrait.webp" alt="TPL Clinic reception, Mayfair London" ' +
+          'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:1" />' + scrim;
       }
       if (this.hotspotCard) this.hotspotCard.style.display = 'none';
       this.renderStaticHotspotRow();
@@ -1735,6 +1906,7 @@ class Component extends DCLogic {
       window.removeEventListener('touchmove', this.onScroll);
       window.removeEventListener('resize', this.onResize);
     }
+    if (this.onDrawerKey) document.removeEventListener('keydown', this.onDrawerKey);
     if (this.onRevive) {
       document.removeEventListener('visibilitychange', this.onRevive);
       window.removeEventListener('pageshow', this.onRevive);
