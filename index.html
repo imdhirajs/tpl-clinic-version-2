@@ -8,13 +8,15 @@
 <link rel="dns-prefetch" href="https://ik.imagekit.io">
 <link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v8_4k" fetchpriority="high">
 <!-- Must stay byte-identical to spriteUrl(), or the browser caches the preload
-     separately and every sheet downloads twice. type="image/avif" makes a
-     browser without AVIF skip these instead of wasting the fetch; its JS
-     probe then falls back to the untouched WebP master. -->
+     separately and every sheet downloads twice. These 5 ARE the scroll gate,
+     so preloading them starts the gate during HTML parse rather than after
+     the JS runs. type="image/avif" makes a browser without AVIF skip them;
+     the loader then downgrades once to the WebP master. -->
 <link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?tr=q-85,f-avif" fetchpriority="high">
 <link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?tr=q-85,f-avif" fetchpriority="high">
 <link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?tr=q-85,f-avif" fetchpriority="high">
 <link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?tr=q-85,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-005.webp?tr=q-85,f-avif" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -1112,32 +1114,30 @@ class Component extends DCLogic {
       '.webp?tr=' + (this.spriteTier || 'q-85,f-avif');
   }
 
-  // AVIF support probe.
+  // AVIF tier, chosen optimistically.
   //
-  // Deliberately probes a REAL 2x2 ImageKit AVIF rather than a hand-embedded
-  // base64 blob: it exercises the exact delivery path the sheets will use (this
-  // CDN, this transform, this decoder), so it cannot report support that the
-  // real pipeline then fails to deliver. An inlined blob is also easy to get
-  // subtly wrong — a malformed one silently reports "no AVIF" on a browser that
-  // supports it perfectly well, which downgrades every visitor to the 2x-heavier
-  // tier. Costs one ~200-byte request.
+  // This used to issue a probe request and await it before ANY sheet was
+  // fetched — a purely serial 1.4s on the critical path, measured, during
+  // which nothing else loaded. AVIF is ~95% of 2026 traffic, so the right
+  // trade is to assume it and handle the rare miss: the head preloads are
+  // already fetching sheets 1-4 as AVIF during HTML parse, so the first real
+  // sheet IS the probe and costs nothing extra. If it fails to decode we
+  // downgrade once, to the untouched WebP master, and restart the gate.
   detectSpriteTier() {
-    return new Promise((resolve) => {
-      let settled = false;
-      const done = (tier) => {
-        if (settled) return;
-        settled = true;
-        this.spriteTier = tier;
-        resolve(tier);
-      };
-      const img = new Image();
-      img.onload = () => done('q-85,f-avif');
-      img.onerror = () => done('orig-true');
-      // Never let a hung probe block the gate.
-      setTimeout(() => done('orig-true'), 2500);
-      img.src = (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
-        'assets/hero-sprites-hd/sprite-hd-001.webp?tr=w-2,h-2,f-avif';
-    });
+    this.spriteTier = 'q-85,f-avif';
+    return Promise.resolve(this.spriteTier);
+  }
+
+  // One-shot downgrade for a browser that cannot decode AVIF.
+  downgradeTier() {
+    if (this.tierDowngraded || this.destroyed) return false;
+    this.tierDowngraded = true;
+    this.spriteTier = 'orig-true';
+    this.sprites = {};
+    this.inflight.clear();
+    this.spriteQueue.length = 0;
+    this.cellW = 0; this.cellH = 0; this.shownSprite = null; this.lastWindowCenter = -1;
+    return true;
   }
 
   // Bounded-concurrency, de-duplicated sprite fetcher.
@@ -1195,6 +1195,16 @@ class Component extends DCLogic {
       };
       img.onerror = () => {
         this.inflight.delete(idx);
+        // First failure on the AVIF tier means this browser cannot decode it:
+        // drop to the WebP master and re-run the gate rather than limping on
+        // with a reel that will never load.
+        if (!this.tierDowngraded && this.spriteTier === 'q-85,f-avif') {
+          if (this.downgradeTier()) {
+            resolve();
+            this.startSpriteLoad(this.gateSet, this.pBar, this.releaseScrollFn);
+            return;
+          }
+        }
         resolve();
         this.pumpSpriteQueue();
       };
@@ -1280,11 +1290,29 @@ class Component extends DCLogic {
     // -------------------------------------------------------------------------
     // Nothing may be requested until the tier is known, or the gate and the
     // rolling window would race and fetch two different URL shapes.
+    // GATE ONLY WHAT IS NEEDED TO START.
+    //
+    // The viewer enters at frame 1 and walks forward, so the only sheets that
+    // must be resident before scroll is unlocked are the opening ones. The
+    // whole-reel safety skeleton does NOT need to block: it is there for a rail
+    // click or scrollbar drag, which cannot happen before the page is even
+    // interactive, and it streams in during the first seconds of scrolling.
+    //
+    // Gating on 21 sheets / 3.35MB measured a 2.0s hold on a 14Mbps link (3-4s
+    // on a slower one) — far too long to sit on a locked page. Five sheets is
+    // ~0.8MB: frames 1-20, enough that the opening is pin-sharp and the rolling
+    // window has a head start, at a fraction of the wait.
+    const GATE_SHEETS = 5;
     const gateSet = [];
-    for (let s = 1; s <= Math.min(10, this.TOTAL_SPRITES); s++) gateSet.push(s);   // opening, dense
-    for (let s = 11; s <= this.TOTAL_SPRITES; s += 25) gateSet.push(s);            // safety skeleton
-    if (gateSet[gateSet.length - 1] !== this.TOTAL_SPRITES) gateSet.push(this.TOTAL_SPRITES);
+    for (let s = 1; s <= Math.min(GATE_SHEETS, this.TOTAL_SPRITES); s++) gateSet.push(s);
     const skeleton = gateSet;
+
+    // Queued the moment the gate releases, ahead of the sequential backfill.
+    this.postGateSkeleton = [];
+    for (let s = GATE_SHEETS + 1; s <= this.TOTAL_SPRITES; s += 25) this.postGateSkeleton.push(s);
+    if (this.postGateSkeleton[this.postGateSkeleton.length - 1] !== this.TOTAL_SPRITES) {
+      this.postGateSkeleton.push(this.TOTAL_SPRITES);
+    }
 
     // Hold scroll until the skeleton is in. A short, honest, luxury preloader
     // beats letting the visitor scrub through frames that aren't there yet.
@@ -1312,6 +1340,9 @@ class Component extends DCLogic {
     this.preloadSafety = setTimeout(releaseScroll, 7000);
 
     let done = 0;
+    this.gateSet = skeleton;
+    this.pBar = pBar;
+    this.releaseScrollFn = releaseScroll;
     this.detectSpriteTier().then(() => this.startSpriteLoad(skeleton, pBar, releaseScroll));
   }
 
@@ -1326,9 +1357,11 @@ class Component extends DCLogic {
       releaseScroll();
       if (this.destroyed) return;
 
-      // Background fill, front-to-back. The rolling window (advanceWindow) keeps
-      // jumping the queue ahead of wherever the viewer actually is, so this is
-      // just the low-priority backstop that eventually completes the reel.
+      // Whole-reel safety skeleton first — it is what makes a rail click or a
+      // scrollbar drag land on something — then the sequential backfill. The
+      // rolling window (advanceWindow) keeps jumping the queue ahead of wherever
+      // the viewer actually is, so this is only the backstop that completes the reel.
+      (this.postGateSkeleton || []).forEach(s => this.requestSprite(s, false));
       for (let s = 1; s <= this.TOTAL_SPRITES; s++) this.requestSprite(s, false);
       this.pumpSpriteQueue();
     }).catch(() => {
