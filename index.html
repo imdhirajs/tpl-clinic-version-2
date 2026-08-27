@@ -764,14 +764,10 @@ class Component extends DCLogic {
   state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
-    // Reel selection. `?reel=500` serves the locally repacked half-rate reel
-    // (500 frames / 125 sheets) so it can be compared side by side with the
-    // 1000-frame CDN reel before committing to regenerating the CDN assets.
-    // Method 01: "reduce frame count, not just frame weight".
-    const reelParam = new URLSearchParams(location.search).get('reel');
-    this.USE_500 = reelParam === '500';
-    this.TOTAL_FRAMES = this.USE_500 ? 500 : 1000;
-    // Every hardcoded beat/threshold below was authored in 1000-frame space.
+    this.TOTAL_FRAMES = 1000;
+    // Beat targets, rail thresholds and hotspot ranges below are authored in
+    // 1000-frame space; routing them through FRAME_SCALE keeps a future frame
+    // count change a one-line edit instead of six scattered constants.
     this.FRAME_SCALE = this.TOTAL_FRAMES / 1000;
     this.hero = document.querySelector('[data-hero]');
     this.nav = document.querySelector('[data-nav]');
@@ -1111,13 +1107,6 @@ class Component extends DCLogic {
   //     orig  reference      70.6 MB
   // Past q-85 you pay most of the original payload back for gains under 1 dB.
   spriteUrl(i) {
-    if (this.USE_500) {
-      // Local preview reel: the repacked masters, served straight off disk.
-      // In production these upload to ImageKit and go through the same
-      // ?tr=q-85,f-avif transform as the main reel, so this preview is
-      // HEAVIER than the shipped result would be, not lighter.
-      return 'assets/hero-sprites-500/masters/sprite-500-' + String(i).padStart(3, '0') + '.webp';
-    }
     return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
       'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
       '.webp?tr=' + (this.spriteTier || 'q-85,f-avif');
@@ -1133,8 +1122,6 @@ class Component extends DCLogic {
   // supports it perfectly well, which downgrades every visitor to the 2x-heavier
   // tier. Costs one ~200-byte request.
   detectSpriteTier() {
-    // Local reel ships as AVIF files directly; nothing to negotiate.
-    if (this.USE_500) { this.spriteTier = 'local'; return Promise.resolve('local'); }
     return new Promise((resolve) => {
       let settled = false;
       const done = (tier) => {
