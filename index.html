@@ -49,14 +49,12 @@
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
-  /* UNSCOPED, document-level. The big stylesheet lives inside <x-dc> and the DC
-     runtime rewrites those selectors for scoping, which is why
-     `.tpl-mobile-drawer.is-open` never won over the base rule: verified in two
-     browsers that the element matched the selector, the rule carried the right
-     values and higher specificity, and the computed style still came back
-     closed in the same tick. Declaring it out here — outside the scoped block —
-     puts it beyond that rewrite. Without this the mobile menu cannot open at
-     all, which on a phone means the site has no navigation. */
+  /* UNSCOPED, document-level: declared out here rather than in the component
+     stylesheet, which the runtime rewrites for scoping. Without this the mobile
+     drawer cannot open, and below 1024px it is the only navigation.
+     NOTE: never write the runtime's element-boundary tag name inside this file
+     outside its real use - it is scanned for literally, and a mention in a
+     comment splits the document and dumps the remainder as visible text. */
   .tpl-mobile-drawer.is-open,
   html.tpl-menu-open .tpl-mobile-drawer {
     opacity: 1 !important;
