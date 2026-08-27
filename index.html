@@ -1032,7 +1032,7 @@ class Component extends DCLogic {
     // a 5K/8K desktop allocating an absurd surface. A 1512pt Retina panel gets
     // its full 3024px backing here; the earlier 2880 clamp was quietly blurring
     // anything wider than 1440pt.
-    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let dpr = Math.min(window.devicePixelRatio || 1, this.MAX_DPR || 2);
     const MAX_BACKING_W = 3840;
     if (cssWidth * dpr > MAX_BACKING_W) dpr = MAX_BACKING_W / cssWidth;
     dpr = Math.max(1, dpr);
@@ -1109,9 +1109,16 @@ class Component extends DCLogic {
   //     orig  reference      70.6 MB
   // Past q-85 you pay most of the original payload back for gains under 1 dB.
   spriteUrl(i) {
+    // Gate sheets are preloaded from <head> at the full tier and must match it
+    // byte-for-byte, or a low-tier device downloads each of them twice.
+    if (i <= 5 && !this.tierDowngraded) {
+      return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
+        'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
+        '.webp?tr=q-85,f-avif';
+    }
     return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
       'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
-      '.webp?tr=' + (this.spriteTier || 'q-85,f-avif');
+      '.webp?tr=' + (this.spriteTier || this.SHEET_TR || 'q-85,f-avif');
   }
 
   // AVIF tier, chosen optimistically.
@@ -1124,7 +1131,7 @@ class Component extends DCLogic {
   // sheet IS the probe and costs nothing extra. If it fails to decode we
   // downgrade once, to the untouched WebP master, and restart the gate.
   detectSpriteTier() {
-    this.spriteTier = 'q-85,f-avif';
+    this.spriteTier = this.SHEET_TR || 'q-85,f-avif';
     return Promise.resolve(this.spriteTier);
   }
 
@@ -1132,11 +1139,12 @@ class Component extends DCLogic {
   downgradeTier() {
     if (this.tierDowngraded || this.destroyed) return false;
     this.tierDowngraded = true;
-    this.spriteTier = 'orig-true';
+    // Keep the device tier's dimensions; only drop the codec to WebP.
+    this.spriteTier = (this.deviceTier === 'low') ? 'w-2560,q-85,f-webp' : 'orig-true';
     this.sprites = {};
     this.inflight.clear();
     this.spriteQueue.length = 0;
-    this.cellW = 0; this.cellH = 0; this.shownSprite = null; this.lastWindowCenter = -1;
+    this.shownSprite = null; this.lastWindowCenter = -1;
     return true;
   }
 
@@ -1169,11 +1177,8 @@ class Component extends DCLogic {
         // So: race the decode, publish either way.
         const publish = () => {
           if (!this.destroyed) {
-            if (!this.cellW) {
-              this.cellW = (img.naturalWidth || img.width) / 2;
-              this.cellH = (img.naturalHeight || img.height) / 2;
-            }
             this.sprites[idx] = img;
+            this.enforceMemoryBudget();
             if (this.lastDrawnFrame >= 1) {
               const want = Math.ceil(this.lastDrawnFrame / 4);
               // Repaint only if this arrival is a better match than what's shown.
@@ -1208,7 +1213,7 @@ class Component extends DCLogic {
         // First failure on the AVIF tier means this browser cannot decode it:
         // drop to the WebP master and re-run the gate rather than limping on
         // with a reel that will never load.
-        if (!this.tierDowngraded && this.spriteTier === 'q-85,f-avif') {
+        if (!this.tierDowngraded && String(this.spriteTier).indexOf('avif') > -1) {
           if (this.downgradeTier()) {
             resolve();
             this.startSpriteLoad(this.gateSet, this.pBar, this.releaseScrollFn);
@@ -1253,14 +1258,60 @@ class Component extends DCLogic {
     this.pumpSpriteQueue();
   }
 
+  // Device capability tier.
+  //
+  // A decoded 3840x2160 sheet costs ~31.6MB of bitmap memory. Holding a whole
+  // 250-sheet reel would be 7.7GB, so on an 8GB laptop the browser spends its
+  // time evicting and re-decoding rather than drawing — which is why this ran
+  // fine on a 16GB Apple-Silicon machine and crawled on an 8GB Intel MacBook.
+  // Intel Macs also have no hardware AVIF decode, so every re-decode is pure
+  // software and several times slower again.
+  //
+  // So: measure the machine, then pick sheet size, DPR and how many decoded
+  // sheets may stay resident. Method 08: "cap and adapt to device capability".
+  detectDeviceTier() {
+    const mem = navigator.deviceMemory || 8;
+    const cores = navigator.hardwareConcurrency || 8;
+    const low = mem <= 8 || cores <= 4;
+    this.deviceTier = low ? 'low' : 'high';
+    if (low) {
+      // 2560-wide sheet => 1280x720 cells, ~14MB decoded (2.25x cheaper), and
+      // markedly faster to decode. Paired with a 1.5 DPR cap the drawn result
+      // stays clean because the canvas it feeds is smaller too.
+      this.SHEET_TR = 'w-2560,q-85,f-avif';
+      this.MAX_DPR = 1.5;
+      this.MAX_RESIDENT = 16;   // ~225MB of bitmaps
+      this.WINDOW_AHEAD = 12;
+    } else {
+      this.SHEET_TR = 'q-85,f-avif';
+      this.MAX_DPR = 2;
+      this.MAX_RESIDENT = 24;   // ~760MB of bitmaps
+      this.WINDOW_AHEAD = 16;
+    }
+    return this.deviceTier;
+  }
+
+  // Drop decoded sheets far from the viewer. Without this `this.sprites` grows
+  // without bound and the browser starts thrashing — the single biggest cause
+  // of "smooth on my machine, unusable on a weaker one".
+  enforceMemoryBudget() {
+    const keys = Object.keys(this.sprites).map(Number);
+    if (keys.length <= this.MAX_RESIDENT) return;
+    const c = this.lastWindowCenter > 0 ? this.lastWindowCenter : 1;
+    keys.sort((a, b) => Math.abs(a - c) - Math.abs(b - c));
+    for (let i = this.MAX_RESIDENT; i < keys.length; i++) {
+      if (keys[i] === this.shownSprite) continue;   // never evict what is on screen
+      delete this.sprites[keys[i]];
+    }
+  }
+
   preloadAppleSpritesLOD() {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
+    this.detectDeviceTier();
     this.sprites = {};
     this.inflight = new Map();
     this.spriteQueue = [];
     this.MAX_CONCURRENT = 6;
-    this.cellW = 0;
-    this.cellH = 0;
     this.shownSprite = null;
     this.lastWindowCenter = -1;
 
@@ -1367,12 +1418,16 @@ class Component extends DCLogic {
       releaseScroll();
       if (this.destroyed) return;
 
-      // Whole-reel safety skeleton first — it is what makes a rail click or a
-      // scrollbar drag land on something — then the sequential backfill. The
-      // rolling window (advanceWindow) keeps jumping the queue ahead of wherever
-      // the viewer actually is, so this is only the backstop that completes the reel.
+      // Whole-reel safety skeleton — what makes a rail click or scrollbar drag
+      // land on something rather than nothing.
+      //
+      // There is deliberately NO "fetch all 250" backfill any more. With a
+      // memory budget in force, eagerly loading the whole reel just decodes
+      // sheets (~124ms each) and evicts them again before the viewer ever gets
+      // there — burning bandwidth and CPU on precisely the weak machines this
+      // change is meant to rescue. What is resident is now driven purely by
+      // where the viewer actually is, via advanceWindow().
       (this.postGateSkeleton || []).forEach(s => this.requestSprite(s, false));
-      for (let s = 1; s <= this.TOTAL_SPRITES; s++) this.requestSprite(s, false);
       this.pumpSpriteQueue();
     }).catch(() => {
       // A locked page is worse than an under-buffered one — always release.
@@ -1417,10 +1472,12 @@ class Component extends DCLogic {
     else if (spriteIndex < targetSpriteIndex) idxInSprite = 3;
     else idxInSprite = 0;
 
-    // Cell size is read off the decoded sheet, so the CDN tier (w-3072, w-2560,
-    // full-res) can change without touching this math.
-    const cw = this.cellW || ((spriteImg.naturalWidth || spriteImg.width) / 2);
-    const ch = this.cellH || ((spriteImg.naturalHeight || spriteImg.height) / 2);
+    // Cell size is read off THIS sheet every draw, never cached globally: the
+    // opening sheets are always full-res while a low-tier device serves the rest
+    // at w-2560, so the reel legitimately holds two sizes at once and a shared
+    // cellW would crop the other one with the wrong rect.
+    const cw = (spriteImg.naturalWidth || spriteImg.width) / 2;
+    const ch = (spriteImg.naturalHeight || spriteImg.height) / 2;
 
     const sx = (idxInSprite % 2) * cw;
     const sy = Math.floor(idxInSprite / 2) * ch;
@@ -1466,8 +1523,10 @@ class Component extends DCLogic {
     if (c === this.lastWindowCenter) return;   // only re-prioritise on sheet change
     this.lastWindowCenter = c;
 
-    const AHEAD = 30;   // ~120 frames of lead at full quality
-    const BEHIND = 4;   // enough to cover a small scroll-back without a refetch
+    // Lead must not exceed what memory can hold, or we fetch and decode sheets
+    // only to evict them before the viewer arrives.
+    const AHEAD = this.WINDOW_AHEAD || 16;
+    const BEHIND = 4;
 
     // Build nearest-first, forward-biased, then push to the queue front in
     // reverse so index c ends up at position 0.
