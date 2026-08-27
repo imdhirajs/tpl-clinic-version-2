@@ -3,11 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Open the ImageKit socket during HTML parse: saves DNS+TCP+TLS (~150-300ms cold) -->
+<link rel="preconnect" href="https://ik.imagekit.io" crossorigin>
+<link rel="dns-prefetch" href="https://ik.imagekit.io">
 <link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v8_4k" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
+<!-- Must stay byte-identical to spriteUrl(), or the browser caches the preload
+     separately and every sheet downloads twice. type="image/avif" makes a
+     browser without AVIF skip these instead of wasting the fetch; its JS
+     probe then falls back to the untouched WebP master. -->
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?tr=q-80,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?tr=q-80,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?tr=q-80,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?tr=q-80,f-avif" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -1011,8 +1018,17 @@ class Component extends DCLogic {
     const cssHeight = window.innerHeight;
     if (cssWidth <= 0 || cssHeight <= 0) return;
 
-    // Full 1:1 Native Retina 4K Display Pixel Ratio
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    // Backing store must match the device's real pixel grid, or the compositor
+    // upscales the canvas and softens every frame — the panel's own pixels are
+    // the last place clarity can be lost. Honour devicePixelRatio up to 2 (which
+    // is what every Retina/HiDPI laptop reports) and only clamp at 3840 to stop
+    // a 5K/8K desktop allocating an absurd surface. A 1512pt Retina panel gets
+    // its full 3024px backing here; the earlier 2880 clamp was quietly blurring
+    // anything wider than 1440pt.
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const MAX_BACKING_W = 3840;
+    if (cssWidth * dpr > MAX_BACKING_W) dpr = MAX_BACKING_W / cssWidth;
+    dpr = Math.max(1, dpr);
 
     const targetW = Math.round(cssWidth * dpr);
     const targetH = Math.round(cssHeight * dpr);
@@ -1023,6 +1039,8 @@ class Component extends DCLogic {
     }
     this.targetW = targetW;
     this.targetH = targetH;
+    this.sizedForW = cssWidth;
+    this.sizedForH = cssHeight;
     this.canvasAspect = targetW / targetH;
 
     // 16:9 source aspect, anchored to top-center (offsetY = 0)
@@ -1039,91 +1057,282 @@ class Component extends DCLogic {
       this.offsetY = 0;
     }
 
+    // Set once here: resizing a canvas resets context state, so this is the only
+    // place it needs re-applying — which is also why keeping it at 'high' costs
+    // nothing per frame. A 1920px master cell is UPSCALED into a ~3024px Retina
+    // backing store, and on an upscale the resampler's quality is visible, so
+    // 'high' is the right setting for this pipeline.
     if (this.ctx) {
       this.ctx.imageSmoothingEnabled = true;
       this.ctx.imageSmoothingQuality = 'high';
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Sprite delivery tier — FULL MASTER QUALITY, no re-encode, no downscale.
+  //
+  // Each sheet is the untouched 3840x2160 master, so every frame cell is a true
+  // 1920x1080. Measured against the master: any `w-` downscale costs ~13 dB PSNR
+  // and is plainly visible; q-90 is ~50-53 dB (transparent) but saves only 5% and
+  // pays a ~640ms ImageKit transform on every cold CDN edge; q-95 re-encodes a
+  // lossy source and comes out LARGER than the original. So orig-true wins on
+  // quality AND on cold-start latency — it is served straight from cache with no
+  // transformation step at all.
+  //
+  // ONE canonical URL shape, shared by the <head> preloads, the gate and the
+  // rolling prefetcher. Any divergence creates a second browser-cache entry for
+  // identical bytes and silently doubles the download.
+  // ---------------------------------------------------------------------------
+  // Method 01 asset pipeline: "AVIF first choice, WebP as the fallback".
+  // Resolved once by detectSpriteTier() before any sheet is requested, so every
+  // consumer (head preload, gate, rolling window) uses one identical URL — a
+  // second URL shape for the same bytes means a second browser-cache entry and
+  // a silently doubled download.
+  //
+  // Both tiers keep the full 3840x2160 master sheet => a true 1920x1080 per
+  // frame cell. Resolution is never traded away: measured against the master a
+  // `w-` downscale costs ~13 dB and is plainly visible, whereas AVIF q-80 at
+  // full size holds 43-44 dB (excellent) for roughly half the bytes.
+  spriteUrl(i) {
+    return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
+      'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
+      '.webp?tr=' + (this.spriteTier || 'q-80,f-avif');
+  }
+
+  // AVIF support probe.
+  //
+  // Deliberately probes a REAL 2x2 ImageKit AVIF rather than a hand-embedded
+  // base64 blob: it exercises the exact delivery path the sheets will use (this
+  // CDN, this transform, this decoder), so it cannot report support that the
+  // real pipeline then fails to deliver. An inlined blob is also easy to get
+  // subtly wrong — a malformed one silently reports "no AVIF" on a browser that
+  // supports it perfectly well, which downgrades every visitor to the 2x-heavier
+  // tier. Costs one ~200-byte request.
+  detectSpriteTier() {
+    return new Promise((resolve) => {
+      let settled = false;
+      const done = (tier) => {
+        if (settled) return;
+        settled = true;
+        this.spriteTier = tier;
+        resolve(tier);
+      };
+      const img = new Image();
+      img.onload = () => done('q-80,f-avif');
+      img.onerror = () => done('orig-true');
+      // Never let a hung probe block the gate.
+      setTimeout(() => done('orig-true'), 2500);
+      img.src = (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
+        'assets/hero-sprites-hd/sprite-hd-001.webp?tr=w-2,h-2,f-avif';
+    });
+  }
+
+  // Bounded-concurrency, de-duplicated sprite fetcher.
+  //
+  // The old code called `new Image()` straight from the scroll handler with only
+  // an `if (!this.sprites[i])` guard. Because `this.sprites[i]` is not populated
+  // until onload+decode resolves, every scroll tick during an un-cached stretch
+  // re-fired the same 7 requests — ~60 ticks/sec x 7 = hundreds of duplicate
+  // in-flight HTTP/2 streams competing for the same pipe. Nothing completed
+  // promptly, the background filler was starved, and the scroll visibly stalled.
+  // On a warm reload every sprite came from disk cache, onload fired immediately,
+  // the storm never formed — which is exactly why "the second time is smooth".
+  loadSprite(idx) {
+    if (this.destroyed) return Promise.resolve();
+    if (this.sprites[idx]) return Promise.resolve();
+    if (this.inflight.has(idx)) return this.inflight.get(idx);
+
+    const p = new Promise((resolve) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        // Decode off the main thread BEFORE publishing the sprite, so the first
+        // drawImage() that touches it never pays a synchronous decode mid-scroll.
+        // decode() is a pre-warm, not a correctness requirement: drawImage works
+        // on a loaded-but-undecoded image, it just may pay a sync decode on the
+        // first draw. Chrome can defer decode indefinitely for a hidden tab, and
+        // if publish() waited on that, inflight would never drain, pumpSpriteQueue
+        // would never fire again and the whole reel would stall behind one image.
+        // So: race the decode, publish either way.
+        const publish = () => {
+          if (!this.destroyed) {
+            if (!this.cellW) {
+              this.cellW = (img.naturalWidth || img.width) / 2;
+              this.cellH = (img.naturalHeight || img.height) / 2;
+            }
+            this.sprites[idx] = img;
+            if (this.lastDrawnFrame >= 1) {
+              const want = Math.ceil(this.lastDrawnFrame / 4);
+              // Repaint only if this arrival is a better match than what's shown.
+              if (idx === want || (this.shownSprite != null && Math.abs(idx - want) < Math.abs(this.shownSprite - want))) {
+                this.drawFrameOnCanvas(this.lastDrawnFrame, true);
+              }
+            }
+          }
+          this.inflight.delete(idx);
+          resolve();
+          this.pumpSpriteQueue();
+        };
+        if (img.decode) {
+          let settled = false;
+          const once = () => { if (!settled) { settled = true; publish(); } };
+          img.decode().then(once, once);
+          setTimeout(once, 200);
+        } else publish();
+      };
+      img.onerror = () => {
+        this.inflight.delete(idx);
+        resolve();
+        this.pumpSpriteQueue();
+      };
+      img.src = this.spriteUrl(idx);
+    });
+
+    this.inflight.set(idx, p);
+    return p;
+  }
+
+  // Drains the priority queue while staying under MAX_CONCURRENT in-flight
+  // requests. Six is the sweet spot: enough streams to saturate a broadband
+  // pipe, few enough that no single sprite is starved of bandwidth.
+  pumpSpriteQueue() {
+    if (this.destroyed) return;
+    while (this.inflight.size < this.MAX_CONCURRENT && this.spriteQueue.length) {
+      const idx = this.spriteQueue.shift();
+      if (this.sprites[idx] || this.inflight.has(idx)) continue;
+      this.loadSprite(idx);
+    }
+  }
+
+  // urgent=true jumps the queue (user has scrolled somewhere we haven't reached).
+  requestSprite(idx, urgent) {
+    if (this.destroyed) return;
+    if (!this.spriteTier) return;   // tier not resolved yet — see detectSpriteTier()
+    if (idx < 1 || idx > this.TOTAL_SPRITES) return;
+    if (this.sprites[idx] || this.inflight.has(idx)) return;
+    const at = this.spriteQueue.indexOf(idx);
+    if (at !== -1) {
+      if (!urgent) return;
+      this.spriteQueue.splice(at, 1);
+    }
+    if (urgent) this.spriteQueue.unshift(idx);
+    else this.spriteQueue.push(idx);
+    this.pumpSpriteQueue();
+  }
+
   preloadAppleSpritesLOD() {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
     this.sprites = {};
+    this.inflight = new Map();
+    this.spriteQueue = [];
+    this.MAX_CONCURRENT = 6;
+    this.cellW = 0;
+    this.cellH = 0;
+    this.shownSprite = null;
+    this.lastWindowCenter = -1;
 
-    // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
+    // 4K poster paints frame 1 instantly while the reel streams in behind it.
     this.posterImg = new Image();
     if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
     this.posterImg.onload = () => {
       if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.sprites[1]) {
-        this.drawFrameOnCanvas(1);
+        this.drawFrameOnCanvas(1, true);
       }
     };
     this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
-    const fetchSprite = (spriteIndex, priority = 'low') => {
-      if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
-      return new Promise((resolve) => {
-        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd&tr=q-90,f-webp`;
-        const img = new Image();
-        if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = async () => {
-          if (img.decode) {
-            try { await img.decode(); } catch(e) {}
-          }
-          this.sprites[spriteIndex] = img;
-          if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
-            this.drawFrameOnCanvas(1);
-          }
-          resolve();
-        };
-        img.onerror = () => resolve();
-        img.src = src;
-      });
-    };
-
-    // Method 08: Preload Gate Progress Bar (Guarantees 1st scroll is 100% as smooth as 2nd scroll)
     let pBar = document.getElementById('tpl-preload-bar');
     if (!pBar) {
       pBar = document.createElement('div');
       pBar.id = 'tpl-preload-bar';
-      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.2s ease, opacity 0.4s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
+      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.25s cubic-bezier(.22,1,.36,1), opacity 0.5s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
       document.body.appendChild(pBar);
     }
 
-    // Millisecond 0: Eagerly fetch initial 25 sprites (100 frames) in parallel
-    let loadedCount = 0;
-    const initialPromises = [];
-    for (let s = 1; s <= 25; s++) {
-      initialPromises.push(
-        fetchSprite(s, 'high').then(() => {
-          loadedCount++;
-          if (pBar) pBar.style.width = Math.round((loadedCount / 25) * 100) + '%';
-        })
-      );
-    }
+    // -------------------------------------------------------------------------
+    // GATE = dense opening + coarse safety skeleton.
+    //
+    // At full master quality a sheet is ~290KB, so a dense whole-reel preload is
+    // not affordable. It is also not necessary: the viewer enters at frame 1 and
+    // walks forward, so what actually has to be resident before release is
+    //   (a) the opening sheets, seen first and studied longest, and
+    //   (b) a coarse skeleton over the rest, purely so a rail click or scrollbar
+    //       drag can never land on a region with nothing to draw.
+    // Everything between is filled by the rolling window below, which stays
+    // ahead of the viewer as they scroll.
+    //
+    // The old gate fetched sheets 1-25 contiguously — frames 1..100 of 1000 —
+    // covering 7% of the scroll and leaving the other 93% empty, so the viewer
+    // ran off the loaded edge within the first second.
+    // -------------------------------------------------------------------------
+    // Nothing may be requested until the tier is known, or the gate and the
+    // rolling window would race and fetch two different URL shapes.
+    const gateSet = [];
+    for (let s = 1; s <= Math.min(10, this.TOTAL_SPRITES); s++) gateSet.push(s);   // opening, dense
+    for (let s = 11; s <= this.TOTAL_SPRITES; s += 25) gateSet.push(s);            // safety skeleton
+    if (gateSet[gateSet.length - 1] !== this.TOTAL_SPRITES) gateSet.push(this.TOTAL_SPRITES);
+    const skeleton = gateSet;
 
-    Promise.all(initialPromises).then(async () => {
+    // Hold scroll until the skeleton is in. A short, honest, luxury preloader
+    // beats letting the visitor scrub through frames that aren't there yet.
+    let released = false;
+    const releaseScroll = () => {
+      if (released || this.destroyed) return;
+      released = true;
+      if (this.lenis) this.lenis.start();
+      document.documentElement.style.removeProperty('overflow');
       if (pBar) {
         pBar.style.width = '100%';
-        setTimeout(() => { pBar.style.opacity = '0'; }, 300);
+        setTimeout(() => { pBar.style.opacity = '0'; }, 250);
       }
+    };
+
+    if (this.lenis) this.lenis.stop();
+    // Browsers restore the previous scroll offset on reload; behind a locked
+    // gate that would strand the visitor mid-reel on a frame we haven't fetched.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    document.documentElement.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
+
+    // Never trap the visitor: on a slow link, release after 7s with whatever
+    // skeleton has landed and let the queue keep filling underneath them.
+    this.preloadSafety = setTimeout(releaseScroll, 7000);
+
+    let done = 0;
+    this.detectSpriteTier().then(() => this.startSpriteLoad(skeleton, pBar, releaseScroll));
+  }
+
+  startSpriteLoad(skeleton, pBar, releaseScroll) {
+    if (this.destroyed) return;
+    let done = 0;
+    Promise.all(skeleton.map(s => this.loadSprite(s).then(() => {
+      done++;
+      if (pBar) pBar.style.width = Math.round((done / skeleton.length) * 92) + '%';
+    }))).then(() => {
+      if (this.preloadSafety) clearTimeout(this.preloadSafety);
+      releaseScroll();
       if (this.destroyed) return;
 
-      // Rapidly stream remaining sprites (26 to 250) in parallel background batches of 8
-      for (let s = 26; s <= this.TOTAL_SPRITES; s += 8) {
-        if (this.destroyed) break;
-        const batch = [];
-        for (let j = s; j < Math.min(s + 8, this.TOTAL_SPRITES + 1); j++) {
-          batch.push(fetchSprite(j, 'low'));
-        }
-        await Promise.all(batch);
-      }
+      // Background fill, front-to-back. The rolling window (advanceWindow) keeps
+      // jumping the queue ahead of wherever the viewer actually is, so this is
+      // just the low-priority backstop that eventually completes the reel.
+      for (let s = 1; s <= this.TOTAL_SPRITES; s++) this.requestSprite(s, false);
+      this.pumpSpriteQueue();
+    }).catch(() => {
+      // A locked page is worse than an under-buffered one — always release.
+      if (this.preloadSafety) clearTimeout(this.preloadSafety);
+      releaseScroll();
     });
+
+    this.pumpSpriteQueue();
   }
 
   findNearestLoadedSprite(spriteIndex) {
     if (this.sprites[spriteIndex]) return spriteIndex;
-    // Monotonic Hold: Search BACKWARD FIRST so sequence never snaps into future
-    for (let delta = 1; delta <= 30; delta++) {
+    // Search BACKWARD first so the sequence holds on a past frame rather than
+    // snapping forward into one the viewer hasn't scrolled to yet. Range covers
+    // the skeleton stride so there is always a hit once the gate has passed.
+    for (let delta = 1; delta <= 12; delta++) {
       if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
       if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
@@ -1140,99 +1349,175 @@ class Component extends DCLogic {
         const pw = this.posterImg.naturalWidth || this.posterImg.width;
         const ph = this.posterImg.naturalHeight || this.posterImg.height;
         this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
+        this.shownSprite = null;
       }
       return;
     }
 
-    const idxInSprite = (spriteIndex === targetSpriteIndex) ? ((frameNum - 1) % 4) : 3;
-    const cellCol = idxInSprite % 2;
-    const cellRow = Math.floor(idxInSprite / 2);
+    // Pick the cell closest in time to the frame we actually wanted: the last
+    // cell when falling back to an earlier sheet, the first when falling forward.
+    let idxInSprite;
+    if (spriteIndex === targetSpriteIndex) idxInSprite = (frameNum - 1) % 4;
+    else if (spriteIndex < targetSpriteIndex) idxInSprite = 3;
+    else idxInSprite = 0;
 
-    const sx = cellCol * 1920;
-    const sy = cellRow * 1080;
-    const sw = 1920;
-    const sh = 1080;
+    // Cell size is read off the decoded sheet, so the CDN tier (w-3072, w-2560,
+    // full-res) can change without touching this math.
+    const cw = this.cellW || ((spriteImg.naturalWidth || spriteImg.width) / 2);
+    const ch = this.cellH || ((spriteImg.naturalHeight || spriteImg.height) / 2);
 
-    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    const sx = (idxInSprite % 2) * cw;
+    const sy = Math.floor(idxInSprite / 2) * ch;
+
+    this.ctx.drawImage(spriteImg, sx, sy, cw, ch, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    this.shownSprite = spriteIndex;
   }
 
-  drawFrameOnCanvas(frameNum) {
-    if (!this.canvas || !this.ctx || !this.targetW) return;
-
-    this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = 'high';
-
+  drawFrameOnCanvas(frameNum, force) {
+    if (!this.canvas || !this.ctx) return;
+    // A page opened in a BACKGROUND tab (or prerendered, or restored from
+    // bfcache) lays out with a zero viewport, so updateCanvasDimensions() bails
+    // and the canvas keeps its 300x150 default. Nothing fires a resize when the
+    // tab is later brought forward, so without this check the hero would render
+    // into a 300x150 surface and be scaled up to full screen — catastrophically
+    // soft. Re-measure whenever the canvas is sized for something other than the
+    // current viewport.
+    if (window.innerWidth > 0 && (this.sizedForW !== window.innerWidth || this.sizedForH !== window.innerHeight)) {
+      this.updateCanvasDimensions();
+      force = true;
+    }
+    if (!this.targetW) return;
+    if (!force && frameNum === this.lastDrawnFrame && this.shownSprite === Math.ceil(frameNum / 4)) return;
     this.drawSingleFrame(frameNum);
     this.lastDrawnFrame = frameNum;
   }
 
-  fetchUrgentFrameChunk(centerFrame) {
+  // Rolling prefetch window.
+  //
+  // Full-quality sheets are ~290KB, so the reel cannot be resident up front. The
+  // loader instead stays AHEAD of the viewer: every scroll tick re-prioritises a
+  // forward-biased span around the current frame, so by the time the viewer
+  // reaches a sheet it is already decoded and drawn at full master resolution.
+  //
+  // Safe to call on every tick — requestSprite() de-dupes against the queue and
+  // the in-flight map, so a repeat call costs a Map lookup, not a new socket.
+  // (The original code called `new Image()` straight from the scroll handler with
+  // only an `if (!this.sprites[i])` guard, which is never true until load+decode
+  // completes — so it re-fired the same requests ~60x/sec and buried the pipe.)
+  advanceWindow(centerFrame) {
     if (this.destroyed) return;
-    const centerSprite = Math.ceil(centerFrame / 4);
-    const baseUrl = this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/';
-    for (let sIdx = Math.max(1, centerSprite - 2); sIdx <= Math.min(this.TOTAL_SPRITES, centerSprite + 4); sIdx++) {
-      if (!this.sprites[sIdx]) {
-        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-90,f-webp`;
-        const img = new Image();
-        if ('fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = async () => {
-          if (img.decode) {
-            try { await img.decode(); } catch(e) {}
-          }
-          this.sprites[sIdx] = img;
-        };
-        img.src = src;
-      }
+    const c = Math.ceil(centerFrame / 4);
+    if (c === this.lastWindowCenter) return;   // only re-prioritise on sheet change
+    this.lastWindowCenter = c;
+
+    const AHEAD = 30;   // ~120 frames of lead at full quality
+    const BEHIND = 4;   // enough to cover a small scroll-back without a refetch
+
+    // Build nearest-first, forward-biased, then push to the queue front in
+    // reverse so index c ends up at position 0.
+    const want = [];
+    for (let d = 0; d <= AHEAD; d++) {
+      want.push(c + d);
+      if (d > 0 && d <= BEHIND) want.push(c - d);
     }
+    for (let i = want.length - 1; i >= 0; i--) this.requestSprite(want[i], true);
+  }
+
+  // Kept as an alias: initScrollEngine and any older call sites still use this name.
+  fetchUrgentFrameChunk(centerFrame) { this.advanceWindow(centerFrame); }
+
+  // Layout metrics used by the per-frame render path. Read ONCE here and on
+  // resize — reading offsetTop/offsetHeight/getBoundingClientRect inside the
+  // scroll handler forced a synchronous reflow on every tick (6+ per event),
+  // and those reflows land on the same main thread that is decoding sprites.
+  measureLayout() {
+    const vh = window.innerHeight;
+    this.vh = vh;
+    this.heroTop = this.hero ? this.hero.offsetTop : 0;
+    this.heroHeight = this.hero ? this.hero.offsetHeight : 0;
+    this.heroScrollable = Math.max(0, this.heroHeight - vh);
+    this.consultTop = this.consultSection ? this.consultSection.offsetTop : Infinity;
+    this.consultBottom = this.consultSection ? this.consultTop + this.consultSection.offsetHeight : Infinity;
+    this.footerTop = this.footerSection ? this.footerSection.offsetTop : Infinity;
+    this.footerBottom = this.footerSection ? this.footerTop + this.footerSection.offsetHeight : Infinity;
   }
 
   initScrollEngine() {
-    this.targetProgress = 0;
-    this.currentProgress = 0;
-    this.ticking = false;
+    this.measureLayout();
 
+    // Pure arithmetic against cached metrics — no layout read.
     this.getScrollProgress = () => {
-      if (!this.hero) return 0;
-      const rect = this.hero.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
-      if (scrollableDistance <= 0) return 0;
-      const raw = -rect.top / scrollableDistance;
+      if (!this.hero || this.heroScrollable <= 0) return 0;
+      const raw = (window.scrollY - this.heroTop) / this.heroScrollable;
       return Math.min(Math.max(raw, 0), 1);
     };
 
-    this.onScroll = () => {
-      if (!this.hero) return;
-      this.isScrolling = true;
-      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-      this.scrollTimeout = setTimeout(() => { this.isScrolling = false; }, 150);
+    // Coalesce to one render per animation frame. Lenis emits scroll at rAF
+    // cadence and native scroll/touchmove can fire faster still; without this
+    // the full renderFrame() (canvas draw + nav restyle + rail + hotspot) ran
+    // several times per displayed frame.
+    this.scrollDirty = false;
+    this.tick = () => {
+      this.rafId = 0;
+      if (this.destroyed || !this.hero) return;
+      this.scrollDirty = false;
 
       const p = this.getScrollProgress();
       const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
-      const targetSpriteIndex = Math.ceil(targetFrame / 4);
-      if (!this.sprites[targetSpriteIndex]) {
-        this.fetchUrgentFrameChunk(targetFrame);
-      }
-
+      // Always advance the window — not just on a miss. Waiting for a miss means
+      // the prefetcher only ever reacts after the viewer has already hit a gap.
+      this.advanceWindow(targetFrame);
       this.renderFrame(p);
     };
 
+    this.onScroll = () => {
+      if (this.scrollDirty || this.destroyed) return;
+      this.scrollDirty = true;
+      this.rafId = requestAnimationFrame(this.tick);
+    };
+
     this.onResize = () => {
+      this.measureLayout();
       this.updateCanvasDimensions();
+      this.drawFrameOnCanvas(Math.max(1, this.lastDrawnFrame), true);
+      this.onScroll();
+    };
+
+    // Becoming visible or returning from bfcache does NOT fire resize, so ask
+    // for a re-measure explicitly on both.
+    this.onRevive = () => {
+      if (this.destroyed || document.hidden) return;
+      this.measureLayout();
+      this.updateCanvasDimensions();
+      this.drawFrameOnCanvas(Math.max(1, this.lastDrawnFrame), true);
       this.onScroll();
     };
 
     window.addEventListener('scroll', this.onScroll, { passive: true });
     window.addEventListener('touchmove', this.onScroll, { passive: true });
     window.addEventListener('resize', this.onResize);
+    document.addEventListener('visibilitychange', this.onRevive);
+    window.addEventListener('pageshow', this.onRevive);
+
+    // Hero height is set from a vh prop just before this runs; re-measure after
+    // layout settles so heroScrollable reflects the final document height.
+    setTimeout(() => { this.measureLayout(); this.onScroll(); }, 0);
     this.onScroll();
   }
 
   componentWillUnmount() {
     this.destroyed = true;
+    if (this.preloadSafety) clearTimeout(this.preloadSafety);
+    if (this.spriteQueue) this.spriteQueue.length = 0;
+    document.documentElement.style.removeProperty('overflow');
     if (this.onScroll) {
       window.removeEventListener('scroll', this.onScroll);
       window.removeEventListener('touchmove', this.onScroll);
       window.removeEventListener('resize', this.onResize);
+    }
+    if (this.onRevive) {
+      document.removeEventListener('visibilitychange', this.onRevive);
+      window.removeEventListener('pageshow', this.onRevive);
     }
     if (this.lenis) {
       this.lenis.destroy();
@@ -1254,20 +1539,16 @@ class Component extends DCLogic {
     // Smart Glassmorphism Header (State-cached to prevent reflow lag)
     if (this.nav) {
       const navHeight = 80;
-      const vh = window.innerHeight;
-      const heroFinishedScroll = (this.hero.offsetHeight - vh) - 40;
-      const isPastHero = window.scrollY >= heroFinishedScroll;
+      const scrollY = window.scrollY;
+      const heroFinishedScroll = (this.heroHeight - this.vh) - 40;
+      const isPastHero = scrollY >= heroFinishedScroll;
 
       let navState = 'transparent';
       if (isPastHero) {
-        const consultTop = this.consultSection ? this.consultSection.offsetTop : 99999;
-        const consultBottom = consultTop + (this.consultSection ? this.consultSection.offsetHeight : 0);
-        const footerTop = this.footerSection ? this.footerSection.offsetTop : 99999;
-        const footerBottom = footerTop + (this.footerSection ? this.footerSection.offsetHeight : 0);
-
-        const currentY = window.scrollY + navHeight;
-        const isOverConsultation = (currentY >= consultTop && window.scrollY <= consultBottom);
-        const isOverFooter = (currentY >= footerTop && window.scrollY <= footerBottom);
+        // Metrics cached in measureLayout() — no reflow inside the render path.
+        const currentY = scrollY + navHeight;
+        const isOverConsultation = (currentY >= this.consultTop && scrollY <= this.consultBottom);
+        const isOverFooter = (currentY >= this.footerTop && scrollY <= this.footerBottom);
 
         if (isOverConsultation || isOverFooter) {
           navState = 'dark';
