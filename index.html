@@ -764,7 +764,15 @@ class Component extends DCLogic {
   state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
-    this.TOTAL_FRAMES = 1000;
+    // Reel selection. `?reel=500` serves the locally repacked half-rate reel
+    // (500 frames / 125 sheets) so it can be compared side by side with the
+    // 1000-frame CDN reel before committing to regenerating the CDN assets.
+    // Method 01: "reduce frame count, not just frame weight".
+    const reelParam = new URLSearchParams(location.search).get('reel');
+    this.USE_500 = reelParam === '500';
+    this.TOTAL_FRAMES = this.USE_500 ? 500 : 1000;
+    // Every hardcoded beat/threshold below was authored in 1000-frame space.
+    this.FRAME_SCALE = this.TOTAL_FRAMES / 1000;
     this.hero = document.querySelector('[data-hero]');
     this.nav = document.querySelector('[data-nav]');
     this.consultSection = document.querySelector('#consultation');
@@ -786,7 +794,8 @@ class Component extends DCLogic {
 
     // Bind click events on Sequence Rail items to scrub directly to target video frames!
     if (this.railItems && this.railItems.length > 0) {
-      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960];
+      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960]
+        .map(f => Math.max(1, Math.round(f * this.FRAME_SCALE)));
       this.railItems.forEach((item, idx) => {
         item.style.cursor = 'pointer';
         item.addEventListener('click', () => {
@@ -1094,6 +1103,13 @@ class Component extends DCLogic {
   // `w-` downscale costs ~13 dB and is plainly visible, whereas AVIF q-80 at
   // full size holds 43-44 dB (excellent) for roughly half the bytes.
   spriteUrl(i) {
+    if (this.USE_500) {
+      // Local preview reel: the repacked masters, served straight off disk.
+      // In production these upload to ImageKit and go through the same
+      // ?tr=q-80,f-avif transform as the main reel, so this preview is
+      // HEAVIER than the shipped result would be, not lighter.
+      return 'assets/hero-sprites-500/masters/sprite-500-' + String(i).padStart(3, '0') + '.webp';
+    }
     return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
       'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
       '.webp?tr=' + (this.spriteTier || 'q-80,f-avif');
@@ -1109,6 +1125,8 @@ class Component extends DCLogic {
   // supports it perfectly well, which downgrades every visitor to the 2x-heavier
   // tier. Costs one ~200-byte request.
   detectSpriteTier() {
+    // Local reel ships as AVIF files directly; nothing to negotiate.
+    if (this.USE_500) { this.spriteTier = 'local'; return Promise.resolve('local'); }
     return new Promise((resolve) => {
       let settled = false;
       const done = (tier) => {
@@ -1636,12 +1654,13 @@ class Component extends DCLogic {
     // Sync Vertical Sequence Rail Highlighting with exact 7-beat video sequence
     if (this.railItems && this.railItems.length > 0) {
       let activeIdx = 0;
-      if (targetFrame > 40 && targetFrame <= 160) activeIdx = 1;       // 02 CONSULTATION
-      else if (targetFrame > 160 && targetFrame <= 300) activeIdx = 2;  // 03 PRP METHOD
-      else if (targetFrame > 300 && targetFrame <= 520) activeIdx = 3; // 04 BODY QUALITY
-      else if (targetFrame > 520 && targetFrame <= 820) activeIdx = 4; // 05 HAIR RESTORATION
-      else if (targetFrame > 820 && targetFrame <= 920) activeIdx = 5; // 06 FORMULATIONS
-      else if (targetFrame > 920) activeIdx = 6;                      // 07 MAYFAIR CODA
+      const k = targetFrame / this.FRAME_SCALE;   // back to 1000-frame space
+      if (k > 40 && k <= 160) activeIdx = 1;       // 02 CONSULTATION
+      else if (k > 160 && k <= 300) activeIdx = 2;  // 03 PRP METHOD
+      else if (k > 300 && k <= 520) activeIdx = 3; // 04 BODY QUALITY
+      else if (k > 520 && k <= 820) activeIdx = 4; // 05 HAIR RESTORATION
+      else if (k > 820 && k <= 920) activeIdx = 5; // 06 FORMULATIONS
+      else if (k > 920) activeIdx = 6;             // 07 MAYFAIR CODA
 
       this.railItems.forEach((item, idx) => {
         const bar = this.railBars[idx];
@@ -1656,7 +1675,8 @@ class Component extends DCLogic {
     }
 
     if (this.hotspotCard) {
-      const match = this.HOTSPOTS.find(h => targetFrame >= h.min && targetFrame <= h.max) || null;
+      const kf = targetFrame / this.FRAME_SCALE;   // back to 1000-frame space
+      const match = this.HOTSPOTS.find(h => kf >= h.min && kf <= h.max) || null;
       if (match !== this.activeHotspot) {
         this.activeHotspot = match;
         if (match) {
