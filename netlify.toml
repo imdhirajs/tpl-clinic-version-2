@@ -1,0 +1,28 @@
+# TPL Clinic — static site, published from the repo root.
+
+[build]
+  publish = "."
+
+# Immutable, content-addressed media: safe to cache hard. Cuts repeat-visit
+# bytes to zero and takes these off the critical path on a warm load.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML must always revalidate, otherwise a deploy never reaches returning visitors.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# The runtime is versioned with the HTML, so revalidate it alongside.
+[[headers]]
+  for = "/support.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

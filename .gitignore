@@ -4,3 +4,6 @@ node_modules/
 .netlify/
 .env
 .env.local
+
+# Local 500-frame preview reel — these are CDN upload masters, not repo assets.
+assets/hero-sprites-500/
