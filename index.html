@@ -11,10 +11,10 @@
      separately and every sheet downloads twice. type="image/avif" makes a
      browser without AVIF skip these instead of wasting the fetch; its JS
      probe then falls back to the untouched WebP master. -->
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?tr=q-80,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?tr=q-80,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?tr=q-80,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?tr=q-80,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?tr=q-85,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?tr=q-85,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?tr=q-85,f-avif" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?tr=q-85,f-avif" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -1100,19 +1100,27 @@ class Component extends DCLogic {
   //
   // Both tiers keep the full 3840x2160 master sheet => a true 1920x1080 per
   // frame cell. Resolution is never traded away: measured against the master a
-  // `w-` downscale costs ~13 dB and is plainly visible, whereas AVIF q-80 at
-  // full size holds 43-44 dB (excellent) for roughly half the bytes.
+  // `w-` downscale costs ~13 dB and is plainly visible.
+  //
+  // q-85 is where added bytes stop buying visible quality. Measured PSNR vs the
+  // untouched master, and reel weight at 250 sheets:
+  //     q-80  43.2-44.3 dB   36.9 MB
+  //     q-85  44.6-45.7 dB   50.5 MB   <- chosen: >45 dB is visually transparent
+  //     q-88  45.3-46.5 dB   57.8 MB      (+0.8 dB for +14% bytes)
+  //     q-90  46.0-47.3 dB   65.4 MB      (+0.7 dB, and by now ~= orig-true)
+  //     orig  reference      70.6 MB
+  // Past q-85 you pay most of the original payload back for gains under 1 dB.
   spriteUrl(i) {
     if (this.USE_500) {
       // Local preview reel: the repacked masters, served straight off disk.
       // In production these upload to ImageKit and go through the same
-      // ?tr=q-80,f-avif transform as the main reel, so this preview is
+      // ?tr=q-85,f-avif transform as the main reel, so this preview is
       // HEAVIER than the shipped result would be, not lighter.
       return 'assets/hero-sprites-500/masters/sprite-500-' + String(i).padStart(3, '0') + '.webp';
     }
     return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
       'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
-      '.webp?tr=' + (this.spriteTier || 'q-80,f-avif');
+      '.webp?tr=' + (this.spriteTier || 'q-85,f-avif');
   }
 
   // AVIF support probe.
@@ -1136,7 +1144,7 @@ class Component extends DCLogic {
         resolve(tier);
       };
       const img = new Image();
-      img.onload = () => done('q-80,f-avif');
+      img.onload = () => done('q-85,f-avif');
       img.onerror = () => done('orig-true');
       // Never let a hung probe block the gate.
       setTimeout(() => done('orig-true'), 2500);
