@@ -101,9 +101,161 @@
     transform: translateX(0);
   }
 
+
+  /* Grid columns lifted out of inline styles so media queries can win.
+     While they were inline, no rule below 1024px could override them — the
+     desktop column counts reached the phone and produced 0px-wide form
+     fields and labels breaking one letter per line. */
+  .tplg1 { grid-template-columns: minmax(0,1fr) minmax(0,1.35fr); }
+  .tplg2 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .tplg3 { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); }
+  .tplg4 { grid-template-columns: 1fr 1fr; }
+  .tplg5 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .tplg6 { grid-template-columns: repeat(3,1fr); }
+  .tplg7 { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .tplg8 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .tplg9 { grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); }
+  .tplg10 { grid-template-columns: minmax(0,1.4fr) repeat(3,minmax(0,1fr)); }
+
+  @media (max-width: 767px) {
+    .tplg1 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg2 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg3 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg4 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg5 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg6 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg7 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg8 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg9 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+    .tplg10 { grid-template-columns: minmax(0,1fr) !important; gap: 22px !important; }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .tplg1 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg2 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg3 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg4 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg5 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg6 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg7 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg8 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg9 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+    .tplg10 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 26px !important; }
+  }
+  /* ==================================================================
+     RESPONSIVE LAYER
+     Every grid on this page is an INLINE style, so nothing below 1024px
+     ever responded to a media query: desktop column counts survived onto
+     a phone and produced ~50px form fields, colliding labels and three
+     90px columns breaking one word per line. Inline styles can only be
+     beaten with !important, hence the weight of these rules.
+     ================================================================== */
+
+  /* ---------- PHONE ---------- */
+  @media (max-width: 767px) {
+    /* Children carrying `grid-column: span 2` (the full-width rows of the
+       enquiry form) force the browser to CREATE a second implicit column even
+       when the template declares one — which is why the form kept rendering as
+       "0px 231px" and no grid-template-columns value could fix it. Reset the
+       spans and the single column finally holds. */
+    [class^="tplg"] > *, [class*=" tplg"] > * { grid-column: auto !important; }
+
+    section [style*="grid-template-columns"],
+    footer  [style*="grid-template-columns"] {
+      grid-template-columns: minmax(0,1fr) !important;
+      gap: 22px !important;
+    }
+    section > *, footer > * { min-width: 0 !important; }
+    section, footer { padding-left: 20px !important; padding-right: 20px !important; }
+    section { padding-top: 56px !important; padding-bottom: 56px !important; }
+
+    /* The hero is full-bleed; the padding above must not inset it. */
+    section#top, [data-hero] { padding: 0 !important; overflow: hidden !important; }
+
+    /* Long unbroken strings (postcodes, emails) were running off-screen. */
+    p, li, span, div, a, h1, h2, h3, h4 { overflow-wrap: break-word; }
+
+    h1 { font-size: clamp(28px,8vw,36px) !important; line-height: 1.14 !important; }
+    h2 { font-size: clamp(23px,6.4vw,30px) !important; line-height: 1.2 !important; }
+    h3 { font-size: clamp(17px,4.6vw,21px) !important; line-height: 1.3 !important; }
+
+    /* FORM — the worst of it. Fields were ~50px wide with labels colliding
+       into "FIRSTLAST NAMENAME". One field per row, full width, and 16px
+       text so iOS does not zoom the viewport on focus. */
+    form, [data-form], section#consultation [style*="grid-template-columns"] {
+      grid-template-columns: minmax(0,1fr) !important;
+    }
+    input, select, textarea {
+      width: 100% !important;
+      min-width: 0 !important;
+      font-size: 16px !important;
+      padding: 13px 12px !important;
+      box-sizing: border-box !important;
+      min-height: 46px !important;
+    }
+    textarea { min-height: 110px !important; }
+    label { display: block !important; margin-bottom: 6px !important; white-space: normal !important; }
+
+    /* Tap targets */
+    button, [data-btn], nav a, footer a { min-height: 44px; }
+  }
+
+  /* ---------- TABLET / iPad ---------- */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    section [style*="grid-template-columns"],
+    footer  [style*="grid-template-columns"] {
+      grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+      gap: 26px !important;
+    }
+    /* 3- and 4-up desktop rows are still too tight at this width. */
+    section [style*="repeat(3"], section [style*="repeat(4"],
+    footer  [style*="repeat(3"], footer  [style*="repeat(4"] {
+      grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    }
+    section#top, [data-hero] { padding: 0 !important; }
+    input, select, textarea { width: 100% !important; box-sizing: border-box !important; min-height: 44px !important; }
+  }
+
   @media (max-width: 1023px) {
     .tpl-desktop-nav { display: none !important; }
     .tpl-mobile-toggle { display: flex !important; }
+
+    /* The header is fixed and transparent, so on a phone the navy CTA block
+       and the wordmark were sitting on top of whatever section happened to be
+       under them — legible or not. Give it a real surface, keep it compact,
+       and stop the CTA from pushing the menu toggle off the row. */
+    header[data-nav="1"] {
+      background: rgba(255,255,255,.94) !important;
+      backdrop-filter: blur(12px) saturate(150%) !important;
+      -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+      border-bottom: 1px solid rgba(184,146,93,.22) !important;
+      padding: 10px 16px !important;
+      gap: 10px !important;
+      box-shadow: 0 6px 20px rgba(8,19,89,.06) !important;
+    }
+    header[data-nav="1"] [data-logo-img="1"] { max-height: 46px !important; width: auto !important; }
+    header[data-nav="1"] [data-btn] {
+      flex: 0 1 auto !important; min-width: 0 !important;
+      padding: 11px 12px !important;
+      font-size: 9.5px !important; letter-spacing: .12em !important;
+      white-space: nowrap !important;
+    }
+    .tpl-mobile-toggle {
+      flex: 0 0 auto !important; margin-left: auto !important;
+      min-width: 44px; min-height: 44px; justify-content: flex-end;
+    }
+    /* Nav links are navy on a light bar now, so force the readable colour
+       regardless of the state the render loop last wrote inline. */
+    header[data-nav="1"] [data-nav-link="1"],
+    header[data-nav="1"] .tpl-mobile-toggle { color: #081359 !important; }
+  }
+
+  @media (max-width: 420px) {
+    header[data-nav="1"] [data-btn] { font-size: 8.5px !important; padding: 10px 9px !important; }
+    .tpl-mobile-toggle span:first-child { display: none !important; }  /* icon only */
+  }
+
+  @media (max-width: 1023px) {
     header[data-nav="1"] { padding: 16px 20px !important; }
     section { padding-left: 20px !important; padding-right: 20px !important; }
     [data-rail="1"], [data-frame="1"] { display: none !important; }
@@ -332,7 +484,7 @@
 
   <!-- Philosophy Section -->
   <section style="padding:130px 48px 120px;background:#ffffff;border-top:1px solid rgba(36,36,36,.08)">
-    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:80px;align-items:start">
+    <div class="tplg1" style="max-width:1280px;margin:0 auto;display:grid;gap:80px;align-items:start">
       <div data-reveal="1">
         <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#F8F6F3;border:1px solid rgba(184,146,93,0.3);margin-bottom:20px">
           <span style="width:5px;height:5px;background:#B8925D;border-radius:50%"></span>
@@ -349,7 +501,7 @@
       </div>
       <div data-reveal="1">
         <h2 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(32px,3.6vw,56px);line-height:1.14;letter-spacing:-.01em;color:#081359;text-wrap:pretty">One treatment rarely changes a face. A <span style="font-weight:400;color:#B8925D">combination</span> of the right ones, sequenced correctly, always does.</h2>
-        <div style="margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+        <div class="tplg2" style="margin-top:48px;display:grid;gap:20px">
           <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-left:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03);transition:transform .3s ease" style-hover="transform:translateY(-4px)">
             <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">01</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#081359">Diagnose</div>
@@ -373,8 +525,8 @@
   <!-- Face Section -->
   <section id="face" style="padding:0 48px;background:#ffffff">
     <div style="max-width:1280px;margin:0 auto;border-top:1px solid rgba(36,36,36,.12)">
-      <div data-reveal="1" style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:64px;padding:88px 0;align-items:center">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div data-reveal="1" class="tplg3" style="display:grid;gap:64px;padding:88px 0;align-items:center">
+        <div class="tplg4" style="display:grid;gap:20px">
           <div style="position:relative;aspect-ratio:4/5;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden;border:1px solid rgba(184,146,93,.25);box-shadow:0 12px 30px rgba(8,19,89,.05)">
             <img src="assets/section-images-webp/section-face.webp" alt="Face treatment protocol" loading="lazy" fetchpriority="low" width="800" height="1000" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s ease" style-hover="transform:scale(1.04)" />
           </div>
@@ -408,7 +560,7 @@
   <!-- Hair Section -->
   <section id="hair" style="padding:0 48px;background:#ffffff">
     <div style="max-width:1280px;margin:0 auto;border-top:1px solid rgba(36,36,36,.12)">
-      <div data-reveal="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;padding:88px 0;align-items:center">
+      <div data-reveal="1" class="tplg5" style="display:grid;gap:64px;padding:88px 0;align-items:center">
         <div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
             <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">02 PROTOCOL</span>
@@ -426,7 +578,7 @@
             <span style="padding:9px 16px;background:#FDFBF8;border:1px solid rgba(184,146,93,.35);font-family:Jost,sans-serif;font-size:13px;letter-spacing:.04em;color:#081359;transition:all .25s ease" style-hover="background:#081359;color:#ffffff;border-color:#081359">Surgeon Consultation</span>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="tplg4" style="display:grid;gap:20px">
           <div style="position:relative;aspect-ratio:4/5;background:linear-gradient(150deg,#F8F6F3,#E9E5DE);overflow:hidden;border:1px solid rgba(184,146,93,.25);box-shadow:0 12px 30px rgba(8,19,89,.05)">
             <picture>
               <source type="image/avif" srcset="assets/images/hair/hair-hairline-profile-portrait-400w.avif 400w, assets/images/hair/hair-hairline-profile-portrait-800w.avif 800w, assets/images/hair/hair-hairline-profile-portrait-1200w.avif 1200w, assets/images/hair/hair-hairline-profile-portrait-1600w.avif 1600w" sizes="(max-width: 768px) 100vw, 50vw">
@@ -445,8 +597,8 @@
   <!-- Body Section -->
   <section id="body" style="padding:0 48px;background:#ffffff">
     <div style="max-width:1280px;margin:0 auto;border-top:1px solid rgba(36,36,36,.12)">
-      <div data-reveal="1" style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:64px;padding:88px 0 100px;align-items:center">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div data-reveal="1" class="tplg3" style="display:grid;gap:64px;padding:88px 0 100px;align-items:center">
+        <div class="tplg6" style="display:grid;gap:16px">
           <div style="position:relative;aspect-ratio:4/5;background:linear-gradient(150deg,#F8F7F5,#EDE9E3);overflow:hidden;border:1px solid rgba(184,146,93,.25);box-shadow:0 12px 30px rgba(8,19,89,.05)">
             <img src="assets/section-images-webp/section-body.webp" alt="Body skin quality protocol" loading="lazy" width="800" height="1000" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s ease" style-hover="transform:scale(1.04)" />
           </div>
@@ -485,7 +637,7 @@
   <!-- PRP Section -->
   <section id="prp" style="background:#F7F5F2;padding:120px 48px">
     <div style="max-width:1280px;margin:0 auto">
-      <div data-reveal="1" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:80px;align-items:center">
+      <div data-reveal="1" class="tplg5" style="display:grid;gap:80px;align-items:center">
         <div>
           <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#ffffff;border:1px solid rgba(184,146,93,0.3);margin-bottom:20px">
             <span style="width:5px;height:5px;background:#B8925D;border-radius:50%"></span>
@@ -494,7 +646,7 @@
           <h2 style="margin:16px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(40px,5.6vw,88px);line-height:.98;letter-spacing:-.02em;color:#081359">Platelet<br /><span style="color:#B8925D">Rich Plasma</span></h2>
           <p style="margin:22px 0 0;font-family:Jost,sans-serif;font-size:15px;line-height:1.85;color:#5E5E5E;max-width:480px">Concentrated autologous plasma separated in-clinic to stimulate natural cellular regeneration. No synthetics. No fillers. Pure regenerative signals.</p>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="tplg4" style="display:grid;gap:20px">
           <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#E9E5DE);overflow:hidden;border:1px solid rgba(184,146,93,.25);box-shadow:0 12px 30px rgba(8,19,89,.05)">
             <picture>
               <source type="image/avif" srcset="assets/images/prp-method/prp-plasma-vial-macro-400w.avif 400w, assets/images/prp-method/prp-plasma-vial-macro-800w.avif 800w, assets/images/prp-method/prp-plasma-vial-macro-1200w.avif 1200w, assets/images/prp-method/prp-plasma-vial-macro-1600w.avif 1600w" sizes="(max-width: 768px) 100vw, 50vw">
@@ -512,7 +664,7 @@
         </div>
       </div>
 
-      <div data-reveal="1" style="margin-top:64px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px">
+      <div data-reveal="1" class="tplg7" style="margin-top:64px;display:grid;gap:20px">
         <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-top:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03)">
           <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 01</div>
           <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:18px;letter-spacing:.02em;color:#081359">Draw</div>
@@ -563,7 +715,7 @@
         </div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#B8925D">18 Advanced Clinical Technologies</div>
       </div>
-      <div data-reveal="1" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 72px">
+      <div data-reveal="1" class="tplg8" style="display:grid;gap:0 72px">
         <div style="display:flex;flex-direction:column">
           <sc-for list="{{ techLeft }}" as="t" hint-placeholder-count="9">
             <div style="display:flex;align-items:center;gap:20px;padding:18px 8px;border-bottom:1px solid rgba(36,36,36,.08);transition:all .3s ease" style-hover="background:#FDFBF8;padding-left:16px">
@@ -593,7 +745,7 @@
 
   <!-- Clinic Section -->
   <section id="clinic" style="padding:0 48px 120px;background:#ffffff">
-    <div data-reveal="1" style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:24px">
+    <div data-reveal="1" class="tplg9" style="max-width:1280px;margin:0 auto;display:grid;gap:24px">
       <div style="position:relative;background:linear-gradient(150deg,#FBFAF8 0%,#F3EFEA 100%);min-height:440px;overflow:hidden;border:1px solid rgba(184,146,93,.3);box-shadow:0 16px 40px rgba(8,19,89,.06)">
         <img src="assets/section-images-webp/section-clinic-portrait.webp" alt="TPL Clinic Mayfair premises" loading="lazy" fetchpriority="low" width="800" height="1000" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,19,89,.2) 0%,rgba(8,19,89,.82) 100%);pointer-events:none"></div>
@@ -632,7 +784,7 @@
 
   <!-- Consultation Section -->
   <section id="consultation" style="padding:120px 48px;background:#081359;color:#ffffff">
-    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:88px;align-items:start">
+    <div class="tplg5" style="max-width:1280px;margin:0 auto;display:grid;gap:88px;align-items:start">
       <div data-reveal="1">
         <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470">Consultation</div>
         <h2 style="margin:20px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(38px,4.6vw,72px);line-height:1.02;letter-spacing:-.01em;color:#ffffff">Every plan starts<br /><span style="color:#C7A470">in the room.</span></h2>
@@ -655,7 +807,7 @@
 
       <div data-reveal="1" style="background:#ffffff;padding:44px 40px;color:#081359;border:1px solid rgba(184,146,93,0.4);box-shadow:0 24px 60px rgba(0,0,0,0.3)">
         <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#B8925D;font-weight:600">Request a Call Back</div>
-        <div style="margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+        <div class="tplg8" style="margin-top:24px;display:grid;gap:16px">
           <label style="display:flex;flex-direction:column;gap:6px">
             <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#081359;font-weight:500">First Name</span>
             <input type="text" value="{{ firstName }}" onChange="{{ onFirstName }}" placeholder="" style="padding:12px;background:#FDFBF8;border:1px solid rgba(8,19,89,0.2);border-radius:0;font-family:Jost,sans-serif;font-size:14px;color:#081359;outline:none" style-focus="border-color:#B8925D" />
@@ -699,7 +851,7 @@
 
   <!-- Footer -->
   <footer style="background:#081359;padding:90px 64px 50px;border-top:1px solid rgba(184,146,93,.35);color:#ffffff">
-    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:48px">
+    <div class="tplg10" style="max-width:1280px;margin:0 auto;display:grid;gap:48px">
       <div>
         <a href="#top" style="display:inline-flex;align-items:center;text-decoration:none" aria-label="TPL Clinic Home">
           <img src="assets/logo/tpl-logo.png" alt="TPL Clinic London" style="height:88px;width:auto;max-height:88px;object-fit:contain;transition:transform .3s ease,filter .3s ease;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))" style-hover="transform:scale(1.04)" />
@@ -1000,7 +1152,7 @@ class Component extends DCLogic {
     row.setAttribute('data-hero-hotspot-row', '1');
     row.style.cssText = 'background:#081359;padding:22px 20px 28px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center';
     row.innerHTML = this.HOTSPOTS.map(h =>
-      '<a href="' + h.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid rgba(199,164,112,.45);background:rgba(255,255,255,.04);font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#E8C89A;text-decoration:none;white-space:nowrap"><span style="width:4px;height:4px;background:#C7A470;display:inline-block;flex:none"></span>' + h.label + '</a>'
+      '<a href="' + h.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid rgba(199,164,112,.45);background:rgba(255,255,255,.04);font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#E8C89A;text-decoration:none;white-space:nowrap"><span style="width:4px;height:4px;background:#C7A470;display:inline-block;flex:none"></span>' + (h.title || h.tag || '') + '</a>'
     ).join('');
     this.hero.insertAdjacentElement('afterend', row);
   }
