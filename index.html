@@ -1,69 +1,16 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- SEO / social. The page previously had an EMPTY <title> and no description,
-     canonical, favicon or OG tags at all: the browser tab showed a bare URL and
-     pasting the link into WhatsApp/LinkedIn produced a blank card. For a clinic
-     whose link gets shared by hand, that card IS the first impression. -->
-<title>TPL Clinic — Platelet Rich Plasma &amp; Regenerative Aesthetics, Mayfair London</title>
-<meta name="description" content="TPL Clinic is the UK's first clinic built entirely around Platelet Rich Plasma — doctor-led regenerative medicine combined with advanced technology, in Mayfair, London.">
-<link rel="canonical" href="https://tpl-clinic-version-2.netlify.app/">
-<meta name="theme-color" content="#081359">
-<meta name="robots" content="index,follow">
-
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="TPL Clinic">
-<meta property="og:title" content="TPL Clinic — Platelet Rich Plasma, Mayfair London">
-<meta property="og:description" content="The UK's first clinic built entirely around Platelet Rich Plasma. Doctor-led regenerative medicine in Mayfair.">
-<meta property="og:url" content="https://tpl-clinic-version-2.netlify.app/">
-<meta property="og:image" content="https://tpl-clinic-version-2.netlify.app/assets/hero-poster/hero-poster.webp">
-<meta property="og:image:width" content="3840">
-<meta property="og:image:height" content="2160">
-<meta property="og:locale" content="en_GB">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TPL Clinic — Platelet Rich Plasma, Mayfair London">
-<meta name="twitter:description" content="The UK's first clinic built entirely around Platelet Rich Plasma. Doctor-led regenerative medicine in Mayfair.">
-<meta name="twitter:image" content="https://tpl-clinic-version-2.netlify.app/assets/hero-poster/hero-poster.webp">
-
-<link rel="icon" href="assets/logo/tpl-logo.png" type="image/png">
-<link rel="apple-touch-icon" href="assets/logo/tpl-logo.png">
-
-<!-- Open the ImageKit socket during HTML parse: saves DNS+TCP+TLS (~150-300ms cold) -->
-<link rel="preconnect" href="https://ik.imagekit.io" crossorigin>
-<link rel="dns-prefetch" href="https://ik.imagekit.io">
 <link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v8_4k" fetchpriority="high">
-<!-- Must stay byte-identical to spriteUrl(), or the browser caches the preload
-     separately and every sheet downloads twice. These 5 ARE the scroll gate,
-     so preloading them starts the gate during HTML parse rather than after
-     the JS runs. type="image/avif" makes a browser without AVIF skip them;
-     the loader then downgrades once to the WebP master. -->
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?tr=q-85,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?tr=q-85,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?tr=q-85,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?tr=q-85,f-avif" fetchpriority="high">
-<link rel="preload" as="image" type="image/avif" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-005.webp?tr=q-85,f-avif" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
-  /* UNSCOPED, document-level: declared out here rather than in the component
-     stylesheet, which the runtime rewrites for scoping. Without this the mobile
-     drawer cannot open, and below 1024px it is the only navigation.
-     NOTE: never write the runtime's element-boundary tag name inside this file
-     outside its real use - it is scanned for literally, and a mention in a
-     comment splits the document and dumps the remainder as visible text. */
-  .tpl-mobile-drawer.is-open,
-  html.tpl-menu-open .tpl-mobile-drawer {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: translateX(0) !important;
-    pointer-events: auto !important;
-  }
-  html:not(.tpl-menu-open) .tpl-mobile-drawer:not(.is-open) { pointer-events: none !important; }
-
   html.lenis, html.lenis body { height: auto; }
   .lenis.lenis-smooth { scroll-behavior: auto !important; }
   .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
@@ -72,22 +19,6 @@
 </style>
 </head>
 <body>
-<!-- Netlify Forms registration stub.
-     The visible enquiry form is rendered by the DC runtime, and Netlify only
-     detects forms by parsing deployed HTML at build time - so this hidden twin
-     is what registers "consultation" and its fields. The live handler POSTs to
-     it. Without this the button only ever flipped a "submitted" flag and every
-     enquiry was silently discarded. -->
-<form name="consultation" data-netlify="true" netlify-honeypot="bot-field" hidden>
-  <input type="text" name="firstName">
-  <input type="text" name="lastName">
-  <input type="email" name="email">
-  <input type="tel" name="phone">
-  <input type="text" name="area">
-  <textarea name="message"></textarea>
-  <input type="text" name="consent">
-  <input type="text" name="bot-field">
-</form>
 <x-dc>
 <helmet>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -174,152 +105,7 @@
     .tpl-desktop-nav { display: none !important; }
     .tpl-mobile-toggle { display: flex !important; }
     header[data-nav="1"] { padding: 16px 20px !important; }
-
-    /* On a 375px viewport the header laid out as logo(72) + Book Consultation(198)
-       + Menu(70) + padding(40) = 380px, pushing the hamburger to right:417 —
-       42px off-screen and completely unreachable, so mobile visitors had no way
-       into the menu at all. Let the CTA shrink and pin the toggle so it can
-       never be the element that overflows. */
-    header[data-nav="1"] { gap: 8px !important; }
-    header[data-nav="1"] [data-btn] {
-      flex: 0 1 auto !important;
-      min-width: 0 !important;
-      padding: 12px 14px !important;
-      font-size: 9.5px !important;
-      letter-spacing: .14em !important;
-      white-space: nowrap;
-    }
-    .tpl-mobile-toggle {
-      flex: 0 0 auto !important;
-      margin-left: auto !important;
-      min-width: 44px; min-height: 44px;   /* WCAG 2.5.8 minimum tap target */
-      justify-content: flex-end;
-    }
-  }
-
-  /* Narrow phones: the wordmark on the CTA is what breaks the row, so drop it
-     to the short label rather than letting anything leave the viewport. */
-  @media (max-width: 419px) {
-    header[data-nav="1"] [data-btn] {
-      font-size: 9px !important;
-      padding: 11px 10px !important;
-      letter-spacing: .1em !important;
-    }
-    .tpl-mobile-toggle span:first-child { display: none !important; }  /* hide "Menu" text, keep the icon */
-  }
-
-  /* ------------------------------------------------------------------
-     PHONE LAYOUT (<=640px)
-
-     Every grid on this page is declared as an INLINE style, so none of
-     them responded to the old mobile query at all — the desktop column
-     counts survived onto a 375px screen and produced columns of
-     35px / 23px / 12.75px. Text cannot lay out in those, which is why
-     the page read as broken on a phone. Inline styles can only be beaten
-     with !important, hence the heavy hand here.
-     ------------------------------------------------------------------ */
-  @media (max-width: 640px) {
-    /* Collapse every multi-column grid to a single readable column. */
-    section [style*="grid-template-columns"],
-    footer  [style*="grid-template-columns"] {
-      grid-template-columns: minmax(0, 1fr) !important;
-      gap: 20px !important;
-    }
-    /* Small numeric/step tiles read fine two-up and look sparse stacked. */
-    [data-steps] , [data-stats] {
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
-    /* Nothing may exceed its column. Long treatment names and inline
-       lists were the source of the off-screen spans in #technology. */
-    section *, footer * { min-width: 0 !important; max-width: 100% !important; }
-    /* NO blanket height rule on images. Every image on this page sits in an
-       aspect-ratio box with object-fit:cover and height:100% already; forcing
-       height:auto collapsed each one to its natural height and left a slab of
-       empty card below it. (The selector was also invalid — `:not()` with a
-       descendant combinator is Selectors-4 and unreliable.) */
-    section img[style*="object-fit"], footer img[style*="object-fit"] {
-      height: 100% !important; width: 100% !important;
-    }
-    [data-hero-media], [data-hero-media] img, [data-hero-media] video {
-      width: 100% !important; height: 100% !important; max-width: none !important;
-      inset: 0 !important;
-    }
-
-    /* Typography: desktop display sizes overflow a 375px line box. */
-    h1 { font-size: clamp(30px, 8.6vw, 40px) !important; line-height: 1.12 !important; }
-    h2 { font-size: clamp(24px, 6.8vw, 32px) !important; line-height: 1.18 !important; }
-    h3 { font-size: clamp(18px, 5vw, 22px) !important; line-height: 1.25 !important; }
-    p, li, a, span, div { overflow-wrap: anywhere; }
-
-    /* Give every section breathing room instead of desktop's tall padding. */
-    section { padding-top: 56px !important; padding-bottom: 56px !important; }
-
-    /* Tap targets: WCAG 2.5.8 asks for 24px minimum, 44px is the comfortable
-       iOS/Material figure. 23 controls were under it. */
-    button, [role="button"], input, select, textarea { min-height: 44px; }
-    /* Only give standalone controls a tap floor — applying it to every inline
-       <a> stretched links inside body copy and blew the header CTA up to 68px. */
-    [data-btn], .tpl-mobile-toggle, nav a, footer a {
-      min-height: 44px; display: inline-flex; align-items: center;
-    }
-    [data-nav] [data-btn] { min-height: 40px !important; line-height: 1 !important; }
-
-    /* The header sits transparent over the hero image, so its contrast depends
-       entirely on whatever pixels happen to be behind it. Over this reception
-       shot the navy wordmark lands on near-white and reads, but that is luck,
-       not design — and the solid CTA block floated with nothing anchoring it.
-       A soft top scrim guarantees legibility over any frame. */
-    /* Applied to the header itself rather than a ::before: the render loop
-       writes an inline background on [data-nav] every scroll tick, and a
-       negative-z pseudo-element under that is fragile. box-shadow paints the
-       scrim without touching the inline background the JS owns. */
-    [data-nav] {
-      position: fixed !important;
-      box-shadow: 0 0 0 100vmax rgba(255,255,255,0) inset,
-                  0 -18px 26px -12px rgba(255,255,255,.55) inset;
-      backdrop-filter: blur(10px) saturate(140%) !important;
-      -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
-      background: rgba(255,255,255,.82) !important;
-      border-bottom: 1px solid rgba(184,146,93,.22) !important;
-    }
-    [data-nav] [data-btn] {
-      padding: 10px 12px !important;
-      font-size: 9px !important;
-      letter-spacing: .12em !important;
-      align-self: center !important;
-    }
-    /* Two 1.5px rules at 4px apart read as one smudge on a phone. */
-    .tpl-mobile-toggle div { gap: 5px !important; width: 22px !important; }
-    .tpl-mobile-toggle div span { height: 2px !important; }
-
-    /* Forms must never be narrower than the column or iOS zooms on focus
-       for any font-size below 16px. */
-    input, select, textarea {
-      width: 100% !important;
-      font-size: 16px !important;
-      box-sizing: border-box !important;
-    }
-  }
-
-  /* Tablet: two columns is right here, the desktop 3-4 column grids are not. */
-  @media (min-width: 641px) and (max-width: 1023px) {
-    section [style*="grid-template-columns"],
-    footer  [style*="grid-template-columns"] {
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 24px !important;
-    }
-  }
-
-  @media (max-width: 1023px) {
     section { padding-left: 20px !important; padding-right: 20px !important; }
-    /* ...but never the hero: it is a full-bleed media section, and the 20px
-       inset was what produced the background-coloured bars down both edges
-       and a 56px gap above the image. */
-    section#top, [data-hero] {
-      padding: 0 !important;
-      overflow: hidden !important;
-    }
     [data-rail="1"], [data-frame="1"] { display: none !important; }
     [data-hero-intro="1"] {
       left: 20px !important;
@@ -327,17 +113,6 @@
       bottom: 24px !important;
       max-width: 100% !important;
     }
-  }
-
-  @media (max-width: 640px) {
-    /* The intro block measured 308px tall and ran 32px past the fold. Tighten
-       it so the whole promise is readable without scrolling. */
-    [data-hero-intro="1"] {
-      bottom: 20px !important;
-      max-height: 62vh !important;
-    }
-    [data-hero-intro="1"] h1 { font-size: clamp(26px, 7.6vw, 34px) !important; margin: 0 0 10px !important; }
-    [data-hero-intro="1"] p  { font-size: 13.5px !important; line-height: 1.5 !important; margin: 0 0 12px !important; }
   }
 </style>
 </helmet>
@@ -465,7 +240,7 @@
 
       <!-- Full-bleed Background Hero Media Canvas (100% 60fps Frame-Exact Precision) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat" role="img" aria-label="Arrival sequence at TPL Clinic, Mayfair — reception, consultation and treatment rooms"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
@@ -917,10 +692,7 @@
           <input type="checkbox" checked="{{ consent }}" onChange="{{ onConsent }}" style="margin-top:3px;width:14px;height:14px;accent-color:#B8925D" />
           <span style="font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:#5E5E5E">I consent to TPL Clinic contacting me regarding my enquiry.</span>
         </label>
-        <sc-if value="{{ formError }}">
-          <div role="alert" aria-live="polite" style="margin-top:18px;padding:12px 14px;border:1px solid #B8925D;background:rgba(184,146,93,.09);font-family:Jost,sans-serif;font-size:12.5px;line-height:1.5;color:#081359">{{ formError }}</div>
-        </sc-if>
-        <button onClick="{{ onSubmit }}" disabled="{{ sending }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">{{ sendLabel }}</button>
+        <button onClick="{{ onSubmit }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">Send Enquiry →</button>
       </div>
     </div>
   </section>
@@ -982,52 +754,10 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;heroScrollDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1400,&quot;min&quot;:400,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showTechnologyIndex&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
 class Component extends DCLogic {
-  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, sending:false, formError:'', mobileMenuOpen:false, megaMenuOpen:false };
+  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
 
   componentDidMount() {
-    // MOBILE MENU.
-    //
-    // Below 1024px the drawer is the ONLY navigation, and it did not open at
-    // all: `{{ mobileMenuOpen ? 'is-open' : '' }}` never flips (verified with a
-    // real click in two browsers). Two further things ruled out the obvious
-    // workarounds — the runtime REPLACES the header/drawer nodes on re-render,
-    // so listeners attached to them are discarded and a className set on them
-    // is rewritten away; and those nodes do not exist yet at componentDidMount.
-    //
-    // So: delegate the click off `document` (survives node replacement) and
-    // hold the open state as a class on <html>, which the runtime does not
-    // manage. The matching rule lives in the unscoped <head> stylesheet.
-    if (!document.documentElement.dataset.tplMenuBound) {
-      document.documentElement.dataset.tplMenuBound = '1';
-      const root = document.documentElement;
-      const setMenu = (open) => {
-        root.classList.toggle('tpl-menu-open', open);
-        const b = document.querySelector('.tpl-mobile-toggle');
-        if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
-        root.style.overflow = open ? 'hidden' : '';
-        if (this.lenis) { open ? this.lenis.stop() : this.lenis.start(); }
-      };
-      document.addEventListener('click', (e) => {
-        if (e.target.closest && e.target.closest('.tpl-mobile-toggle')) {
-          e.preventDefault();
-          setMenu(!root.classList.contains('tpl-menu-open'));
-          return;
-        }
-        // Any link or button inside the open drawer closes it.
-        if (root.classList.contains('tpl-menu-open') &&
-            e.target.closest && e.target.closest('.tpl-mobile-drawer a, .tpl-mobile-drawer button')) {
-          setMenu(false);
-        }
-      }, true);
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
-      this.setMenu = setMenu;
-    }
-
     this.TOTAL_FRAMES = 1000;
-    // Beat targets, rail thresholds and hotspot ranges below are authored in
-    // 1000-frame space; routing them through FRAME_SCALE keeps a future frame
-    // count change a one-line edit instead of six scattered constants.
-    this.FRAME_SCALE = this.TOTAL_FRAMES / 1000;
     this.hero = document.querySelector('[data-hero]');
     this.nav = document.querySelector('[data-nav]');
     this.consultSection = document.querySelector('#consultation');
@@ -1044,14 +774,12 @@ class Component extends DCLogic {
       this.whatsappLink = this.nav.querySelector('a[href*="wa.me"]');
       this.navBtn = this.nav.querySelector('[data-btn]');
       this.toggleBtn = this.nav.querySelector('.tpl-mobile-toggle');
-
     }
     this.currentNavState = null;
 
     // Bind click events on Sequence Rail items to scrub directly to target video frames!
     if (this.railItems && this.railItems.length > 0) {
-      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960]
-        .map(f => Math.max(1, Math.round(f * this.FRAME_SCALE)));
+      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960];
       this.railItems.forEach((item, idx) => {
         item.style.cursor = 'pointer';
         item.addEventListener('click', () => {
@@ -1181,23 +909,7 @@ class Component extends DCLogic {
       // Mobile Phones: Lightweight hardware-accelerated video fallback for 100% crash-free 60fps performance
       if (this.hero) this.hero.style.height = '100vh';
       if (this.heroMedia) {
-        // PHONE HERO — sharpness, not motion.
-        //
-        // A 16:9 source under object-fit:cover in a full-height PORTRAIT box is
-        // scaled to match the box HEIGHT, so on a 375x812 phone at dpr3 it is
-        // blown up to 4330px wide. Measured upscale from each candidate:
-        //     960x540  video   x4.51  (what shipped — visibly blurry)
-        //     1280x720 video   x3.38
-        //     1920x1080 video  x2.26
-        //     3840x2160 poster x1.13  (sharp)
-        // No mobile-weight video can win that: staying sharp would need a ~4K
-        // source. So the phone gets a purpose-made 9:16 crop of the 3840px
-        // poster (1215x2160, 61KB) — sharp at dpr3, correctly framed rather
-        // than severely zoomed, and a fraction of the video's bytes on cellular.
-        const scrim = '<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
-        this.heroMedia.innerHTML =
-          '<img src="assets/hero-poster/hero-poster-portrait.webp" alt="TPL Clinic reception, Mayfair London" ' +
-          'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:1" />' + scrim;
+        this.heroMedia.innerHTML = '<video src="assets/hero-fallback/hero-mobile.mp4" poster="assets/hero-poster/hero-poster.webp" autoplay loop muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:1"></video><div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0.65) 100%);z-index:2;pointer-events:none"></div>';
       }
       if (this.hotspotCard) this.hotspotCard.style.display = 'none';
       this.renderStaticHotspotRow();
@@ -1299,17 +1011,8 @@ class Component extends DCLogic {
     const cssHeight = window.innerHeight;
     if (cssWidth <= 0 || cssHeight <= 0) return;
 
-    // Backing store must match the device's real pixel grid, or the compositor
-    // upscales the canvas and softens every frame — the panel's own pixels are
-    // the last place clarity can be lost. Honour devicePixelRatio up to 2 (which
-    // is what every Retina/HiDPI laptop reports) and only clamp at 3840 to stop
-    // a 5K/8K desktop allocating an absurd surface. A 1512pt Retina panel gets
-    // its full 3024px backing here; the earlier 2880 clamp was quietly blurring
-    // anything wider than 1440pt.
-    let dpr = Math.min(window.devicePixelRatio || 1, this.MAX_DPR || 2);
-    const MAX_BACKING_W = 3840;
-    if (cssWidth * dpr > MAX_BACKING_W) dpr = MAX_BACKING_W / cssWidth;
-    dpr = Math.max(1, dpr);
+    // Full 1:1 Native Retina 4K Display Pixel Ratio
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
     const targetW = Math.round(cssWidth * dpr);
     const targetH = Math.round(cssHeight * dpr);
@@ -1320,8 +1023,6 @@ class Component extends DCLogic {
     }
     this.targetW = targetW;
     this.targetH = targetH;
-    this.sizedForW = cssWidth;
-    this.sizedForH = cssHeight;
     this.canvasAspect = targetW / targetH;
 
     // 16:9 source aspect, anchored to top-center (offsetY = 0)
@@ -1338,386 +1039,91 @@ class Component extends DCLogic {
       this.offsetY = 0;
     }
 
-    // Set once here: resizing a canvas resets context state, so this is the only
-    // place it needs re-applying — which is also why keeping it at 'high' costs
-    // nothing per frame. A 1920px master cell is UPSCALED into a ~3024px Retina
-    // backing store, and on an upscale the resampler's quality is visible, so
-    // 'high' is the right setting for this pipeline.
     if (this.ctx) {
       this.ctx.imageSmoothingEnabled = true;
       this.ctx.imageSmoothingQuality = 'high';
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Sprite delivery tier — FULL MASTER QUALITY, no re-encode, no downscale.
-  //
-  // Each sheet is the untouched 3840x2160 master, so every frame cell is a true
-  // 1920x1080. Measured against the master: any `w-` downscale costs ~13 dB PSNR
-  // and is plainly visible; q-90 is ~50-53 dB (transparent) but saves only 5% and
-  // pays a ~640ms ImageKit transform on every cold CDN edge; q-95 re-encodes a
-  // lossy source and comes out LARGER than the original. So orig-true wins on
-  // quality AND on cold-start latency — it is served straight from cache with no
-  // transformation step at all.
-  //
-  // ONE canonical URL shape, shared by the <head> preloads, the gate and the
-  // rolling prefetcher. Any divergence creates a second browser-cache entry for
-  // identical bytes and silently doubles the download.
-  // ---------------------------------------------------------------------------
-  // Method 01 asset pipeline: "AVIF first choice, WebP as the fallback".
-  // Resolved once by detectSpriteTier() before any sheet is requested, so every
-  // consumer (head preload, gate, rolling window) uses one identical URL — a
-  // second URL shape for the same bytes means a second browser-cache entry and
-  // a silently doubled download.
-  //
-  // Both tiers keep the full 3840x2160 master sheet => a true 1920x1080 per
-  // frame cell. Resolution is never traded away: measured against the master a
-  // `w-` downscale costs ~13 dB and is plainly visible.
-  //
-  // q-85 is where added bytes stop buying visible quality. Measured PSNR vs the
-  // untouched master, and reel weight at 250 sheets:
-  //     q-80  43.2-44.3 dB   36.9 MB
-  //     q-85  44.6-45.7 dB   50.5 MB   <- chosen: >45 dB is visually transparent
-  //     q-88  45.3-46.5 dB   57.8 MB      (+0.8 dB for +14% bytes)
-  //     q-90  46.0-47.3 dB   65.4 MB      (+0.7 dB, and by now ~= orig-true)
-  //     orig  reference      70.6 MB
-  // Past q-85 you pay most of the original payload back for gains under 1 dB.
-  spriteUrl(i) {
-    // Gate sheets are preloaded from <head> at the full tier and must match it
-    // byte-for-byte, or a low-tier device downloads each of them twice.
-    if (i <= 5 && !this.tierDowngraded) {
-      return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
-        'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
-        '.webp?tr=q-85,f-avif';
-    }
-    return (this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/') +
-      'assets/hero-sprites-hd/sprite-hd-' + String(i).padStart(3, '0') +
-      '.webp?tr=' + (this.spriteTier || this.SHEET_TR || 'q-85,f-avif');
-  }
-
-  // AVIF tier, chosen optimistically.
-  //
-  // This used to issue a probe request and await it before ANY sheet was
-  // fetched — a purely serial 1.4s on the critical path, measured, during
-  // which nothing else loaded. AVIF is ~95% of 2026 traffic, so the right
-  // trade is to assume it and handle the rare miss: the head preloads are
-  // already fetching sheets 1-4 as AVIF during HTML parse, so the first real
-  // sheet IS the probe and costs nothing extra. If it fails to decode we
-  // downgrade once, to the untouched WebP master, and restart the gate.
-  detectSpriteTier() {
-    this.spriteTier = this.SHEET_TR || 'q-85,f-avif';
-    return Promise.resolve(this.spriteTier);
-  }
-
-  // One-shot downgrade for a browser that cannot decode AVIF.
-  downgradeTier() {
-    if (this.tierDowngraded || this.destroyed) return false;
-    this.tierDowngraded = true;
-    // Keep the device tier's dimensions; only drop the codec to WebP.
-    this.spriteTier = (this.deviceTier === 'low') ? 'w-2560,q-85,f-webp' : 'orig-true';
-    this.sprites = {};
-    this.inflight.clear();
-    this.spriteQueue.length = 0;
-    this.shownSprite = null; this.lastWindowCenter = -1;
-    return true;
-  }
-
-  // Bounded-concurrency, de-duplicated sprite fetcher.
-  //
-  // The old code called `new Image()` straight from the scroll handler with only
-  // an `if (!this.sprites[i])` guard. Because `this.sprites[i]` is not populated
-  // until onload+decode resolves, every scroll tick during an un-cached stretch
-  // re-fired the same 7 requests — ~60 ticks/sec x 7 = hundreds of duplicate
-  // in-flight HTTP/2 streams competing for the same pipe. Nothing completed
-  // promptly, the background filler was starved, and the scroll visibly stalled.
-  // On a warm reload every sprite came from disk cache, onload fired immediately,
-  // the storm never formed — which is exactly why "the second time is smooth".
-  loadSprite(idx) {
-    if (this.destroyed) return Promise.resolve();
-    if (this.sprites[idx]) return Promise.resolve();
-    if (this.inflight.has(idx)) return this.inflight.get(idx);
-
-    const p = new Promise((resolve) => {
-      const img = new Image();
-      img.decoding = 'async';
-      img.onload = () => {
-        // Decode off the main thread BEFORE publishing the sprite, so the first
-        // drawImage() that touches it never pays a synchronous decode mid-scroll.
-        // decode() is a pre-warm, not a correctness requirement: drawImage works
-        // on a loaded-but-undecoded image, it just may pay a sync decode on the
-        // first draw. Chrome can defer decode indefinitely for a hidden tab, and
-        // if publish() waited on that, inflight would never drain, pumpSpriteQueue
-        // would never fire again and the whole reel would stall behind one image.
-        // So: race the decode, publish either way.
-        const publish = () => {
-          if (!this.destroyed) {
-            this.sprites[idx] = img;
-            this.enforceMemoryBudget();
-            if (this.lastDrawnFrame >= 1) {
-              const want = Math.ceil(this.lastDrawnFrame / 4);
-              // Repaint only if this arrival is a better match than what's shown.
-              if (idx === want || (this.shownSprite != null && Math.abs(idx - want) < Math.abs(this.shownSprite - want))) {
-                this.drawFrameOnCanvas(this.lastDrawnFrame, true);
-              }
-            }
-          }
-          this.inflight.delete(idx);
-          resolve();
-          this.pumpSpriteQueue();
-        };
-        if (img.decode) {
-          let settled = false;
-          const once = () => { if (!settled) { settled = true; publish(); } };
-          img.decode().then(once, once);
-          // Stall-guard ONLY — it must never pre-empt a healthy decode.
-          // Measured decode of one 3840x2160 sheet on this pipeline:
-          //   AVIF q-85  median 124ms, max 195ms
-          //   WebP master median  99ms, max 110ms
-          // The previous 200ms guard sat right on top of that distribution, so
-          // sheets were publishing UNDECODED and the first drawImage paid the
-          // decode synchronously on the scroll path - a 124-195ms freeze, 7-12
-          // dropped frames, exactly the stutter this whole change set exists to
-          // remove. 3s is far outside the normal range and still bounds the
-          // hidden-tab case where decode() is deferred indefinitely.
-          setTimeout(once, 3000);
-        } else publish();
-      };
-      img.onerror = () => {
-        this.inflight.delete(idx);
-        // First failure on the AVIF tier means this browser cannot decode it:
-        // drop to the WebP master and re-run the gate rather than limping on
-        // with a reel that will never load.
-        if (!this.tierDowngraded && String(this.spriteTier).indexOf('avif') > -1) {
-          if (this.downgradeTier()) {
-            resolve();
-            this.startSpriteLoad(this.gateSet, this.pBar, this.releaseScrollFn);
-            return;
-          }
-        }
-        resolve();
-        this.pumpSpriteQueue();
-      };
-      img.src = this.spriteUrl(idx);
-    });
-
-    this.inflight.set(idx, p);
-    return p;
-  }
-
-  // Drains the priority queue while staying under MAX_CONCURRENT in-flight
-  // requests. Six is the sweet spot: enough streams to saturate a broadband
-  // pipe, few enough that no single sprite is starved of bandwidth.
-  pumpSpriteQueue() {
-    if (this.destroyed) return;
-    while (this.inflight.size < this.MAX_CONCURRENT && this.spriteQueue.length) {
-      const idx = this.spriteQueue.shift();
-      if (this.sprites[idx] || this.inflight.has(idx)) continue;
-      this.loadSprite(idx);
-    }
-  }
-
-  // urgent=true jumps the queue (user has scrolled somewhere we haven't reached).
-  requestSprite(idx, urgent) {
-    if (this.destroyed) return;
-    if (!this.spriteTier) return;   // tier not resolved yet — see detectSpriteTier()
-    if (idx < 1 || idx > this.TOTAL_SPRITES) return;
-    if (this.sprites[idx] || this.inflight.has(idx)) return;
-    const at = this.spriteQueue.indexOf(idx);
-    if (at !== -1) {
-      if (!urgent) return;
-      this.spriteQueue.splice(at, 1);
-    }
-    if (urgent) this.spriteQueue.unshift(idx);
-    else this.spriteQueue.push(idx);
-    this.pumpSpriteQueue();
-  }
-
-  // Device capability tier.
-  //
-  // A decoded 3840x2160 sheet costs ~31.6MB of bitmap memory. Holding a whole
-  // 250-sheet reel would be 7.7GB, so on an 8GB laptop the browser spends its
-  // time evicting and re-decoding rather than drawing — which is why this ran
-  // fine on a 16GB Apple-Silicon machine and crawled on an 8GB Intel MacBook.
-  // Intel Macs also have no hardware AVIF decode, so every re-decode is pure
-  // software and several times slower again.
-  //
-  // So: measure the machine, then pick sheet size, DPR and how many decoded
-  // sheets may stay resident. Method 08: "cap and adapt to device capability".
-  detectDeviceTier() {
-    const mem = navigator.deviceMemory || 8;
-    const cores = navigator.hardwareConcurrency || 8;
-    const low = mem <= 8 || cores <= 4;
-    this.deviceTier = low ? 'low' : 'high';
-    if (low) {
-      // 2560-wide sheet => 1280x720 cells, ~14MB decoded (2.25x cheaper), and
-      // markedly faster to decode. Paired with a 1.5 DPR cap the drawn result
-      // stays clean because the canvas it feeds is smaller too.
-      this.SHEET_TR = 'w-2560,q-85,f-avif';
-      this.MAX_DPR = 1.5;
-      this.MAX_RESIDENT = 16;   // ~225MB of bitmaps
-      this.WINDOW_AHEAD = 12;
-    } else {
-      this.SHEET_TR = 'q-85,f-avif';
-      this.MAX_DPR = 2;
-      this.MAX_RESIDENT = 24;   // ~760MB of bitmaps
-      this.WINDOW_AHEAD = 16;
-    }
-    return this.deviceTier;
-  }
-
-  // Drop decoded sheets far from the viewer. Without this `this.sprites` grows
-  // without bound and the browser starts thrashing — the single biggest cause
-  // of "smooth on my machine, unusable on a weaker one".
-  enforceMemoryBudget() {
-    const keys = Object.keys(this.sprites).map(Number);
-    if (keys.length <= this.MAX_RESIDENT) return;
-    const c = this.lastWindowCenter > 0 ? this.lastWindowCenter : 1;
-    keys.sort((a, b) => Math.abs(a - c) - Math.abs(b - c));
-    for (let i = this.MAX_RESIDENT; i < keys.length; i++) {
-      if (keys[i] === this.shownSprite) continue;   // never evict what is on screen
-      delete this.sprites[keys[i]];
-    }
-  }
-
   preloadAppleSpritesLOD() {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
-    this.detectDeviceTier();
     this.sprites = {};
-    this.inflight = new Map();
-    this.spriteQueue = [];
-    this.MAX_CONCURRENT = 6;
-    this.shownSprite = null;
-    this.lastWindowCenter = -1;
 
-    // 4K poster paints frame 1 instantly while the reel streams in behind it.
+    // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
     this.posterImg = new Image();
     if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
     this.posterImg.onload = () => {
       if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.sprites[1]) {
-        this.drawFrameOnCanvas(1, true);
+        this.drawFrameOnCanvas(1);
       }
     };
     this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
 
+    const fetchSprite = (spriteIndex, priority = 'low') => {
+      if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
+      return new Promise((resolve) => {
+        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd&tr=q-90,f-webp`;
+        const img = new Image();
+        if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
+        img.onload = async () => {
+          if (img.decode) {
+            try { await img.decode(); } catch(e) {}
+          }
+          this.sprites[spriteIndex] = img;
+          if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+            this.drawFrameOnCanvas(1);
+          }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = src;
+      });
+    };
+
+    // Method 08: Preload Gate Progress Bar (Guarantees 1st scroll is 100% as smooth as 2nd scroll)
     let pBar = document.getElementById('tpl-preload-bar');
     if (!pBar) {
       pBar = document.createElement('div');
       pBar.id = 'tpl-preload-bar';
-      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.25s cubic-bezier(.22,1,.36,1), opacity 0.5s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
+      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.2s ease, opacity 0.4s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
       document.body.appendChild(pBar);
     }
 
-    // -------------------------------------------------------------------------
-    // GATE = dense opening + coarse safety skeleton.
-    //
-    // At full master quality a sheet is ~290KB, so a dense whole-reel preload is
-    // not affordable. It is also not necessary: the viewer enters at frame 1 and
-    // walks forward, so what actually has to be resident before release is
-    //   (a) the opening sheets, seen first and studied longest, and
-    //   (b) a coarse skeleton over the rest, purely so a rail click or scrollbar
-    //       drag can never land on a region with nothing to draw.
-    // Everything between is filled by the rolling window below, which stays
-    // ahead of the viewer as they scroll.
-    //
-    // The old gate fetched sheets 1-25 contiguously — frames 1..100 of 1000 —
-    // covering 7% of the scroll and leaving the other 93% empty, so the viewer
-    // ran off the loaded edge within the first second.
-    // -------------------------------------------------------------------------
-    // Nothing may be requested until the tier is known, or the gate and the
-    // rolling window would race and fetch two different URL shapes.
-    // GATE ONLY WHAT IS NEEDED TO START.
-    //
-    // The viewer enters at frame 1 and walks forward, so the only sheets that
-    // must be resident before scroll is unlocked are the opening ones. The
-    // whole-reel safety skeleton does NOT need to block: it is there for a rail
-    // click or scrollbar drag, which cannot happen before the page is even
-    // interactive, and it streams in during the first seconds of scrolling.
-    //
-    // Gating on 21 sheets / 3.35MB measured a 2.0s hold on a 14Mbps link (3-4s
-    // on a slower one) — far too long to sit on a locked page. Five sheets is
-    // ~0.8MB: frames 1-20, enough that the opening is pin-sharp and the rolling
-    // window has a head start, at a fraction of the wait.
-    const GATE_SHEETS = 5;
-    const gateSet = [];
-    for (let s = 1; s <= Math.min(GATE_SHEETS, this.TOTAL_SPRITES); s++) gateSet.push(s);
-    const skeleton = gateSet;
-
-    // Queued the moment the gate releases, ahead of the sequential backfill.
-    this.postGateSkeleton = [];
-    for (let s = GATE_SHEETS + 1; s <= this.TOTAL_SPRITES; s += 25) this.postGateSkeleton.push(s);
-    if (this.postGateSkeleton[this.postGateSkeleton.length - 1] !== this.TOTAL_SPRITES) {
-      this.postGateSkeleton.push(this.TOTAL_SPRITES);
+    // Millisecond 0: Eagerly fetch initial 25 sprites (100 frames) in parallel
+    let loadedCount = 0;
+    const initialPromises = [];
+    for (let s = 1; s <= 25; s++) {
+      initialPromises.push(
+        fetchSprite(s, 'high').then(() => {
+          loadedCount++;
+          if (pBar) pBar.style.width = Math.round((loadedCount / 25) * 100) + '%';
+        })
+      );
     }
 
-    // Hold scroll until the skeleton is in. A short, honest, luxury preloader
-    // beats letting the visitor scrub through frames that aren't there yet.
-    let released = false;
-    const releaseScroll = () => {
-      if (released || this.destroyed) return;
-      released = true;
-      if (this.lenis) this.lenis.start();
-      document.documentElement.style.removeProperty('overflow');
+    Promise.all(initialPromises).then(async () => {
       if (pBar) {
         pBar.style.width = '100%';
-        setTimeout(() => { pBar.style.opacity = '0'; }, 250);
+        setTimeout(() => { pBar.style.opacity = '0'; }, 300);
       }
-    };
-
-    if (this.lenis) this.lenis.stop();
-    // Browsers restore the previous scroll offset on reload; behind a locked
-    // gate that would strand the visitor mid-reel on a frame we haven't fetched.
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    document.documentElement.style.overflow = 'hidden';
-    window.scrollTo(0, 0);
-
-    // Never trap the visitor: on a slow link, release after 7s with whatever
-    // skeleton has landed and let the queue keep filling underneath them.
-    this.preloadSafety = setTimeout(releaseScroll, 7000);
-
-    let done = 0;
-    this.gateSet = skeleton;
-    this.pBar = pBar;
-    this.releaseScrollFn = releaseScroll;
-    this.detectSpriteTier().then(() => this.startSpriteLoad(skeleton, pBar, releaseScroll));
-  }
-
-  startSpriteLoad(skeleton, pBar, releaseScroll) {
-    if (this.destroyed) return;
-    let done = 0;
-    Promise.all(skeleton.map(s => this.loadSprite(s).then(() => {
-      done++;
-      if (pBar) pBar.style.width = Math.round((done / skeleton.length) * 92) + '%';
-    }))).then(() => {
-      if (this.preloadSafety) clearTimeout(this.preloadSafety);
-      releaseScroll();
       if (this.destroyed) return;
 
-      // Whole-reel safety skeleton — what makes a rail click or scrollbar drag
-      // land on something rather than nothing.
-      //
-      // There is deliberately NO "fetch all 250" backfill any more. With a
-      // memory budget in force, eagerly loading the whole reel just decodes
-      // sheets (~124ms each) and evicts them again before the viewer ever gets
-      // there — burning bandwidth and CPU on precisely the weak machines this
-      // change is meant to rescue. What is resident is now driven purely by
-      // where the viewer actually is, via advanceWindow().
-      (this.postGateSkeleton || []).forEach(s => this.requestSprite(s, false));
-      this.pumpSpriteQueue();
-    }).catch(() => {
-      // A locked page is worse than an under-buffered one — always release.
-      if (this.preloadSafety) clearTimeout(this.preloadSafety);
-      releaseScroll();
+      // Rapidly stream remaining sprites (26 to 250) in parallel background batches of 8
+      for (let s = 26; s <= this.TOTAL_SPRITES; s += 8) {
+        if (this.destroyed) break;
+        const batch = [];
+        for (let j = s; j < Math.min(s + 8, this.TOTAL_SPRITES + 1); j++) {
+          batch.push(fetchSprite(j, 'low'));
+        }
+        await Promise.all(batch);
+      }
     });
-
-    this.pumpSpriteQueue();
   }
 
   findNearestLoadedSprite(spriteIndex) {
     if (this.sprites[spriteIndex]) return spriteIndex;
-    // Search BACKWARD first so the sequence holds on a past frame rather than
-    // snapping forward into one the viewer hasn't scrolled to yet. Range covers
-    // the skeleton stride so there is always a hit once the gate has passed.
-    for (let delta = 1; delta <= 12; delta++) {
+    // Monotonic Hold: Search BACKWARD FIRST so sequence never snaps into future
+    for (let delta = 1; delta <= 30; delta++) {
       if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
       if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
@@ -1734,180 +1140,99 @@ class Component extends DCLogic {
         const pw = this.posterImg.naturalWidth || this.posterImg.width;
         const ph = this.posterImg.naturalHeight || this.posterImg.height;
         this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
-        this.shownSprite = null;
       }
       return;
     }
 
-    // Pick the cell closest in time to the frame we actually wanted: the last
-    // cell when falling back to an earlier sheet, the first when falling forward.
-    let idxInSprite;
-    if (spriteIndex === targetSpriteIndex) idxInSprite = (frameNum - 1) % 4;
-    else if (spriteIndex < targetSpriteIndex) idxInSprite = 3;
-    else idxInSprite = 0;
+    const idxInSprite = (spriteIndex === targetSpriteIndex) ? ((frameNum - 1) % 4) : 3;
+    const cellCol = idxInSprite % 2;
+    const cellRow = Math.floor(idxInSprite / 2);
 
-    // Cell size is read off THIS sheet every draw, never cached globally: the
-    // opening sheets are always full-res while a low-tier device serves the rest
-    // at w-2560, so the reel legitimately holds two sizes at once and a shared
-    // cellW would crop the other one with the wrong rect.
-    const cw = (spriteImg.naturalWidth || spriteImg.width) / 2;
-    const ch = (spriteImg.naturalHeight || spriteImg.height) / 2;
+    const sx = cellCol * 1920;
+    const sy = cellRow * 1080;
+    const sw = 1920;
+    const sh = 1080;
 
-    const sx = (idxInSprite % 2) * cw;
-    const sy = Math.floor(idxInSprite / 2) * ch;
-
-    this.ctx.drawImage(spriteImg, sx, sy, cw, ch, this.offsetX, this.offsetY, this.drawW, this.drawH);
-    this.shownSprite = spriteIndex;
+    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
   }
 
-  drawFrameOnCanvas(frameNum, force) {
-    if (!this.canvas || !this.ctx) return;
-    // A page opened in a BACKGROUND tab (or prerendered, or restored from
-    // bfcache) lays out with a zero viewport, so updateCanvasDimensions() bails
-    // and the canvas keeps its 300x150 default. Nothing fires a resize when the
-    // tab is later brought forward, so without this check the hero would render
-    // into a 300x150 surface and be scaled up to full screen — catastrophically
-    // soft. Re-measure whenever the canvas is sized for something other than the
-    // current viewport.
-    if (window.innerWidth > 0 && (this.sizedForW !== window.innerWidth || this.sizedForH !== window.innerHeight)) {
-      this.updateCanvasDimensions();
-      force = true;
-    }
-    if (!this.targetW) return;
-    if (!force && frameNum === this.lastDrawnFrame && this.shownSprite === Math.ceil(frameNum / 4)) return;
+  drawFrameOnCanvas(frameNum) {
+    if (!this.canvas || !this.ctx || !this.targetW) return;
+
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
+
     this.drawSingleFrame(frameNum);
     this.lastDrawnFrame = frameNum;
   }
 
-  // Rolling prefetch window.
-  //
-  // Full-quality sheets are ~290KB, so the reel cannot be resident up front. The
-  // loader instead stays AHEAD of the viewer: every scroll tick re-prioritises a
-  // forward-biased span around the current frame, so by the time the viewer
-  // reaches a sheet it is already decoded and drawn at full master resolution.
-  //
-  // Safe to call on every tick — requestSprite() de-dupes against the queue and
-  // the in-flight map, so a repeat call costs a Map lookup, not a new socket.
-  // (The original code called `new Image()` straight from the scroll handler with
-  // only an `if (!this.sprites[i])` guard, which is never true until load+decode
-  // completes — so it re-fired the same requests ~60x/sec and buried the pipe.)
-  advanceWindow(centerFrame) {
+  fetchUrgentFrameChunk(centerFrame) {
     if (this.destroyed) return;
-    const c = Math.ceil(centerFrame / 4);
-    if (c === this.lastWindowCenter) return;   // only re-prioritise on sheet change
-    this.lastWindowCenter = c;
-
-    // Lead must not exceed what memory can hold, or we fetch and decode sheets
-    // only to evict them before the viewer arrives.
-    const AHEAD = this.WINDOW_AHEAD || 16;
-    const BEHIND = 4;
-
-    // Build nearest-first, forward-biased, then push to the queue front in
-    // reverse so index c ends up at position 0.
-    const want = [];
-    for (let d = 0; d <= AHEAD; d++) {
-      want.push(c + d);
-      if (d > 0 && d <= BEHIND) want.push(c - d);
+    const centerSprite = Math.ceil(centerFrame / 4);
+    const baseUrl = this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/';
+    for (let sIdx = Math.max(1, centerSprite - 2); sIdx <= Math.min(this.TOTAL_SPRITES, centerSprite + 4); sIdx++) {
+      if (!this.sprites[sIdx]) {
+        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-90,f-webp`;
+        const img = new Image();
+        if ('fetchPriority' in img) img.fetchPriority = 'high';
+        img.onload = async () => {
+          if (img.decode) {
+            try { await img.decode(); } catch(e) {}
+          }
+          this.sprites[sIdx] = img;
+        };
+        img.src = src;
+      }
     }
-    for (let i = want.length - 1; i >= 0; i--) this.requestSprite(want[i], true);
-  }
-
-  // Kept as an alias: initScrollEngine and any older call sites still use this name.
-  fetchUrgentFrameChunk(centerFrame) { this.advanceWindow(centerFrame); }
-
-  // Layout metrics used by the per-frame render path. Read ONCE here and on
-  // resize — reading offsetTop/offsetHeight/getBoundingClientRect inside the
-  // scroll handler forced a synchronous reflow on every tick (6+ per event),
-  // and those reflows land on the same main thread that is decoding sprites.
-  measureLayout() {
-    const vh = window.innerHeight;
-    this.vh = vh;
-    this.heroTop = this.hero ? this.hero.offsetTop : 0;
-    this.heroHeight = this.hero ? this.hero.offsetHeight : 0;
-    this.heroScrollable = Math.max(0, this.heroHeight - vh);
-    this.consultTop = this.consultSection ? this.consultSection.offsetTop : Infinity;
-    this.consultBottom = this.consultSection ? this.consultTop + this.consultSection.offsetHeight : Infinity;
-    this.footerTop = this.footerSection ? this.footerSection.offsetTop : Infinity;
-    this.footerBottom = this.footerSection ? this.footerTop + this.footerSection.offsetHeight : Infinity;
   }
 
   initScrollEngine() {
-    this.measureLayout();
+    this.targetProgress = 0;
+    this.currentProgress = 0;
+    this.ticking = false;
 
-    // Pure arithmetic against cached metrics — no layout read.
     this.getScrollProgress = () => {
-      if (!this.hero || this.heroScrollable <= 0) return 0;
-      const raw = (window.scrollY - this.heroTop) / this.heroScrollable;
+      if (!this.hero) return 0;
+      const rect = this.hero.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      if (scrollableDistance <= 0) return 0;
+      const raw = -rect.top / scrollableDistance;
       return Math.min(Math.max(raw, 0), 1);
     };
 
-    // Coalesce to one render per animation frame. Lenis emits scroll at rAF
-    // cadence and native scroll/touchmove can fire faster still; without this
-    // the full renderFrame() (canvas draw + nav restyle + rail + hotspot) ran
-    // several times per displayed frame.
-    this.scrollDirty = false;
-    this.tick = () => {
-      this.rafId = 0;
-      if (this.destroyed || !this.hero) return;
-      this.scrollDirty = false;
+    this.onScroll = () => {
+      if (!this.hero) return;
+      this.isScrolling = true;
+      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = setTimeout(() => { this.isScrolling = false; }, 150);
 
       const p = this.getScrollProgress();
       const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
-      // Always advance the window — not just on a miss. Waiting for a miss means
-      // the prefetcher only ever reacts after the viewer has already hit a gap.
-      this.advanceWindow(targetFrame);
+      const targetSpriteIndex = Math.ceil(targetFrame / 4);
+      if (!this.sprites[targetSpriteIndex]) {
+        this.fetchUrgentFrameChunk(targetFrame);
+      }
+
       this.renderFrame(p);
     };
 
-    this.onScroll = () => {
-      if (this.scrollDirty || this.destroyed) return;
-      this.scrollDirty = true;
-      this.rafId = requestAnimationFrame(this.tick);
-    };
-
     this.onResize = () => {
-      this.measureLayout();
       this.updateCanvasDimensions();
-      this.drawFrameOnCanvas(Math.max(1, this.lastDrawnFrame), true);
-      this.onScroll();
-    };
-
-    // Becoming visible or returning from bfcache does NOT fire resize, so ask
-    // for a re-measure explicitly on both.
-    this.onRevive = () => {
-      if (this.destroyed || document.hidden) return;
-      this.measureLayout();
-      this.updateCanvasDimensions();
-      this.drawFrameOnCanvas(Math.max(1, this.lastDrawnFrame), true);
       this.onScroll();
     };
 
     window.addEventListener('scroll', this.onScroll, { passive: true });
     window.addEventListener('touchmove', this.onScroll, { passive: true });
     window.addEventListener('resize', this.onResize);
-    document.addEventListener('visibilitychange', this.onRevive);
-    window.addEventListener('pageshow', this.onRevive);
-
-    // Hero height is set from a vh prop just before this runs; re-measure after
-    // layout settles so heroScrollable reflects the final document height.
-    setTimeout(() => { this.measureLayout(); this.onScroll(); }, 0);
     this.onScroll();
   }
 
   componentWillUnmount() {
     this.destroyed = true;
-    if (this.preloadSafety) clearTimeout(this.preloadSafety);
-    if (this.spriteQueue) this.spriteQueue.length = 0;
-    document.documentElement.style.removeProperty('overflow');
     if (this.onScroll) {
       window.removeEventListener('scroll', this.onScroll);
       window.removeEventListener('touchmove', this.onScroll);
       window.removeEventListener('resize', this.onResize);
-    }
-    if (this.onDrawerKey) document.removeEventListener('keydown', this.onDrawerKey);
-    if (this.onRevive) {
-      document.removeEventListener('visibilitychange', this.onRevive);
-      window.removeEventListener('pageshow', this.onRevive);
     }
     if (this.lenis) {
       this.lenis.destroy();
@@ -1929,16 +1254,20 @@ class Component extends DCLogic {
     // Smart Glassmorphism Header (State-cached to prevent reflow lag)
     if (this.nav) {
       const navHeight = 80;
-      const scrollY = window.scrollY;
-      const heroFinishedScroll = (this.heroHeight - this.vh) - 40;
-      const isPastHero = scrollY >= heroFinishedScroll;
+      const vh = window.innerHeight;
+      const heroFinishedScroll = (this.hero.offsetHeight - vh) - 40;
+      const isPastHero = window.scrollY >= heroFinishedScroll;
 
       let navState = 'transparent';
       if (isPastHero) {
-        // Metrics cached in measureLayout() — no reflow inside the render path.
-        const currentY = scrollY + navHeight;
-        const isOverConsultation = (currentY >= this.consultTop && scrollY <= this.consultBottom);
-        const isOverFooter = (currentY >= this.footerTop && scrollY <= this.footerBottom);
+        const consultTop = this.consultSection ? this.consultSection.offsetTop : 99999;
+        const consultBottom = consultTop + (this.consultSection ? this.consultSection.offsetHeight : 0);
+        const footerTop = this.footerSection ? this.footerSection.offsetTop : 99999;
+        const footerBottom = footerTop + (this.footerSection ? this.footerSection.offsetHeight : 0);
+
+        const currentY = window.scrollY + navHeight;
+        const isOverConsultation = (currentY >= consultTop && window.scrollY <= consultBottom);
+        const isOverFooter = (currentY >= footerTop && window.scrollY <= footerBottom);
 
         if (isOverConsultation || isOverFooter) {
           navState = 'dark';
@@ -2026,13 +1355,12 @@ class Component extends DCLogic {
     // Sync Vertical Sequence Rail Highlighting with exact 7-beat video sequence
     if (this.railItems && this.railItems.length > 0) {
       let activeIdx = 0;
-      const k = targetFrame / this.FRAME_SCALE;   // back to 1000-frame space
-      if (k > 40 && k <= 160) activeIdx = 1;       // 02 CONSULTATION
-      else if (k > 160 && k <= 300) activeIdx = 2;  // 03 PRP METHOD
-      else if (k > 300 && k <= 520) activeIdx = 3; // 04 BODY QUALITY
-      else if (k > 520 && k <= 820) activeIdx = 4; // 05 HAIR RESTORATION
-      else if (k > 820 && k <= 920) activeIdx = 5; // 06 FORMULATIONS
-      else if (k > 920) activeIdx = 6;             // 07 MAYFAIR CODA
+      if (targetFrame > 40 && targetFrame <= 160) activeIdx = 1;       // 02 CONSULTATION
+      else if (targetFrame > 160 && targetFrame <= 300) activeIdx = 2;  // 03 PRP METHOD
+      else if (targetFrame > 300 && targetFrame <= 520) activeIdx = 3; // 04 BODY QUALITY
+      else if (targetFrame > 520 && targetFrame <= 820) activeIdx = 4; // 05 HAIR RESTORATION
+      else if (targetFrame > 820 && targetFrame <= 920) activeIdx = 5; // 06 FORMULATIONS
+      else if (targetFrame > 920) activeIdx = 6;                      // 07 MAYFAIR CODA
 
       this.railItems.forEach((item, idx) => {
         const bar = this.railBars[idx];
@@ -2047,8 +1375,7 @@ class Component extends DCLogic {
     }
 
     if (this.hotspotCard) {
-      const kf = targetFrame / this.FRAME_SCALE;   // back to 1000-frame space
-      const match = this.HOTSPOTS.find(h => kf >= h.min && kf <= h.max) || null;
+      const match = this.HOTSPOTS.find(h => targetFrame >= h.min && targetFrame <= h.max) || null;
       if (match !== this.activeHotspot) {
         this.activeHotspot = match;
         if (match) {
@@ -2100,8 +1427,6 @@ class Component extends DCLogic {
       email: this.state.email, phone: this.state.phone,
       area: this.state.area, message: this.state.message,
       consent: this.state.consent, submitted: this.state.submitted,
-      sending: this.state.sending, formError: this.state.formError,
-      sendLabel: this.state.sending ? 'Sending…' : 'Send Enquiry →',
       mobileMenuOpen: this.state.mobileMenuOpen,
       megaMenuOpen: this.state.megaMenuOpen,
       onToggleMobileMenu: () => this.setState({ mobileMenuOpen: !this.state.mobileMenuOpen }),
@@ -2112,41 +1437,7 @@ class Component extends DCLogic {
       onEmail: this.set('email'), onPhone: this.set('phone'),
       onArea: this.set('area'), onMessage: this.set('message'),
       onConsent: e => this.setState({ consent: e.target.checked }),
-      onSubmit: async () => {
-        const st = this.state;
-        // Validate before claiming success - the old handler showed a thank-you
-        // for an empty form.
-        if (!st.firstName.trim() || !st.email.trim() || !st.consent) {
-          this.setState({ formError: 'Please add your name, email and consent before sending.' });
-          return;
-        }
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(st.email.trim())) {
-          this.setState({ formError: 'That email address does not look right.' });
-          return;
-        }
-        this.setState({ formError: '', sending: true });
-        const body = new URLSearchParams({
-          'form-name': 'consultation',
-          firstName: st.firstName, lastName: st.lastName, email: st.email,
-          phone: st.phone, area: st.area, message: st.message,
-          consent: st.consent ? 'yes' : 'no'
-        }).toString();
-        try {
-          const res = await fetch('/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body
-          });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          this.setState({ sending: false, submitted: true });
-        } catch (e) {
-          // Never pretend it sent. Give them a route that cannot fail.
-          this.setState({
-            sending: false,
-            formError: 'Could not send just now — please WhatsApp us on +44 20 7998 7077 and we will pick it up straight away.'
-          });
-        }
-      },
+      onSubmit: () => this.setState({ submitted: true }),
       onClose: () => this.setState({ submitted: false, firstName:"", lastName:"", email:"", phone:"", message:"", consent:false })
     };
   }
