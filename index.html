@@ -1283,22 +1283,31 @@ class Component extends DCLogic {
       // Initialize Lenis Smooth Scroll with butter-smooth easing & momentum
       if (typeof window.Lenis !== 'undefined') {
         this.lenis = new window.Lenis({
-          duration: 1.4,
+          duration: 1.2,
           easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           direction: 'vertical',
           gestureDirection: 'vertical',
           smoothWheel: true,
-          wheelMultiplier: 0.9,
-          touchMultiplier: 1.1,
+          wheelMultiplier: 1.0,
+          touchMultiplier: 1.2,
         });
 
-        const lenisRaf = (time) => {
-          if (this.lenis) {
-            this.lenis.raf(time);
-            this.animId = requestAnimationFrame(lenisRaf);
-          }
-        };
-        this.animId = requestAnimationFrame(lenisRaf);
+        // Use GSAP ticker if available for 100% single-loop synchronized frame timing
+        if (typeof window.gsap !== 'undefined' && window.gsap.ticker) {
+          this._gsapTickerCb = (time) => {
+            if (this.lenis) this.lenis.raf(time * 1000);
+          };
+          window.gsap.ticker.add(this._gsapTickerCb);
+          window.gsap.ticker.lagSmoothing(0);
+        } else {
+          const lenisRaf = (time) => {
+            if (this.lenis) {
+              this.lenis.raf(time);
+              this.animId = requestAnimationFrame(lenisRaf);
+            }
+          };
+          this.animId = requestAnimationFrame(lenisRaf);
+        }
 
         this.lenis.on('scroll', (e) => {
           if (this.onLenisScroll) this.onLenisScroll(e.scroll);
@@ -1504,10 +1513,10 @@ class Component extends DCLogic {
     const percentEl = document.getElementById('tpl-loading-percent');
     const barEl = document.getElementById('tpl-loading-bar');
 
-    const GATE_DENSE = 30;
+    const GATE_DENSE = 40;
     const gateSet = [];
     for (let s = 1; s <= Math.min(GATE_DENSE, this.TOTAL_SPRITES); s++) gateSet.push(s);
-    for (let s = GATE_DENSE + 1; s <= this.TOTAL_SPRITES; s += 12) gateSet.push(s);
+    for (let s = GATE_DENSE + 1; s <= this.TOTAL_SPRITES; s += 10) gateSet.push(s);
     if (gateSet[gateSet.length - 1] !== this.TOTAL_SPRITES) gateSet.push(this.TOTAL_SPRITES);
 
     let released = false;
@@ -1546,14 +1555,29 @@ class Component extends DCLogic {
       releaseScroll();
       if (this.destroyed) return;
 
-      // The gate deliberately over-fetches so the first scroll is stutter-free,
-      // but that set alone is well past the decoded budget. Trim back to a
-      // window around the opening frame before the visitor can scroll.
-      // Deliberately NOT followed by a background fill of the remaining
-      // sheets: pulling all 250 into memory is what broke Safari, and every
-      // sheet stays in the HTTP cache anyway, so scrolling back into an
-      // evicted stretch is a cheap re-decode, not a re-download.
-      this.trimSpriteCache(1);
+      // Start non-blocking progressive background stream for the entire reel
+      let bgIdx = 1;
+      const streamNext = () => {
+        if (this.destroyed) return;
+        while (bgIdx <= this.TOTAL_SPRITES && (this.sprites[bgIdx] || this.inflight.has(bgIdx))) {
+          bgIdx++;
+        }
+        if (bgIdx <= this.TOTAL_SPRITES) {
+          const current = bgIdx++;
+          fetchSprite(current, 'low').then(() => {
+            if (window.requestIdleCallback) {
+              window.requestIdleCallback(streamNext, { timeout: 200 });
+            } else {
+              setTimeout(streamNext, 40);
+            }
+          });
+        }
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(streamNext, { timeout: 500 });
+      } else {
+        setTimeout(streamNext, 200);
+      }
     }).catch(() => {
       clearTimeout(gateSafety);
       releaseScroll();
@@ -1562,9 +1586,7 @@ class Component extends DCLogic {
 
   // Hold at most MAX_SPRITES decoded sheets, dropping the ones furthest from
   // the playhead first — a viewer scrubbing the sequence returns to nearby
-  // frames constantly and distant ones almost never. Dropping the reference is
-  // what actually frees the decoded bitmap; the Image is not touched otherwise
-  // (assigning .src = '' would fire a spurious request for the page URL).
+  // frames constantly and distant ones almost never.
   trimSpriteCache(centerSprite) {
     const keys = Object.keys(this.sprites);
     const overBy = keys.length - this.MAX_SPRITES;
@@ -1573,8 +1595,6 @@ class Component extends DCLogic {
     keys
       .map(k => {
         const offset = (Number(k) - centerSprite) * dir;   // >0 = ahead of travel
-        // Sheets behind the playhead are discounted 2:1 — still worth keeping
-        // for a reversal, but the first to go when space runs out.
         return { k, dist: offset >= 0 ? offset : -offset * 2 };
       })
       .sort((a, b) => b.dist - a.dist)
@@ -1582,8 +1602,6 @@ class Component extends DCLogic {
       .forEach(({ k }) => {
         const held = this.sprites[k];
         delete this.sprites[k];
-        // Hand the ~31.6MB decoded bitmap back immediately instead of waiting
-        // for GC to get round to it. Only ImageBitmaps can be released this way.
         if (held && typeof held.close === 'function') {
           try { held.close(); } catch (e) {}
         }
@@ -1591,8 +1609,6 @@ class Component extends DCLogic {
   }
 
   // Turn a loaded <img> into whatever this engine should actually hold for it.
-  // On WebKit that is an ImageBitmap (decoded off the main thread, and
-  // releasable); everywhere else the plain <img> is already the fast path.
   prepareSprite(img) {
     if (!this.useImageBitmap || typeof createImageBitmap !== 'function') {
       return Promise.resolve(img);
@@ -1603,7 +1619,7 @@ class Component extends DCLogic {
   findNearestLoadedSprite(spriteIndex) {
     if (this.sprites[spriteIndex]) return spriteIndex;
     // Monotonic Hold: Search BACKWARD FIRST so sequence never snaps into future
-    for (let delta = 1; delta <= 30; delta++) {
+    for (let delta = 1; delta <= 50; delta++) {
       if (spriteIndex - delta >= 1 && this.sprites[spriteIndex - delta]) return spriteIndex - delta;
       if (spriteIndex + delta <= this.TOTAL_SPRITES && this.sprites[spriteIndex + delta]) return spriteIndex + delta;
     }
@@ -1666,23 +1682,6 @@ class Component extends DCLogic {
 
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
-
-    // WebKit's 'high' imageSmoothingQuality takes a materially slower resampling
-    // path than Chrome's for the same drawImage call — fine for one settled
-    // frame, costly when it runs on every scroll-driven frame during an active
-    // gesture. Match Apple's own product-page trick: cheap resampling while the
-    // sequence is actively scrubbing, sharpen back up once scrolling settles
-    // (this.isScrolling already flips false ~150ms after the last scroll event).
-    // Assigning imageSmoothingQuality invalidates cached graphics state in
-    // WebKit, so only touch it when the value actually changes rather than on
-    // every single draw.
-    const wantQuality = this.isScrolling ? 'low' : 'high';
-    if (wantQuality !== this._smoothing) {
-      this._smoothing = wantQuality;
-      this.ctx.imageSmoothingEnabled = true;
-      this.ctx.imageSmoothingQuality = wantQuality;
-    }
-
     this.drawSingleFrame(frameNum);
     this.lastDrawnFrame = frameNum;
   }
@@ -1785,10 +1784,7 @@ class Component extends DCLogic {
     };
 
     // One render pass. `y` comes straight from Lenis when Lenis is driving, so
-    // the image updates in the SAME frame the page moves in. The old path
-    // listened for the native `scroll` event and deferred to requestAnimationFrame,
-    // which meant the canvas was always exactly one frame (~16ms) behind the
-    // scroll position — the picture visibly trailing the gesture.
+    // the image updates in the SAME frame the page moves in without frame-drag.
     this.renderTick = (y) => {
       const next = (y !== undefined && y !== null) ? y : window.scrollY;
       if (next === this.scrollY) return;
@@ -1814,11 +1810,6 @@ class Component extends DCLogic {
       if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
       this.scrollTimeout = setTimeout(() => {
         this.isScrolling = false;
-        // Force one more draw at settled (high-quality) resampling — the frame
-        // last painted mid-scroll used the cheap 'low' path and never gets
-        // sharpened up on its own since drawFrameOnCanvas only redraws when
-        // the target frame number changes.
-        if (this.lastDrawnFrame > 0) this.drawFrameOnCanvas(this.lastDrawnFrame);
       }, 150);
     };
 
@@ -1831,25 +1822,16 @@ class Component extends DCLogic {
 
     this.onScroll = () => {
       if (!this.hero) return;
+      // If Lenis is actively running, let Lenis own the scroll pipeline exclusively to prevent micro-jitter
+      if (this.lenis) return;
       this.markScrolling();
 
-      // Safari's trackpad momentum scroll fires far more raw `scroll` events
-      // per second than Chrome does, which was re-running the full canvas
-      // draw + nav-state DOM work on every single one of them. Throttle to
-      // one render pass per animation frame regardless of event frequency.
       if (this.ticking) return;
       this.ticking = true;
       const rafId = requestAnimationFrame(() => {
         this.ticking = false;
         this.renderTick();
       });
-      // A requestAnimationFrame callback is NOT guaranteed to run: the browser
-      // drops it while the tab is backgrounded, and can skip it under load. The
-      // old code latched `ticking = true` and, if that callback never fired, every
-      // later scroll event returned early — the hero froze on whatever frame it
-      // was on and never recovered. (Reproduced: background the tab mid-hero,
-      // come back, and the sequence is dead.) This releases the latch if the
-      // frame never arrives.
       clearTimeout(this._tickFallback);
       this._tickFallback = setTimeout(() => {
         if (!this.ticking) return;
@@ -1912,6 +1894,9 @@ class Component extends DCLogic {
 
   componentWillUnmount() {
     this.destroyed = true;
+    if (this._gsapTickerCb && typeof window.gsap !== 'undefined' && window.gsap.ticker) {
+      window.gsap.ticker.remove(this._gsapTickerCb);
+    }
     if (this.onScroll) {
       window.removeEventListener('scroll', this.onScroll);
       window.removeEventListener('touchmove', this.onScroll);
