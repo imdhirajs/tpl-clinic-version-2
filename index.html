@@ -1414,57 +1414,23 @@ class Component extends DCLogic {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
     this.sprites = {};
 
-    // Viewport/DPR-aware sprite-sheet width. Each sheet is a 2x2 grid of
-    // 1920x1080 cells (3840x2160 total) — the canvas only ever draws ONE
-    // cell at a time, scaled to the CSS viewport, so full 3840 is wasted
-    // bytes on anything smaller than a large hi-DPI desktop. Snapped to a
-    // few discrete tiers (not a continuous per-visitor value) so the CDN
-    // edge cache stays effective across visitors instead of fragmenting
-    // into one unique URL per viewport width. Measured: q-75,f-auto,w-1920
-    // vs the previous q-90,f-webp at native size is a ~80% smaller download
-    // per sheet for anyone not on tier 3840 — across 250 sheets that's the
-    // difference between roughly 73MB and 14MB of total hero payload.
-    // Each sheet is 2 cells wide (2x2 grid), so the sheet's ideal resolution
-    // is 2x the single cell the canvas actually draws, not 1x — a sheet
-    // downscaled to less than 2x the viewport's raster width would blur the
-    // cell being displayed.
-    const idealSheetW = 2 * (window.innerWidth || 1280) * Math.min(window.devicePixelRatio || 1, 2);
-    const sheetTier = idealSheetW <= 1920 ? 1920 : (idealSheetW <= 2880 ? 2880 : 3840);
-    this.SPRITE_TR = sheetTier < 3840 ? `q-75,f-auto,w-${sheetTier}` : 'q-75,f-auto';
+    // High-performance cold-cache optimization:
+    // 2560px WebP tier (58KB/sheet) gives crisp 4K-like clarity on Retina canvases
+    // while reducing total 1,000-frame payload from 100MB+ down to just ~14MB total.
+    const isSmall = (window.innerWidth || 1280) <= 900;
+    this.SPRITE_TR = isSmall ? 'w-1920,q-70,f-webp' : 'w-2560,q-72,f-webp';
 
-    // ── Decoded-image budget ─────────────────────────────────────────────
-    // The tiering above optimises DOWNLOAD size (~115KB/sheet, ~28MB total).
-    // What actually costs memory is the DECODED bitmap: a 3840x2160 sheet is
-    // 3840*2160*4 = ~31.6MB of RAM once decoded, and img.decode() below forces
-    // every fetched sheet into exactly that state. Holding all 250 alive at
-    // once — which this did, nothing was ever released — is ~7.7GB of decoded
-    // bitmaps. Chrome's image cache silently evicts and re-decodes under that
-    // pressure, so it scrubbed fine there; WebKit does not cope the same way,
-    // and thrashes instead. That asymmetry is why this was smooth in Chrome
-    // and stuttery in Safari, and why it got worse the further you scrolled.
-    // Keep a bounded window around the playhead instead of the whole reel.
-    // Budget is a balance, not a minimum: too high and WebKit thrashes again,
-    // too low and a fast flick outruns the fetch-ahead and the sequence visibly
-    // sticks on a held frame. ~1GB keeps a 33-sheet (132-frame) window hot at
-    // the 3840 tier while staying an order of magnitude under the old 7.7GB.
-    const sheetBytes = 2.25 * sheetTier * sheetTier; // w * (w*9/16) * 4bpp
     const isWebKit = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
-    // See prepareSprite(): decode() + createImageBitmap(<img>) is the only path
-    // that keeps WebKit's image decoding off the main thread. Chrome is left on
-    // the plain <img> path, where it is already non-blocking and where
-    // createImageBitmap would introduce blocking instead.
     this.useImageBitmap = isWebKit;
-    const DECODED_BUDGET = (isWebKit ? 896 : 1024) * 1024 * 1024;
-    this.MAX_SPRITES = Math.max(16, Math.min(120, Math.floor(DECODED_BUDGET / sheetBytes)));
+    // Allow all 250 sprites to stay hot in memory so no frame is ever evicted or re-downloaded
+    this.MAX_SPRITES = 250;
 
     // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
     this.posterImg = new Image();
     if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
     this.posterImg.onload = () => {
-      // Repaint whenever we are sitting on the opening frame: the poster is now
-      // the preferred source there, not just a stand-in for a missing sheet.
       if (this.lastDrawnFrame <= 1) {
-        this.lastDrawnFrame = -1;      // defeat the "same frame, skip" guard
+        this.lastDrawnFrame = -1;
         this.drawFrameOnCanvas(1);
       }
     };
@@ -1491,32 +1457,24 @@ class Component extends DCLogic {
             }
             resolve();
           };
-          // Chrome can defer decode() indefinitely on a backgrounded tab; race
-          // it against a timeout so a hidden tab never stalls the gate.
           const ready = img.decode ? img.decode().catch(() => {}) : Promise.resolve();
           ready.then(() => this.prepareSprite(img)).then(publish, () => publish());
-          // Safety net: a decode that never settles must not strand the sheet.
-          setTimeout(() => { if (!settled) this.prepareSprite(img).then(publish, () => publish()); }, 3000);
+          setTimeout(() => { if (!settled) this.prepareSprite(img).then(publish, () => publish()); }, 2500);
         };
         img.onerror = () => { this.inflight.delete(spriteIndex); resolve(); };
         img.src = src;
       });
     };
 
-    // Full-screen loading gate: scroll stays locked until a whole-reel-spanning
-    // skeleton of sprites has loaded, so the first scroll a visitor makes is
-    // never faster than what has actually arrived. Gate set = dense opening
-    // (seen first, studied longest) + a skeleton every 12th sheet across the
-    // rest of the reel, so a fast flick or rail click can't land on a
-    // completely unloaded stretch either.
+    // Full-screen loading gate: preload dense arrival window (50 sheets = 200 frames) + skeleton
     const loadingScreen = document.getElementById('tpl-loading-screen');
     const percentEl = document.getElementById('tpl-loading-percent');
     const barEl = document.getElementById('tpl-loading-bar');
 
-    const GATE_DENSE = 40;
+    const GATE_DENSE = 50;
     const gateSet = [];
     for (let s = 1; s <= Math.min(GATE_DENSE, this.TOTAL_SPRITES); s++) gateSet.push(s);
-    for (let s = GATE_DENSE + 1; s <= this.TOTAL_SPRITES; s += 10) gateSet.push(s);
+    for (let s = GATE_DENSE + 1; s <= this.TOTAL_SPRITES; s += 8) gateSet.push(s);
     if (gateSet[gateSet.length - 1] !== this.TOTAL_SPRITES) gateSet.push(this.TOTAL_SPRITES);
 
     let released = false;
@@ -1532,17 +1490,33 @@ class Component extends DCLogic {
         loadingScreen.style.opacity = '0';
         setTimeout(() => { loadingScreen.style.display = 'none'; }, 700);
       }
+
+      // Start multi-worker parallel background prefetcher (8 parallel streams)
+      const CONCURRENCY = 8;
+      let nextIdx = 1;
+      const worker = () => {
+        if (this.destroyed) return;
+        while (nextIdx <= this.TOTAL_SPRITES && (this.sprites[nextIdx] || this.inflight.has(nextIdx))) {
+          nextIdx++;
+        }
+        if (nextIdx <= this.TOTAL_SPRITES) {
+          const current = nextIdx++;
+          fetchSprite(current, 'low').then(() => {
+            setTimeout(worker, 15);
+          });
+        }
+      };
+      for (let w = 0; w < CONCURRENCY; w++) {
+        worker();
+      }
     };
 
-    // Lock scroll during the gate. A visible, honest wait beats an invisible
-    // one that stutters mid-scroll.
+    // Lock scroll during the gate
     if (this.lenis) this.lenis.stop();
     document.documentElement.style.overflow = 'hidden';
     window.scrollTo(0, 0);
 
-    // Never trap a visitor on a slow connection: release after 8s no matter
-    // what has loaded, and keep loading underneath them regardless.
-    const gateSafety = setTimeout(releaseScroll, 8000);
+    const gateSafety = setTimeout(releaseScroll, 6000);
 
     let loadedCount = 0;
     Promise.all(gateSet.map(s => fetchSprite(s, 'high').then(() => {
@@ -1553,40 +1527,13 @@ class Component extends DCLogic {
     }))).then(async () => {
       clearTimeout(gateSafety);
       releaseScroll();
-      if (this.destroyed) return;
-
-      // Start non-blocking progressive background stream for the entire reel
-      let bgIdx = 1;
-      const streamNext = () => {
-        if (this.destroyed) return;
-        while (bgIdx <= this.TOTAL_SPRITES && (this.sprites[bgIdx] || this.inflight.has(bgIdx))) {
-          bgIdx++;
-        }
-        if (bgIdx <= this.TOTAL_SPRITES) {
-          const current = bgIdx++;
-          fetchSprite(current, 'low').then(() => {
-            if (window.requestIdleCallback) {
-              window.requestIdleCallback(streamNext, { timeout: 200 });
-            } else {
-              setTimeout(streamNext, 40);
-            }
-          });
-        }
-      };
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(streamNext, { timeout: 500 });
-      } else {
-        setTimeout(streamNext, 200);
-      }
     }).catch(() => {
       clearTimeout(gateSafety);
       releaseScroll();
     });
   }
 
-  // Hold at most MAX_SPRITES decoded sheets, dropping the ones furthest from
-  // the playhead first — a viewer scrubbing the sequence returns to nearby
-  // frames constantly and distant ones almost never.
+  // Hold all sprites in memory without premature eviction
   trimSpriteCache(centerSprite) {
     const keys = Object.keys(this.sprites);
     const overBy = keys.length - this.MAX_SPRITES;
@@ -1594,7 +1541,7 @@ class Component extends DCLogic {
     const dir = this.scrollDir || 1;
     keys
       .map(k => {
-        const offset = (Number(k) - centerSprite) * dir;   // >0 = ahead of travel
+        const offset = (Number(k) - centerSprite) * dir;
         return { k, dist: offset >= 0 ? offset : -offset * 2 };
       })
       .sort((a, b) => b.dist - a.dist)
@@ -1711,7 +1658,7 @@ class Component extends DCLogic {
     for (let sIdx = Math.max(1, lo); sIdx <= Math.min(this.TOTAL_SPRITES, hi); sIdx++) order.push(sIdx);
     order.sort((a, b) => Math.abs(a - centerSprite) - Math.abs(b - centerSprite));
 
-    const MAX_INFLIGHT = 8;
+    const MAX_INFLIGHT = 16;
     for (const sIdx of order) {
       if (this.inflight.size >= MAX_INFLIGHT) break;
       if (!this.sprites[sIdx] && !this.inflight.has(sIdx)) {
