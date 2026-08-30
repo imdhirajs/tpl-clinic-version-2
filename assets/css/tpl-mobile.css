@@ -1,0 +1,1602 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TPL Clinic — the mobile layer
+   ═══════════════════════════════════════════════════════════════════════════
+
+   One stylesheet, linked from every page, holding everything the site needs
+   below 1024px. It exists because the pages are built from inline styles: a
+   media query in a page's <style> block can only reach an inline `style=`
+   attribute with !important, so the mobile rules were never going to live
+   next to the desktop ones. Keeping them here means the phone layout is one
+   file you can read end to end.
+
+   Two rules for working in here:
+
+   1. Almost every declaration needs !important. It is overriding an inline
+      style attribute, not another stylesheet. Where you see a rule without
+      it, the target is a class-only property and the plain form is enough.
+
+   2. The class vocabulary (.tpl-m-*) is applied in the page markup. Adding a
+      collapse means adding a class to the grid, not writing a new selector
+      against a fragile ancestor chain.
+
+   Breakpoints
+     ≤1023px   tablets and phones — chrome swaps to the drawer
+     ≤767px    phones — layout collapses to one column, rhythm tightens
+     ≤479px    small phones — type scale steps down once more
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ══ 1. Foundations ════════════════════════════════════════════════════════
+   Applied at every width because they are corrections, not layout. */
+
+:root {
+  --tpl-navy: #081359;
+  --tpl-gold: #B8925D;
+  --tpl-gold-light: #C7A470;
+  --tpl-ink: #242424;
+  --tpl-gutter: 20px;
+  /* Height of the fixed header on phones. Anchor offsets and the sticky
+     anchor rail are both derived from it, so the three can never drift apart.
+     tpl-mobile.js measures the real header on load and overwrites this — the
+     value here is the pre-measurement fallback. */
+  --tpl-header-h: 64px;
+  /* Height of the fixed action bar, including the home-indicator inset. Set to
+     0 at widths where the bar is not shown so the padding maths collapses. */
+  --tpl-actionbar-h: 0px;
+}
+
+html {
+  /* Landscape rotation on iOS otherwise inflates body text and breaks every
+     carefully-set measure on the page. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* The grey flash on every tap reads as cheap on a clinic site; the states
+     below replace it with something deliberate. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keyboard focus stays visible — the reset above only removes the touch flash. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--tpl-gold) !important;
+  outline-offset: 3px !important;
+}
+
+@media (max-width: 1023px) {
+  /* Touch feedback, since :hover is meaningless here. Confined to the
+     elements a finger actually lands on. */
+  a:active,
+  button:active {
+    opacity: .62;
+    transition: opacity .06s linear;
+  }
+}
+
+
+/* ══ 2. Header ═════════════════════════════════════════════════════════════
+   The desktop header is a three-part bar: logo, nav, then WhatsApp + a
+   "Book Consultation" pill + the hamburger. On a phone the nav is gone and
+   the three survivors fight over 350px — the pill wins and pushes the
+   hamburger off the right edge.
+
+   The fix is to decide what the header is for on a phone. It is for knowing
+   where you are and opening the menu. Booking is handled by the action bar
+   pinned to the bottom of the screen, which is closer to the thumb than any
+   header could be, so the pill comes out below 768px. */
+
+@media (max-width: 1023px) {
+  header[data-nav="1"] {
+    padding: 10px var(--tpl-gutter) !important;
+    padding-top: calc(10px + env(safe-area-inset-top)) !important;
+    min-height: var(--tpl-header-h);
+    box-sizing: border-box;
+    gap: 12px !important;
+  }
+
+  .tpl-logo-img,
+  header[data-nav="1"] a[data-logo="1"] img {
+    height: 48px !important;
+  }
+
+  /* The desktop rule insets the mark from the corner; on a 64px-tall mobile
+     header there is no room to spare, so it goes back to the edge. */
+  header[data-nav="1"] a[data-logo="1"] { margin-left: 0 !important; }
+
+  /* Footer mark scales with the header one, capped so it does not dominate
+     the stacked footer. */
+  .tpl-footer-logo { height: 64px !important; }
+
+  /* The hamburger is the one control in the header, so it gets a real target:
+     44px tall, and padded out to the screen edge so the corner counts. */
+  .tpl-mobile-toggle {
+    min-height: 44px;
+    padding: 0 0 0 14px !important;
+    margin-right: -4px;
+    gap: 9px !important;
+  }
+  .tpl-mobile-toggle span {
+    font-size: 10.5px !important;
+  }
+
+  /* Header theme is driven by tpl-mobile.js, which reads what is under the bar
+     and stamps data-theme. The page scripts also write inline styles onto the
+     header; !important is what keeps the two from fighting. */
+  /* Dark theme, scrolled: a solid navy bar. This used to be transparent for the
+     whole dark theme, which meant every mid-page navy band — the results
+     timeline, the consultation form — scrolled straight through the header and
+     collided with the nav labels. */
+  header[data-nav="1"][data-theme="dark"] {
+    background: rgba(8, 19, 89, .94) !important;
+    border-bottom: 1px solid rgba(184, 146, 93, .28) !important;
+    box-shadow: 0 6px 24px rgba(4, 10, 38, .30) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  }
+  /* The one case that earns transparency: floating over the hero, where there is
+     nothing to collide with and the film should read edge to edge.
+     data-float is stamped by tpl-mobile.js. */
+  header[data-nav="1"][data-theme="dark"][data-float="1"] {
+    background: transparent !important;
+    border-bottom-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  header[data-nav="1"][data-theme="dark"] .tpl-mobile-toggle,
+  header[data-nav="1"][data-theme="dark"] [data-nav-link="1"] {
+    color: #ffffff !important;
+  }
+
+  header[data-nav="1"][data-theme="light"] {
+    background: rgba(255, 255, 255, .97) !important;
+    border-bottom: 1px solid rgba(184, 146, 93, .28) !important;
+    box-shadow: 0 6px 24px rgba(8, 19, 89, .07) !important;
+    backdrop-filter: blur(18px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important;
+  }
+  header[data-nav="1"][data-theme="light"] .tpl-mobile-toggle,
+  header[data-nav="1"][data-theme="light"] [data-nav-link="1"] {
+    color: var(--tpl-ink) !important;
+  }
+  header[data-nav="1"][data-theme="light"] .tpl-logo-dark { display: none !important; }
+  header[data-nav="1"][data-theme="light"] .tpl-logo-light { display: block !important; }
+  header[data-nav="1"][data-theme="dark"] .tpl-logo-dark { display: block !important; }
+  header[data-nav="1"][data-theme="dark"] .tpl-logo-light { display: none !important; }
+
+  /* Pages whose logo is a text lockup rather than the ring mark. */
+  header[data-nav="1"][data-theme="light"] a[data-logo="1"] span:first-child { color: var(--tpl-ink) !important; }
+  header[data-nav="1"][data-theme="light"] a[data-logo="1"] span:last-child { color: var(--tpl-gold) !important; }
+  header[data-nav="1"][data-theme="dark"] a[data-logo="1"] span:first-child { color: #ffffff !important; }
+  header[data-nav="1"][data-theme="dark"] a[data-logo="1"] span:last-child { color: var(--tpl-gold-light) !important; }
+}
+
+/* The desktop nav — including the WhatsApp link that sits beside it — is hidden
+   below 1024px by each page's own `.tpl-desktop-nav { display: none }`. That rule
+   is a bare class, so on any page whose `.tpl-cta-wa { display: inline-flex
+   !important }` happens to be declared after it the two tie on specificity and
+   the later one wins: prp.html was the one page where the header kept a WhatsApp
+   label, crowding the hamburger. Qualifying by the header element outranks both,
+   so source order stops deciding it. */
+@media (max-width: 1023px) {
+  header[data-nav="1"] .tpl-desktop-nav { display: none !important; }
+
+  /* Tablets keep the booking pill, and its desktop padding builds a 38px
+     target — a finger short. Sized here rather than in §8 with the other touch
+     targets, and deliberately ABOVE the phone rule below: the two selectors are
+     identical, so whichever is written last wins, and the phone has to be the
+     one that gets the final say. Written the other way round — which is how
+     this first went in — the tablet sizing switched the pill back on at 390px
+     and it fought the hamburger for the corner again. */
+  header[data-nav="1"] [data-btn="1"] {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 767px) {
+  /* The header CTA moves to the action bar. Tablets keep it — they have room. */
+  header[data-nav="1"] [data-btn="1"] { display: none !important; }
+}
+
+
+/* ══ 3. Drawer ═════════════════════════════════════════════════════════════
+   The drawer is the only route into the site on a phone, so it carries the
+   whole map: the four treatment groups (cloned from the desktop mega menu by
+   tpl-mobile.js, so the two can never fall out of sync), the pages, and the
+   ways to reach the clinic. */
+
+@media (max-width: 1023px) {
+  .tpl-mobile-drawer {
+    padding: 0 !important;
+    background: var(--tpl-navy) !important;
+    /* Fixed elements measured in vh are cut off by the iOS toolbars; svh is
+       the small viewport, which is the one that is always visible. */
+    height: 100svh;
+    max-height: 100svh;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tpl-drawer-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px var(--tpl-gutter);
+    padding-top: calc(14px + env(safe-area-inset-top));
+    background: var(--tpl-navy);
+    border-bottom: 1px solid rgba(184, 146, 93, .3);
+  }
+  .tpl-drawer-head img { height: 40px !important; width: auto !important; }
+  .tpl-drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 4px 0 16px !important;
+    background: none;
+    border: 0;
+    color: #ffffff;
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .tpl-drawer-body {
+    flex: 1 1 auto;
+    padding: 8px var(--tpl-gutter) 26px;
+  }
+
+  .tpl-drawer-eyebrow {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--tpl-gold-light);
+    padding: 26px 0 4px;
+  }
+
+  /* Primary destinations. One per line, hairline-separated, 56px tall —
+     a list you can hit without looking. */
+  .tpl-drawer-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 56px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+    font-family: Jost, sans-serif;
+    font-weight: 300;
+    font-size: 19px;
+    letter-spacing: .06em;
+    color: #ffffff !important;
+    text-decoration: none;
+  }
+  .tpl-drawer-link .idx {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .2em;
+    color: var(--tpl-gold-light);
+  }
+  .tpl-drawer-link--gold { color: var(--tpl-gold-light) !important; }
+
+  /* Treatment groups. Closed by default: twenty links opened flat would bury
+     the pages underneath them. */
+  .tpl-drawer-group { border-bottom: 1px solid rgba(255, 255, 255, .1); }
+  .tpl-drawer-group-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    min-height: 54px;
+    padding: 6px 0;
+    background: none;
+    border: 0;
+    text-align: left;
+    font-family: Jost, sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    letter-spacing: .05em;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .tpl-drawer-group-btn .mark {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--tpl-gold-light);
+    transition: transform .3s ease;
+    flex: none;
+  }
+  .tpl-drawer-group[aria-expanded="true"] .mark { transform: rotate(45deg); }
+  .tpl-drawer-group-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .38s cubic-bezier(.22, 1, .36, 1);
+  }
+  .tpl-drawer-group[aria-expanded="true"] .tpl-drawer-group-panel { grid-template-rows: 1fr; }
+  .tpl-drawer-group-panel > div { overflow: hidden; }
+  .tpl-drawer-group-panel a {
+    display: block;
+    padding: 13px 0 13px 14px;
+    margin-left: 2px;
+    border-left: 1px solid rgba(184, 146, 93, .35);
+    font-size: 15px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, .82) !important;
+    text-decoration: none;
+  }
+  .tpl-drawer-group-panel a:last-child { padding-bottom: 18px; }
+
+  .tpl-drawer-foot {
+    margin-top: auto;
+    padding: 26px var(--tpl-gutter);
+    padding-bottom: calc(26px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, .04);
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tpl-drawer-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    padding: 0 20px;
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-sizing: border-box;
+  }
+  .tpl-drawer-cta--gold { background: var(--tpl-gold); color: #ffffff !important; }
+  .tpl-drawer-cta--ghost { border: 1px solid rgba(255, 255, 255, .4); color: #ffffff !important; }
+  /* The drawer's WhatsApp button carries the green mark, as every other
+     WhatsApp call to action on the site now does. The letter-spacing it
+     inherits is trailing whitespace after the last glyph, so the gap is
+     deliberately tighter than the desktop 10px to look even. */
+  .tpl-drawer-cta--wa { gap: 7px; }
+  .tpl-drawer-cta--wa svg { flex: none; width: 15px; height: 15px; display: block; }
+  .tpl-drawer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tpl-drawer-addr {
+    margin-top: 6px;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    /* The address and the phone number are content, not chrome — this is where
+       a visitor reads where the clinic actually is. */
+    font-size: 11.5px;
+    line-height: 1.85;
+    letter-spacing: .12em;
+    color: rgba(255, 255, 255, .55);
+    text-align: center;
+  }
+}
+
+/* Body lock while the drawer is open. position:fixed rather than
+   overflow:hidden — iOS Safari ignores the latter on the scrolling element,
+   and the page scrolls away underneath the panel. */
+body.tpl-locked {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+
+
+/* ══ 4. Action bar ═════════════════════════════════════════════════════════
+   The clinic takes no online bookings: every enquiry becomes a phone call, a
+   WhatsApp message or the callback form. On a phone those three are one thumb
+   movement away at all times rather than a scroll back to the header.
+
+   It steps aside when the enquiry form is on screen — two competing calls to
+   action at the same moment is one too many. */
+
+.tpl-actionbar { display: none; }
+
+@media (max-width: 767px) {
+  :root { --tpl-actionbar-h: calc(58px + env(safe-area-inset-bottom)); }
+
+  .tpl-actionbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 250;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    background: rgba(255, 255, 255, .95);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-top: 1px solid rgba(36, 36, 36, .12);
+    padding-bottom: env(safe-area-inset-bottom);
+    transform: translateY(0);
+    transition: transform .38s cubic-bezier(.22, 1, .36, 1), opacity .28s ease;
+  }
+  .tpl-actionbar[data-hidden="1"] {
+    transform: translateY(120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .tpl-actionbar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 58px;
+    font-family: Jost, sans-serif;
+    /* This bar is the site's primary navigation on a phone and is on screen the
+       whole way down a 12,000px page, so it is the last place to be precious
+       about label size. 9.5px at .2em was below the 11px floor the rest of this
+       file holds to; the tracking gives back the width the larger size costs,
+       and "WhatsApp" — the longest label — still sits on one line at 320px. */
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--tpl-ink) !important;
+    text-decoration: none;
+    border-right: 1px solid rgba(36, 36, 36, .1);
+  }
+  .tpl-actionbar a svg { width: 18px; height: 18px; display: block; }
+  .tpl-actionbar a:last-child {
+    background: var(--tpl-navy);
+    color: #ffffff !important;
+    border-right: 0;
+    letter-spacing: .16em;
+  }
+
+  /* Nothing at the foot of the page may sit under the bar. */
+  body { padding-bottom: var(--tpl-actionbar-h); }
+}
+
+
+/* ══ 5. Section rhythm ═════════════════════════════════════════════════════
+   Desktop breathes at 120–190px between bands. Carried onto a 390px screen
+   that reads as dead air — you scroll through nothing to reach the next idea.
+   Roughly half of it holds the same composure on a phone. */
+
+@media (max-width: 1023px) {
+  section {
+    padding-left: var(--tpl-gutter) !important;
+    padding-right: var(--tpl-gutter) !important;
+  }
+  footer {
+    padding-left: var(--tpl-gutter) !important;
+    padding-right: var(--tpl-gutter) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .tpl-sec {
+    padding-top: 68px !important;
+    padding-bottom: 68px !important;
+  }
+  .tpl-sec--tight {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  /* Page heroes: the top pad has to clear the fixed header, the bottom does not. */
+  .tpl-sec--hero {
+    padding-top: calc(var(--tpl-header-h) + 54px) !important;
+    padding-bottom: 56px !important;
+  }
+  /* Bands that deliberately butt up against their neighbour on one side —
+     collapsing both edges would open a gap the desktop layout does not have. */
+  .tpl-sec--head { padding-top: 62px !important; }
+  .tpl-sec--foot { padding-bottom: 62px !important; }
+  .tpl-band {
+    padding-top: 52px !important;
+    padding-bottom: 52px !important;
+  }
+  footer {
+    padding-top: 56px !important;
+    padding-bottom: 28px !important;
+  }
+
+  /* Every in-page anchor lands below the header rather than behind it. */
+  section[id],
+  [data-anchor-target] {
+    scroll-margin-top: calc(var(--tpl-header-h) + 12px) !important;
+  }
+}
+
+
+/* ══ 6. Layout vocabulary ══════════════════════════════════════════════════
+   The classes below are applied in the markup. Each one names a shape, not a
+   place, so the same class collapses the same way on every page. */
+
+@media (max-width: 1023px) {
+  /* Two editorial columns → one. The named classes alongside .tpl-m-split are
+     the per-page grids that already existed; they collapse the same way, so
+     they share the rule rather than repeating it five times. */
+  .tpl-m-split,
+  .tpl-hero-grid,
+  .tpl-2col,
+  .tpl-signature,
+  .tpl-founder,
+  .tpl-split {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 40px !important;
+  }
+  /* Where the media block comes first in source but the argument should lead. */
+  .tpl-m-split > .tpl-m-first { order: -1; }
+
+  /* The services hero rail sits to the right of the headline on a desktop and is
+     hung off a left hairline. Stacked underneath, that hairline reads as a stray
+     vertical rule against nothing, so it becomes the seam above the rail. */
+  .tpl-hero-rail {
+    border-left: 0 !important;
+    border-top: 1px solid rgba(232, 200, 154, 0.3);
+    padding-left: 0 !important;
+    padding-top: 26px;
+  }
+  /* Its rows are padded in vh so they breathe with a laptop screen. Stacked
+     full-width on a 1180px-tall tablet that same vh reads as a gappy list, so
+     below the split the rows go back to a fixed rhythm. */
+  .tpl-hero-rail a[data-hero-region] { padding: 13px 0 !important; }
+}
+
+@media (max-width: 767px) {
+  /* Three and four-up card rows → one, with the seam grid intact. */
+  .tpl-m-3,
+  .tpl-m-4 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Two-column text lists (treatment names). Kept at two up to 480px, where
+     the longer names start breaking mid-word. */
+  .tpl-m-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 22px !important;
+  }
+
+  /* A pair of portraits stays two-up — it is the composition, not a grid —
+     but loses the desktop stagger, which on a narrow screen just looks
+     like something failed to load. */
+  .tpl-m-pair {
+    gap: 12px !important;
+  }
+  .tpl-m-pair > * { margin-top: 0 !important; }
+
+  /* Three or more framed images become a swipeable strip rather than three
+     stamp-sized boxes. Full-bleed to the screen edge so the cut-off card on
+     the right reads as "there is more", which is the whole point. */
+  .tpl-m-rail {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 62vw !important;
+    grid-template-columns: none !important;
+    gap: 12px !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    margin-left: calc(var(--tpl-gutter) * -1) !important;
+    margin-right: calc(var(--tpl-gutter) * -1) !important;
+    padding: 0 var(--tpl-gutter) !important;
+    /* Without this the snapport is the padding box, so the browser scrolls the
+       gutter away on load to align the first card — the strip opens already
+       clipped on its left edge. */
+    scroll-padding-left: var(--tpl-gutter);
+    scrollbar-width: none;
+  }
+  .tpl-m-rail::-webkit-scrollbar { display: none; }
+  .tpl-m-rail > * {
+    scroll-snap-align: start;
+    margin-top: 0 !important;
+  }
+
+  /* Footer: the brand block full width, then the three link columns two-up.
+     Stacking all four made the footer taller than the section above it. */
+  .tpl-m-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 34px 20px !important;
+  }
+  /* The brand block is the first cell on the pages still carrying the original
+     four-column footer, and it needs the full width there. On the treatment
+     pages the mark has moved to its own centred row above this grid, so the
+     first cell is an ordinary link column — --links opts those out, otherwise
+     "Treatments" would stretch the width of the footer. */
+  .tpl-m-footer > *:first-child { grid-column: 1 / -1; }
+  .tpl-m-footer--links > *:first-child { grid-column: auto; }
+
+  /* Form grid → one field per row. */
+  .tpl-m-form {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+  }
+  .tpl-m-form > [style*="grid-column"] { grid-column: auto !important; }
+}
+
+@media (max-width: 479px) {
+  .tpl-m-list { grid-template-columns: minmax(0, 1fr) !important; }
+  .tpl-m-rail { grid-auto-columns: 72vw !important; }
+}
+
+
+/* ══ 7. Type scale ═════════════════════════════════════════════════════════
+   Two corrections, both about measure.
+
+   Body copy is set at line-height 1.9. That is right for a 520px column and
+   wrong for a 350px one — at seven or eight words a line the leading opens
+   gaps the eye has to jump, and the paragraph stops reading as a block.
+
+   Display sizes use vw units that were tuned against a 1440px viewport, so
+   they resolve to their clamp minimum on a phone regardless of what the
+   heading has to say. The floors below are set per level instead. */
+
+@media (max-width: 767px) {
+  p, li {
+    line-height: 1.7 !important;
+  }
+  /* Both spellings on purpose. The pages are authored with compact inline
+     styles (`font-size:16px`), but the runtime re-serialises every style
+     attribute through React, which writes them spaced and normalises leading
+     decimals (`letter-spacing: 0.3em`). Matching only the source spelling
+     matches nothing in the rendered page. */
+  section p[style*="font-size:16px"],
+  section p[style*="font-size: 16px"],
+  section p[style*="font-size:16.5px"],
+  section p[style*="font-size: 16.5px"] {
+    font-size: 15.5px !important;
+  }
+
+  h1 { font-size: clamp(38px, 10.6vw, 54px) !important; line-height: 1.02 !important; }
+  h2 { font-size: clamp(29px, 8vw, 40px) !important; line-height: 1.1 !important; }
+  h3 { font-size: clamp(30px, 9vw, 46px) !important; }
+
+  /* Jost at weight 200 goes fragile below ~34px; 300 holds the stroke. */
+  h1, h2 { font-weight: 300 !important; }
+
+  /* Tracked-out mono eyebrows wrap to three lines at .3em on a phone. */
+  [style*="letter-spacing:.3em"],
+  [style*="letter-spacing: 0.3em"],
+  [style*="letter-spacing:.32em"],
+  [style*="letter-spacing: 0.32em"],
+  [style*="letter-spacing:.36em"],
+  [style*="letter-spacing: 0.36em"] {
+    letter-spacing: .22em !important;
+  }
+}
+
+
+/* ══ 8. Forms ══════════════════════════════════════════════════════════════
+   Any input below 16px makes iOS Safari zoom the page on focus, and it does
+   not zoom back out. Everything else here follows from giving the fields a
+   real target height. */
+
+@media (max-width: 1023px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    padding: 14px 14px !important;
+    min-height: 52px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  select {
+    /* appearance:none strips the native arrow, so draw one back. */
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23B8925D' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 16px center !important;
+    padding-right: 40px !important;
+  }
+  textarea { min-height: 118px !important; }
+
+  /* Field labels. Set at 10px to sit quietly above a field on a desktop form —
+     but on a phone the label is the only thing distinguishing one identical
+     grey box from the next, and it is being read at arm's length by someone who
+     has already decided to hand over their phone number. It comes up to the
+     11px floor and gives back the width in tracking. */
+  .tpl-m-form label > span {
+    font-size: 11.5px !important;
+    letter-spacing: .16em !important;
+  }
+
+  input[type="checkbox"] {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    margin-top: 0 !important;
+  }
+  /* The consent row is the last thing between a visitor and sending — give the
+     whole line a target rather than the 22px box. */
+  .tpl-m-consent {
+    align-items: center !important;
+    gap: 14px !important;
+    min-height: 48px;
+    padding: 6px 0;
+  }
+
+  button[data-submit="1"] {
+    min-height: 56px !important;
+  }
+}
+
+/* Targets that are text on a desktop but need to be hit with a thumb here.
+   Anything already carrying an inline `display` is a padded button and is left
+   alone — an inline style would win over these rules anyway. Tablets are
+   included: a finger is a finger at 768px. */
+@media (max-width: 1023px) {
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* The services filter pills. The phone rule that used to carry this height
+     lives in the ≤767 scroller block, so at 768–1023 — where the row is still
+     a wrapped flex line but the pointer is already a finger — the pills stayed
+     at their 36px desktop height. Set once, for the whole touch range. */
+  .tpl-filter-row button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px !important;
+  }
+
+  /* Scoped to page content on purpose. Unscoped, this caught the tel: link in
+     the action bar and replaced its flex centring with inline-block, which
+     pushed the Call icon off the left edge of the bar. */
+  section a[href^="tel:"],
+  section a[href^="mailto:"],
+  footer a[href^="tel:"],
+  footer a[href^="mailto:"] {
+    display: inline-block;
+    padding: 13px 0;
+  }
+  section a[style*="text-transform:uppercase"],
+  section a[style*="text-transform: uppercase"] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Inline validation — see tpl-mobile.js. */
+  .tpl-field-error {
+    border-color: #B4432F !important;
+  }
+  .tpl-form-note {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #B4432F;
+  }
+  .tpl-form-note[hidden] { display: none; }
+}
+
+
+/* ══ 9. Anchor rail ════════════════════════════════════════════════════════
+   The treatment pages carry a sticky in-page nav that was set to display:none
+   below 1024px. On the page where it matters least — a 1440px desktop with a
+   scrollbar for orientation — it was visible; on a 16,000px phone scroll it
+   was not. Here it becomes a swipeable chip rail that tracks the section you
+   are actually in. */
+
+@media (max-width: 1023px) {
+  .tpl-anchorbar {
+    display: block !important;
+    top: var(--tpl-header-h) !important;
+    background: rgba(255, 255, 255, .97) !important;
+  }
+  .tpl-anchorbar-inner {
+    padding: 0 var(--tpl-gutter) !important;
+    gap: 0 !important;
+    /* The bar centres on desktop. Here it is a scroller wider than the screen,
+       and a centred flex row whose content overflows pushes the first chip off
+       the left edge with no way to scroll back to it. Start-aligned. */
+    justify-content: flex-start !important;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tpl-anchorbar-inner::-webkit-scrollbar { display: none; }
+  .tpl-anchorbar a {
+    padding: 13px 14px !important;
+    margin-right: 4px;
+    scroll-snap-align: center;
+    /* The rail is a scroller, so a larger chip costs scroll distance, not
+       layout — cheap in exchange for a label that can be read at arm's length. */
+    font-size: 11px !important;
+    letter-spacing: .14em !important;
+    border-bottom: 0 !important;
+    border: 1px solid rgba(36, 36, 36, .14) !important;
+    border-radius: 999px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .tpl-anchorbar a.is-current {
+    background: var(--tpl-navy) !important;
+    border-color: var(--tpl-navy) !important;
+    color: #ffffff !important;
+  }
+  .tpl-anchorbar-inner { padding-top: 10px !important; padding-bottom: 10px !important; }
+}
+
+
+/* ══ 10. Homepage — the mobile story ═══════════════════════════════════════
+   The desktop hero is a 499-frame scroll-scrub that moves through four beats in
+   the clinic's own order: the plasma diagnostics, then Hair, Body, and Face.
+   Phones are served a looping video instead, and the four beats — the argument
+   the hero exists to make — never appeared at all.
+
+   This is that argument, rebuilt for a thumb: four cards you swipe, carrying
+   the hero's own copy, each one a way into the section that expands it. On a
+   10,000px page it doubles as the table of contents. */
+
+.tpl-mstory { display: none; }
+
+@media (max-width: 767px) {
+  .tpl-mstory {
+    display: block;
+    background: var(--tpl-navy);
+    color: #ffffff;
+    padding: 54px 0 58px !important;
+  }
+  .tpl-mstory-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 var(--tpl-gutter);
+  }
+  .tpl-mstory-head .eyebrow {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--tpl-gold-light);
+  }
+  .tpl-mstory-head .hint {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .45);
+  }
+  .tpl-mstory h2 {
+    margin: 16px 0 26px !important;
+    padding: 0 var(--tpl-gutter);
+    font-family: Jost, sans-serif;
+    font-weight: 300 !important;
+    font-size: clamp(30px, 8.4vw, 40px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.01em;
+    color: #ffffff;
+  }
+
+  .tpl-mstory-deck {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 80vw;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 var(--tpl-gutter);
+    scrollbar-width: none;
+  }
+  .tpl-mstory-deck::-webkit-scrollbar { display: none; }
+
+  .tpl-mstory-card {
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid rgba(184, 146, 93, .3);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+  }
+  .tpl-mstory-media {
+    position: relative;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+    background: #0B1A6B;
+  }
+  .tpl-mstory-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tpl-mstory-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 19, 89, .1) 0%, rgba(8, 19, 89, .72) 100%);
+  }
+  .tpl-mstory-media .num {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+    z-index: 2;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--tpl-gold-light);
+  }
+  .tpl-mstory-body { padding: 20px 18px 22px; display: flex; flex-direction: column; flex: 1; }
+  .tpl-mstory-body h3 {
+    margin: 0 !important;
+    font-family: Jost, sans-serif;
+    font-weight: 300 !important;
+    font-size: 26px !important;
+    line-height: 1.12 !important;
+    color: #ffffff;
+  }
+  .tpl-mstory-body p {
+    margin: 12px 0 0 !important;
+    font-size: 14.5px !important;
+    line-height: 1.65 !important;
+    color: rgba(255, 255, 255, .76);
+  }
+  .tpl-mstory-body .kit {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, .14);
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    line-height: 1.85;
+    color: #E8C89A;
+  }
+  .tpl-mstory-body .go {
+    margin-top: 16px;
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--tpl-gold-light);
+  }
+
+  /* Progress: four rules, the active one filled. Cheaper to read at a glance
+     than dots and it echoes the desktop hero's rail. */
+  .tpl-mstory-dots {
+    display: flex;
+    gap: 6px;
+    padding: 22px var(--tpl-gutter) 0;
+  }
+  .tpl-mstory-dots span {
+    flex: 1;
+    height: 2px;
+    background: rgba(255, 255, 255, .2);
+    transition: background .35s ease;
+  }
+  .tpl-mstory-dots span.is-on { background: var(--tpl-gold); }
+}
+
+
+/* ══ 11. Homepage — hero ═══════════════════════════════════════════════════
+   The desktop hero centres its copy in a 460vh scroll stage. On a phone the
+   stage is one screen tall, so the copy is bottom-weighted instead: the film
+   reads at the top, the argument sits above the fold line where the thumb is,
+   and the two calls to action are reachable without moving your hand. */
+
+/* Scoped to the attribute index.html stamps on <html>, not to a width query.
+   The page decides which hero engine runs — video or 499-frame scrub — and the
+   styling has to follow that decision rather than take its own view. While the
+   two were allowed to disagree (a desktop user agent in a window narrowed to
+   phone width), the scrub engine ran against a hero this file had already cut
+   to one screen tall: zero scroll travel, progress pinned to 1 on the first
+   event, dead canvas. Anyone checking the mobile layout by resizing hit it.
+
+   It also means a phone in landscape — wider than 767px but still a phone —
+   gets the phone hero rather than 33MB of frames. */
+html[data-tpl-mobile="1"] [data-hero="1"],
+html[data-tpl-mobile="1"] [data-hero="1"] > div { height: 100svh !important; }
+
+html[data-tpl-mobile="1"] [data-hero-intro="1"] {
+  padding-top: 0 !important;
+  /* Clears the action bar, which is fixed over the bottom of the hero. */
+  padding-bottom: calc(var(--tpl-actionbar-h) + 26px) !important;
+  align-items: flex-end !important;
+  pointer-events: auto !important;
+}
+html[data-tpl-mobile="1"] [data-hero-intro="1"] > div {
+  text-align: left !important;
+  padding: 0 var(--tpl-gutter) !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+html[data-tpl-mobile="1"] [data-hero-intro="1"] h1 {
+  margin-top: 20px !important;
+  font-size: clamp(38px, 11.2vw, 56px) !important;
+  line-height: 1.0 !important;
+}
+html[data-tpl-mobile="1"] [data-hero-intro="1"] p {
+  margin: 18px 0 0 !important;
+  max-width: 34ch !important;
+  font-size: 15px !important;
+  line-height: 1.62 !important;
+}
+html[data-tpl-mobile="1"] [data-hero-intro="1"] .tpl-badge {
+  padding: 7px 13px !important;
+  gap: 9px !important;
+}
+html[data-tpl-mobile="1"] [data-hero-intro="1"] .tpl-badge span:last-child {
+  font-size: 9px !important;
+  letter-spacing: .18em !important;
+}
+
+/* The desktop "SCROLL" cue is replaced by real buttons — a phone visitor who
+   has decided already should not have to scroll to act. */
+html[data-tpl-mobile="1"] .tpl-hero-scrollcue { display: none !important; }
+html[data-tpl-mobile="1"] .tpl-hero-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 26px;
+}
+html[data-tpl-mobile="1"] .tpl-hero-actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 54px;
+  padding: 12px 10px;
+  font-family: Jost, sans-serif;
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+html[data-tpl-mobile="1"] .tpl-hero-actions .primary { background: var(--tpl-gold); color: #ffffff !important; }
+html[data-tpl-mobile="1"] .tpl-hero-actions .ghost {
+  border: 1px solid rgba(255, 255, 255, .55);
+  color: #ffffff !important;
+  background: rgba(8, 19, 89, .3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Furniture belonging to the scroll-scrub engine, which does not run here:
+   the outline word behind the copy, the frame counter, the segment rail, the
+   floating segment copy and the scrub progress bar. The story those last two
+   carried is delivered by the deck below the hero instead. */
+html[data-tpl-mobile="1"] [data-stage="1"],
+html[data-tpl-mobile="1"] [data-rail="1"],
+html[data-tpl-mobile="1"] [data-frame="1"],
+html[data-tpl-mobile="1"] [data-hero-copy="1"],
+html[data-tpl-mobile="1"] [data-hero="1"] [data-progress="1"] { display: none !important; }
+
+.tpl-hero-actions { display: none; }
+
+
+/* ══ 12. Page-specific ═════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  /* — Services: filter chips ——————————————————————————————————
+     Wrapped filter buttons pushed the grid a screen and a half down the page.
+     One swipeable row instead, full-bleed so it reads as scrollable. */
+  .tpl-filter-row {
+    flex-wrap: nowrap !important;
+    /* The pills are centred on desktop. Here the row is a horizontal scroller,
+       and centring an overflowing flex line pushes its first item off the start
+       edge where scrolling cannot reach it — so the desktop centring is
+       explicitly undone rather than inherited. */
+    justify-content: flex-start !important;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    margin-left: calc(var(--tpl-gutter) * -1) !important;
+    margin-right: calc(var(--tpl-gutter) * -1) !important;
+    padding: 2px var(--tpl-gutter) !important;
+    scroll-padding-left: var(--tpl-gutter);
+    scrollbar-width: none;
+  }
+  .tpl-filter-row::-webkit-scrollbar { display: none; }
+  .tpl-filter-row button {
+    flex: none !important;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  /* — Services: the treatment index ————————————————————————
+     Twenty cards. Stacked as-is — 120px icon above the name, above the
+     description, above the footer — that is roughly 6,800px of scrolling to
+     read a list, and the icon carries more weight than the treatment it
+     labels. Turned on its side the same card is a row you can scan: icon in a
+     fixed rail on the left, everything you read in a column on the right. */
+  .tpl-card-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .tpl-card {
+    min-height: 0 !important;
+    padding: 20px !important;
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr);
+    column-gap: 18px;
+    align-content: start;
+  }
+  /* Placed by class, not by nth-child. These were positional rules until the
+     icon was centred on desktop, which meant lifting the row number out of the
+     icon's flex row — that renumbered every child and silently moved the name
+     into the icon's rail. Classes cannot drift that way. */
+  .tpl-card-icon {
+    grid-column: 1;
+    grid-row: 1;
+    width: 64px !important;
+    height: 64px !important;
+    margin: 0 !important;
+  }
+  /* Back into the rail, under the icon. The desktop rule pins this to the
+     card's top-right corner, which on a 64px-rail row would land it on top of
+     the treatment name. */
+  .tpl-card-num {
+    position: static !important;
+    grid-column: 1;
+    grid-row: 2;
+    width: 64px;
+    margin-top: 8px;
+  }
+  .tpl-card-name { grid-column: 2; grid-row: 1; margin-top: 0 !important; font-size: 20px !important; }
+  .tpl-card-desc { grid-column: 2; grid-row: 2; }
+  .tpl-card-foot { grid-column: 2; grid-row: 3; margin-top: 8px !important; padding-top: 12px !important; }
+  /* There is no hover on a phone, so the call to action has to be there from
+     the start rather than revealed by a pointer that never arrives. */
+  .tpl-card-arrow { opacity: 1 !important; transform: none !important; }
+
+  /* — About: the team ——————————————————————————————————————— */
+  .tpl-team-grid { grid-template-columns: minmax(0, 1fr) !important; }
+
+  /* — Treatment pages ——————————————————————————————————————— */
+  /* At a glance: six gold discs go two across. The disc comes down from 118px
+     so two of them plus the gap clear a 320px screen with room for the label
+     beneath, and the row gap opens up because each cell is now three stacked
+     elements rather than two lines of text in a bordered box. */
+  .tpl-glance {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 38px 16px !important;
+  }
+  .tpl-glance-disc { width: 96px !important; height: 96px !important; }
+  .tpl-glance-disc svg { width: 46px !important; height: 46px !important; }
+  .tpl-glance-key { margin-top: 18px !important; }
+  .tpl-steps,
+  .tpl-why,
+  .tpl-combine-grid,
+  .tpl-timeline,
+  .tpl-areas,
+  .tpl-results,
+  .tpl-protocols,
+  .tpl-three,
+  .tpl-hero-stats { grid-template-columns: minmax(0, 1fr) !important; }
+
+  /* Price rows: the desktop three-column row (treatment · detail · price)
+     becomes a stacked block with the price on its own line, because at 350px
+     the middle column squeezed the price to two characters a line. */
+  .tpl-price-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 6px !important;
+    padding: 20px 6px !important;
+  }
+  .tpl-price-row > *:last-child { text-align: left !important; }
+
+  /* The compact two-column list on sofwave.html. Name and price sit on one line
+     at desktop width; at 350px "Surf & XERF™ — Full Face & Neck" against
+     "£4,000 bespoke" leaves the name about eight characters, so the price drops
+     onto its own line and both align left. */
+  .tpl-price-line {
+    display: block !important;
+    padding: 13px 6px !important;
+  }
+  .tpl-price-line .tpl-price-val {
+    display: block;
+    margin-top: 3px;
+    white-space: normal;
+  }
+
+  .tpl-faq-q { min-height: 60px; padding-top: 18px !important; padding-bottom: 18px !important; }
+  .tpl-faq-q .q-text { font-size: 17px !important; line-height: 1.35 !important; }
+
+  /* — Sofwave: before / after ————————————————————————————————
+     Already a scroller; it just needs to reach the screen edges and snap. */
+  .tpl-compare-scroll {
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    margin-left: calc(var(--tpl-gutter) * -1) !important;
+    margin-right: calc(var(--tpl-gutter) * -1) !important;
+    padding: 0 var(--tpl-gutter) !important;
+    scroll-padding-left: var(--tpl-gutter);
+    scrollbar-width: none;
+  }
+  .tpl-compare-scroll::-webkit-scrollbar { display: none; }
+  .tpl-compare-scroll > * { scroll-snap-align: center; }
+
+  /* — Legal pages ————————————————————————————————————————————
+     Long-form prose is the whole page; it gets a proper reading size. */
+  .tpl-legal-body p,
+  .tpl-legal-body li { font-size: 15px !important; line-height: 1.78 !important; }
+  .tpl-legal-toc { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+
+/* ══ 13. Play control ══════════════════════════════════════════════════════
+   Added by tpl-mobile.js to the films it parks on their poster. Deliberately
+   understated — it is an invitation, not a YouTube chrome. */
+
+@media (max-width: 767px) {
+  .tpl-video-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 22px;
+    background: rgba(8, 19, 89, .62);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(184, 146, 93, .7);
+    color: #ffffff;
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .tpl-video-play .glyph { font-size: 11px; color: var(--tpl-gold-light); line-height: 1; }
+}
+
+
+/* ══ 14. Motion ════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .tpl-mobile-drawer,
+  .tpl-actionbar,
+  .tpl-drawer-group-panel,
+  .tpl-mstory-dots span {
+    transition-duration: .01ms !important;
+  }
+  .tpl-mstory-deck,
+  .tpl-m-rail,
+  .tpl-compare-scroll,
+  .tpl-anchorbar-inner {
+    scroll-snap-type: none;
+  }
+}
+
+
+/* ══ 15. Section header system ═════════════════════════════════════════════
+   The treatment pages set their section labels and titles from one place
+   (see the page's own <style>). Those desktop sizes — a title clamped up to
+   84px — need bringing down here, and the label/meta pair that sits on one
+   line at desktop widths has to stack.
+
+   The combination illustrations are also brought back up. They were pinned
+   at 64px for the stacked card layout, which left the picture smaller than
+   the words beside it — the opposite of what an illustration is for. */
+
+@media (max-width: 1023px) {
+  .tpl-sec-title {
+    font-size: clamp(32px, 7vw, 46px) !important;
+    line-height: 1.06 !important;
+  }
+  /* The label is the section's heading here too, so it stays above the body
+     scale — 15px against 15.5px body reads as a peer once the weight and the
+     tracking are counted, where the old 11px read as a caption. */
+  .tpl-sec-label {
+    font-size: 15px !important;
+    letter-spacing: .18em !important;
+    margin-bottom: 16px !important;
+  }
+  .tpl-sec-label::before,
+  .tpl-sec-label::after { width: 32px !important; }
+  .tpl-sec-head {
+    flex-direction: column;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+  .tpl-sec-meta { white-space: normal !important; text-align: center; }
+  .tpl-sec-lede { font-size: 15.5px !important; max-width: none !important; }
+
+  /* Left-aligned opt-outs keep their alignment at every width. */
+  .tpl-sec-label--start { justify-content: flex-start !important; }
+  .tpl-sec-title--start { text-align: left !important; }
+  .tpl-sec-lede--start { text-align: left !important; }
+
+  /* Centred, matching the cards themselves — the negative left margin here was
+     optically nudging the illustration back to the cell's text edge, which is
+     the alignment the client asked to be dropped. */
+  .tpl-combine-icon { width: 96px !important; height: 96px !important; margin-inline: auto !important; }
+
+  /* Services index cards — the icon pass raised these to 120px on desktop and
+     this file was holding them at 64px, below the 74px they started at. */
+  .tpl-card-icon { width: 96px !important; height: 96px !important; }
+
+  /* about.html gives these inner blocks `width: 100%` so that centring has a
+     width to bite on. Their padding is authored inline, and the page has no
+     global border-box, so 100% + 30px a side put every team bio and every
+     accreditation caption 60px past the right edge of its own card — the text
+     ran under the card border and off the screen. The width is what the
+     centring needs; border-box is what makes it true. */
+  .tpl-team-card > div,
+  .tpl-accred > div > div { box-sizing: border-box !important; }
+
+  /* WhatsApp CTAs keep the mark and label on one line at any width. */
+  .tpl-cta-wa { display: inline-flex !important; align-items: center; gap: 9px; }
+  .tpl-wa-mark { flex: none; }
+}
+
+
+/* ══ 16. The homepage's editorial bands ════════════════════════════════════
+   Everything below the hero on index.html — Philosophy, the three protocol
+   bands, the PRP method, the Technology index and the Clinic card — was
+   rebuilt on the V2 layout after this file was written, and came back as
+   inline two-column grids with no collapse class on them. On a 390px screen
+   that read as a 150px column of text broken three words to the line, beside
+   a 90px thumbnail, with the headings running off the right edge; at 768px
+   the three Diagnose/Combine/Sustain cards were clipped mid-word.
+
+   The classes below finish that job. Every one of them is declared inside a
+   max-width query and has no desktop counterpart anywhere, so adding them to
+   the markup cannot move a pixel above 1024px — which is the whole point,
+   the desktop layout being signed off.
+
+   Naming: .tpl-m-* is the shared vocabulary from §6, extended here with the
+   two shapes that were missing (a two-up grid, and a card). .tpl-msec and
+   .tpl-mrow carry vertical rhythm for bands that hold their padding inline
+   and so cannot use .tpl-sec, whose desktop values would rewrite theirs. */
+
+@media (max-width: 1023px) {
+  /* Two-column grids the shared .tpl-m-split does not fit — the technology
+     index is a pair of lists, not an editorial split, so it collapses without
+     inheriting the split's 40px gap. */
+  .tpl-m-2 { grid-template-columns: minmax(0, 1fr) !important; }
+
+  /* Bands carrying 110–130px of vertical padding inline. Halved here; the
+     two modifiers exist because #clinic opens flush against the band above it
+     and #face..#body close flush against the one below, and collapsing an edge
+     that was deliberately zero would open a seam the desktop layout has not
+     got. */
+  .tpl-msec { padding-top: 84px !important; padding-bottom: 84px !important; }
+  .tpl-msec--head { padding-top: 84px !important; }
+  .tpl-msec--foot { padding-bottom: 84px !important; }
+
+  /* The protocol bands hold their rhythm on an inner row (padding:88px 0),
+     because the rule above them is a border on the wrapper. */
+  .tpl-mrow { padding-top: 64px !important; padding-bottom: 64px !important; }
+
+  /* Cards whose desktop padding is set for a 420px column. */
+  .tpl-m-card { padding: 32px 24px !important; }
+
+  /* A lede sized to a 400px desktop column. Once the split has collapsed the
+     column is the screen, and the old cap left the line breaking short of the
+     measure while the film beneath it ran the full width. */
+  .tpl-m-lede { max-width: 46ch !important; }
+
+  /* Ambient film in a collapsed column. At 768px, full width and 4:3 is most
+     of a screen given to a loop that is atmosphere, not argument — so it is
+     held to the measure of the text it sits under. Below ~560px the cap is
+     wider than the screen and the film is full width again, which is right:
+     on a phone it is the only thing on the line. */
+  .tpl-m-media { max-width: 560px !important; }
+}
+
+@media (max-width: 767px) {
+  .tpl-msec { padding-top: 62px !important; padding-bottom: 62px !important; }
+  .tpl-msec--head { padding-top: 62px !important; }
+  .tpl-msec--foot { padding-bottom: 62px !important; }
+  .tpl-mrow { padding-top: 52px !important; padding-bottom: 52px !important; }
+  .tpl-m-card { padding: 28px 22px !important; }
+
+  /* The card's field labels — Address, Telephone, Email — are set at 10px to
+     sit quietly under a 42px heading on a desktop. On a phone they are the
+     only thing telling a reader which line is the phone number, so they come
+     up to the 11px floor the rest of this file holds to. Both spellings, per
+     the note in §7: the runtime re-serialises every style attribute. */
+  .tpl-m-card [style*="font-size:10px"],
+  .tpl-m-card [style*="font-size: 10px"] {
+    font-size: 11px !important;
+    letter-spacing: .2em !important;
+  }
+
+  /* An inline-block call to action at the foot of a card. On a phone it is the
+     only thing being asked of the reader in that card, so it gets the full
+     width and a thumb-sized target rather than sitting in the corner. */
+  .tpl-m-wide {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  /* — Technology index ————————————————————————————————————————
+     The desktop row is number · name · tag on one line, which at 350px leaves
+     the name about nine characters before the tag pushes it into a stack of
+     single words. The tag drops under the name instead, aligned to it, so the
+     number keeps its rail and the list stays scannable. */
+  .tpl-techrow {
+    display: grid !important;
+    grid-template-columns: 24px minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 7px;
+    align-items: baseline !important;
+    padding: 15px 0 !important;
+  }
+  .tpl-tech-n { grid-column: 1; grid-row: 1; min-width: 0 !important; }
+  .tpl-tech-name { grid-column: 2; grid-row: 1; font-size: 17px !important; }
+  .tpl-tech-tag { grid-column: 2; grid-row: 2; justify-self: start; }
+
+  /* — Clinic card ——————————————————————————————————————————————
+     The portrait is 440px tall to balance a half-width info card beside it.
+     Stacked, that is most of a screen spent on one image before the address
+     it illustrates, so it comes down to a letterbox. */
+  .tpl-m-portrait { min-height: 0 !important; aspect-ratio: 4 / 3; }
+  .tpl-m-portrait > div[style*="padding:44px"],
+  .tpl-m-portrait > div[style*="padding: 44px"] { padding: 24px 20px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HERO V7 + SOFWAVE — the parts main's mobile pass could not have covered
+   ══════════════════════════════════════════════════════════════════════════
+   Everything above came from the mobile work already on main. The rules below
+   are the ones that arrived with Hero V7 and with the Sofwave audit, so they
+   had nothing to collide with. The duplicate half of this branch's own mobile
+   layer — a second set of collapse classes doing what .tpl-m-* already does —
+   was dropped rather than merged: two class systems for one job is worse than
+   either of them alone.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* ── The hero's copy overlay ────────────────────────────────────────────
+     V7 only. A phone gets the fallback video and the scroll engine never
+     starts, so nothing positions this: it sat at y=-4157, invisible, but still
+     13 focusable links. Tab through the page or run a screen reader over it and
+     you walked 13 stops that were not on screen. The stylesheet already hid
+     [data-hero-copy="1"], which was V5's attribute; V6 renamed it data-hv6-copy
+     and the rule never followed. */
+  [data-hv6-copy] { display: none !important; }
+
+  /* ── An 11px floor for the smallest labels ───────────────────────────────
+     Caps with wide tracking read larger than their nominal size, which is why
+     11px holds and why the site leans on it. 10 and 10.5px are past the point
+     where that argument works. .tpl-microlabel is stamped in the markup on the
+     elements that set those sizes inline; .sc-interp is the technology index's
+     tags. Scoped to the media query, so desktop keeps its approved sizes. */
+  .tpl-microlabel,
+  .sc-interp { font-size: 11px !important; }
+
+  /* The drawer's home link was a 40x40px target — width alone isn't enough,
+     the 40px-tall logo image inside it left the vertical dimension short too. */
+  .tpl-drawer-head a { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SOFWAVE'S COMPARISON TABLE — stacked, not scrolled
+   ══════════════════════════════════════════════════════════════════════════
+   Three separate faults on a phone, all visible at once:
+
+   1. The sticky header row was parked at top:140px — "the 92px fixed header
+      plus the 48px anchor rail". Those are DESKTOP numbers. On a phone the
+      header is 69px and the rail is 87px, so the row sat 140px down inside the
+      table with live data showing above it.
+
+   2. Sticky could not have worked here anyway, which is the same trap the
+      desktop comment documents. `overflow-x: auto` forces the other axis to
+      compute to `auto` too, so the wrapper becomes a scroll container and a
+      sticky child sticks to THAT — a box exactly as tall as the table. The
+      desktop fix was to scope the horizontal scroll to below 1024px, which is
+      precisely where phones live, so the bug was moved onto phones rather than
+      removed. It is unfixable in place: you cannot have overflow-x: auto and
+      overflow-y: visible on the same element.
+
+   3. The mobile stylesheet gave this scroller scroll-snap-type: x mandatory
+      with scroll-snap-align: center on its child — a rule written for the
+      before/after image pair. With one 682px child in a 390px viewport,
+      mandatory centre-snap makes the left edge unreachable: the first column,
+      the one naming the technology, could not be scrolled to.
+
+   So the table stops being a table. Four technologies by three attributes
+   becomes four stacked cards with the column headings repeated inline as
+   labels, which is the standard responsive-table pattern and removes the
+   horizontal axis — and with it all three faults — rather than tuning it.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  .tpl-compare-scroll {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    scroll-snap-type: none !important;
+  }
+  .tpl-measure-compare .tpl-compare { min-width: 0 !important; }
+  .tpl-compare {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0 !important;
+    background: transparent !important;
+    border: 1px solid rgba(36, 36, 36, .12) !important;
+  }
+  /* The header row's labels are repeated inside each card below, so the row
+     itself is redundant — and it was the broken sticky element. */
+  .tpl-compare-h { display: none !important; }
+
+  /* Cell 1 of each row is the technology name. It carries its own type from
+     the markup, so this only sets the card's spacing and its divider. */
+  .tpl-compare > div:nth-child(4n+1):not(.tpl-compare-h) {
+    padding: 20px 18px 14px !important;
+    position: static !important;
+  }
+  .tpl-compare > div:nth-child(4n+1):not(.tpl-compare-h):not(:nth-child(5)) {
+    border-top: 1px solid rgba(36, 36, 36, .12);
+  }
+  /* Cells 2-4 become labelled rows: heading on the left, value on the right. */
+  .tpl-compare > div:nth-child(4n+2):not(.tpl-compare-h),
+  .tpl-compare > div:nth-child(4n+3):not(.tpl-compare-h),
+  .tpl-compare > div:nth-child(4n+4):not(.tpl-compare-h) {
+    display: flex !important;
+    position: static !important;
+    align-items: baseline;
+    gap: 16px;
+    text-align: left !important;
+    padding: 9px 18px !important;
+    font-size: 16px !important;
+    line-height: 1.55 !important;
+  }
+  .tpl-compare > div:nth-child(4n+4):not(.tpl-compare-h) { padding-bottom: 22px !important; }
+  .tpl-compare > div:nth-child(4n+2):not(.tpl-compare-h)::before { content: 'Effect'; }
+  .tpl-compare > div:nth-child(4n+3):not(.tpl-compare-h)::before { content: 'Downtime'; }
+  .tpl-compare > div:nth-child(4n+4):not(.tpl-compare-h)::before { content: 'Discomfort'; }
+  .tpl-compare > div:nth-child(4n+2):not(.tpl-compare-h)::before,
+  .tpl-compare > div:nth-child(4n+3):not(.tpl-compare-h)::before,
+  .tpl-compare > div:nth-child(4n+4):not(.tpl-compare-h)::before {
+    flex: 0 0 88px;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    /* #6E6E6E, not the desktop header's #8A8A8A: at 11px the label has to
+       clear AA against white, and 8A does not (3.2:1 against 5.1:1). */
+    color: #6E6E6E;
+  }
+  /* The highlighted row keeps its navy, so its labels take the gold the rest
+     of that card already uses — 7.8:1 on navy. */
+  .tpl-compare > div[style*="rgb(8, 19, 89)"]::before {
+    color: rgba(232, 200, 154, .9) !important;
+  }
+}

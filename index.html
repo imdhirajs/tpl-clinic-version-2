@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v8_4k" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
-<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?v=v8_hd&tr=q-90,f-webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/hero-poster/hero-poster.webp?v=v9_4k" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-001.webp?v=v8_hd&tr=q-75,f-auto" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-002.webp?v=v8_hd&tr=q-75,f-auto" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-003.webp?v=v8_hd&tr=q-75,f-auto" fetchpriority="high">
+<link rel="preload" as="image" href="https://ik.imagekit.io/dhiraj1995/assets/hero-sprites-hd/sprite-hd-004.webp?v=v8_hd&tr=q-75,f-auto" fetchpriority="high">
 <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script src="./support.js"></script>
 <style>
@@ -16,9 +16,38 @@
   .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
   .lenis.lenis-stopped { overflow: hidden; }
   .lenis.lenis-smooth iframe { pointer-events: none; }
+
+  /* Scroll-sequence service pills — dark ink, no scrim, matching the
+     hv6-link treatment: outlined on a semi-transparent white chip, navy
+     fill on hover. No card/backdrop behind the copy block itself; the
+     footage is shot in white rooms so dark ink clears AA on its own. */
+  .tpl-hotspot-pill {
+    display: inline-block;
+    padding: 11px 18px;
+    border: 1px solid rgba(36,36,36,.28);
+    background: rgba(255,255,255,.55);
+    font-family: Jost, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #242424 !important;
+    text-decoration: none;
+    transition: background .28s ease, border-color .28s ease, color .28s ease;
+  }
+  .tpl-hotspot-pill:hover { background: #081359; border-color: #081359; color: #ffffff !important; }
 </style>
 </head>
 <body>
+<div id="tpl-loading-screen" style="position:fixed;inset:0;z-index:9999999;background:#081359;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity 0.7s ease;">
+  <img src="assets/logo/tpl-logo.png" alt="TPL Clinic London" style="height:64px;width:auto;object-fit:contain;filter:drop-shadow(0 3px 12px rgba(0,0,0,0.35));opacity:0.96;" />
+  <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+    <div id="tpl-loading-percent" style="font-family:Jost,sans-serif;font-size:13px;letter-spacing:.3em;color:#DFC396;">0%</div>
+    <div style="width:180px;height:2px;background:rgba(255,255,255,0.12);overflow:hidden;">
+      <div id="tpl-loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#B8925D,#DFC396);transition:width 0.25s ease;"></div>
+    </div>
+  </div>
+</div>
 <x-dc>
 <helmet>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -26,7 +55,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   body { margin: 0; background: #ffffff; color: #242424; font-family: Jost, "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   a { color: #B8925D; text-decoration: none; }
@@ -79,6 +108,75 @@
   header.is-light .tpl-mega-link:hover { color: #B8925D !important; }
   header.is-light .tpl-mega-card { background: #F8F6F3 !important; }
   header.is-light .tpl-mega-card div { color: #242424 !important; }
+
+  /* Services mega-menu — the full 20-treatment catalogue, previously only
+     reachable from the inner pages' own header. Distinct class from
+     .tpl-mega-menu (which is tuned for the Treatments dropdown's 3-column +
+     fixed-width promo card) because this one is 4 equal columns plus a
+     full-width footer bar, and needs its own independent open/close state
+     so clicking Treatments doesn't also pop this panel open. */
+  .tpl-services-mega {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-top: 14px;
+    width: min(1080px, calc(100vw - 48px));
+    background: rgba(8, 19, 89, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(184, 146, 93, 0.35);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    padding: 34px 38px 30px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 30px 28px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -8px);
+    transition: opacity .28s ease, transform .28s ease, visibility .28s;
+    pointer-events: none;
+    z-index: 199;
+    box-sizing: border-box;
+    text-align: left;
+  }
+  .tpl-services-mega::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -22px;
+    height: 22px;
+  }
+  .tpl-has-mega:hover .tpl-services-mega,
+  .tpl-has-mega:focus-within .tpl-services-mega,
+  .tpl-services-mega.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+  }
+  .tpl-services-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(184, 146, 93, 0.28);
+  }
+  header.is-light .tpl-services-mega {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(184, 146, 93, 0.3);
+    box-shadow: 0 20px 50px rgba(8, 19, 89, 0.14);
+  }
+  header.is-light .tpl-services-foot { border-top-color: rgba(8, 19, 89, 0.14); }
+  header.is-light .tpl-services-foot div { color: #242424 !important; }
+  header.is-light .tpl-services-foot [data-eyebrow] { color: #8A6F44 !important; }
+  @media (max-width: 1200px) {
+    .tpl-services-mega { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(640px, calc(100vw - 48px)); }
+  }
 
   .tpl-mobile-drawer {
     position: fixed;
@@ -272,7 +370,7 @@
 <div style="width:100%;overflow-x:clip">
 
   <!-- Fixed Glassmorphism Luxury Header -->
-  <header data-nav="1" style="position:fixed;top:0;left:0;right:0;z-index:200;padding:20px 64px;display:flex;align-items:center;justify-content:space-between;gap:28px;background:rgba(8,19,89,0);border-bottom:1px solid rgba(184,146,93,0);transition:background .35s ease,border-color .35s ease,padding .35s ease,backdrop-filter .35s ease,-webkit-backdrop-filter .35s ease,box-shadow .35s ease">
+  <header data-nav="1" style="position:fixed;top:0;left:0;right:0;z-index:200;padding:20px 64px;display:flex;align-items:center;justify-content:space-between;gap:28px;background:rgba(8,19,89,0);border-bottom:1px solid rgba(184,146,93,0);transform:translateZ(0);will-change:background;transition:background .35s ease,border-color .35s ease,padding .35s ease,box-shadow .35s ease">
     <!-- Brand Logo -->
     <a href="#top" onClick="{{ onCloseMobileMenu }}" style="display:inline-flex;align-items:center;text-decoration:none;margin-left:16px" aria-label="TPL Clinic Home">
       <img src="assets/logo/tpl-logo.png" alt="TPL Clinic London" data-logo-img="1" style="height:72px;width:auto;max-height:72px;object-fit:contain;transition:transform .3s ease,filter .3s ease;filter:drop-shadow(0 3px 12px rgba(8,19,89,0.22))" style-hover="transform:scale(1.04)" />
@@ -280,59 +378,76 @@
 
     <!-- Desktop Navigation Links -->
     <nav class="tpl-desktop-nav">
-      <!-- Treatments Trigger with Mega Menu Dropdown -->
+      <!-- Nav simplified to Home / Services / About Us on the client's explicit
+           instruction — Treatments mega-menu, PRP Method, Technology and
+           Mayfair Clinic are no longer separate nav items. Their targets
+           (#face, #hair, #body, #prp, #technology, #clinic) still exist as
+           real homepage sections and are reachable via the Services menu,
+           in-page scrolling, and the footer — only the top-level nav entries
+           were removed. -->
+      <a href="#top" onClick="{{ onCloseMegaMenu }}" style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1" style-hover="color:#B8925D">Home</a>
+
+      <!-- Services Trigger with full 20-treatment Mega Menu — same catalogue
+           the inner pages (services.html etc.) show in their own header, now
+           reachable straight from the homepage instead of only after
+           clicking through to About Us. -->
       <div class="tpl-has-mega" style="position:relative">
-        <button onClick="{{ onToggleMegaMenu }}" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1">
-          <span>Treatments</span>
+        <button onClick="{{ onToggleServicesMenu }}" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1">
+          <span>Services</span>
           <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style="transition:transform .3s ease">
             <path d="M1 1L4 4L7 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
           </svg>
         </button>
-
-        <!-- Treatments Mega Menu Panel -->
-        <div class="tpl-mega-menu {{ megaMenuOpen ? 'is-active' : '' }}">
+        <div class="tpl-services-mega {{ servicesMenuOpen ? 'is-active' : '' }}">
           <div>
-            <div class="tpl-mega-title" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">01 — Face</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <a href="#face" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">PRP &amp; PRF Biofiller</a>
-              <a href="#face" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Sofwave™ Collagen Lifting</a>
-              <a href="#face" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Morpheus8® RF Burst</a>
-              <a href="#face" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">LaseMD Ultra® Resurfacing</a>
-              <a href="#face" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Korean Glass Skin Protocol</a>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">01 — Regenerative</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a class='tpl-mega-link' href='/prp' onClick='{{ onCloseServicesMenu }}' style='font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s'>Platelet Rich Plasma</a>
+              <a href="https://www.tplclinic.com/enhanced-prp-mct" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Enhanced PRP &amp; Exosomes</a>
+              <a href="https://www.tplclinic.com/prf-biofiller" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">PRF Biofiller</a>
+              <a href="https://www.tplclinic.com/regenera-activa" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Regenera Activa®</a>
+              <a href="https://www.tplclinic.com/hair" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Invisible Hair Transplant™</a>
             </div>
           </div>
           <div>
-            <div class="tpl-mega-title" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">02 — Hair</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <a href="#hair" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Enhanced PRP &amp; Exosomes</a>
-              <a href="#hair" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Regenera Activa® Protocol</a>
-              <a href="#hair" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">TrichoComp Diagnostics</a>
-              <a href="#hair" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Invisible Hair Transplant™</a>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">02 — Energy &amp; Laser</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a class='tpl-mega-link' href='/sofwave' onClick='{{ onCloseServicesMenu }}' style='font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s'>Sofwave™</a>
+              <a href="https://www.tplclinic.com/morpheus-8" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Morpheus8® Burst</a>
+              <a href="https://www.tplclinic.com/lasemd-ultra" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">LaseMD Ultra®</a>
+              <a href="https://www.tplclinic.com/soprano-ice-titanium" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Soprano Ice Titanium™</a>
             </div>
           </div>
           <div>
-            <div class="tpl-mega-title" style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">03 — Body</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <a href="#body" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">PRP Regenerative Body</a>
-              <a href="#body" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Morpheus8® RF Remodeling</a>
-              <a href="#body" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Targeted Mesotherapy</a>
-              <a href="#body" onClick="{{ onCloseMegaMenu }}" class="tpl-mega-link" style="font-size:13.5px;color:rgba(255,255,255,.85);transition:color .2s">Soprano Ice Titanium™</a>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">03 — Injectables &amp; Resurfacing</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a href="https://www.tplclinic.com/toxins" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Wrinkle Relaxation Injections</a>
+              <a href="https://www.tplclinic.com/dermal-fillers" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Dermal Fillers</a>
+              <a href="https://www.tplclinic.com/skin-boosters" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Skin Boosters</a>
+              <a href="https://www.tplclinic.com/microneedling" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Micro-needling</a>
+              <a href="https://www.tplclinic.com/chemical-peels-2" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Chemical Peels</a>
             </div>
           </div>
-          <div class="tpl-mega-card" style="background:rgba(255,255,255,0.06);border:1px solid rgba(184,146,93,0.3);padding:24px;display:flex;flex-direction:column;justify-space-between">
+          <div>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">04 — Skin Health &amp; Facials</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a href="https://www.tplclinic.com/hydrafacial" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">HydraFacial®</a>
+              <a href="https://www.tplclinic.com/korean-skin-care" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Korean Glass Skin</a>
+              <a href="https://www.tplclinic.com/led-phototherapy" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">LED Phototherapy</a>
+              <a href="#consultation" onClick="{{ onCloseServicesMenu }}" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Consultation</a>
+            </div>
+          </div>
+          <div class="tpl-services-foot">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:#C7A470">Mayfair Specialty</div>
-              <div style="font-family:Jost,sans-serif;font-weight:300;font-size:18px;line-height:1.25;color:#ffffff;margin-top:10px">The PRP Regenerative Protocol</div>
-              <p style="font-size:12.5px;line-height:1.6;color:rgba(255,255,255,0.7);margin:10px 0 0">Custom blood fraction separation combined with clinical precision.</p>
+              <div data-eyebrow style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#C7A470">The full library</div>
+              <div style="font-family:Jost,sans-serif;font-weight:300;font-size:18px;line-height:1.25;color:#ffffff;margin-top:8px">Twenty treatments. One combined protocol.</div>
             </div>
-            <a href="#consultation" onClick="{{ onCloseMegaMenu }}" style="margin-top:20px;display:inline-block;padding:10px 16px;background:#B8925D;color:#ffffff;font-family:Jost,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;text-align:center;text-decoration:none">Book Diagnostics</a>
+            <a href='/services' onClick='{{ onCloseServicesMenu }}' style='flex:none;padding:12px 22px;background:#B8925D;color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;text-align:center;text-decoration:none'>Services Index</a>
           </div>
         </div>
       </div>
 
-      <a href="#prp" onClick="{{ onCloseMegaMenu }}" style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1" style-hover="color:#B8925D">PRP Method</a>
-      <a href="#technology" onClick="{{ onCloseMegaMenu }}" style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1" style-hover="color:#B8925D">Technology</a>
-      <a href="#clinic" onClick="{{ onCloseMegaMenu }}" style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease" data-nav-link="1" style-hover="color:#B8925D">Mayfair Clinic</a>
+      <a data-nav-link='1' href='/about' style-hover='color:#B8925D' style='font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#081359;transition:color .35s ease'>About Us</a>
     </nav>
 
     <!-- Header Actions (WhatsApp & Consultation CTA) -->
@@ -364,26 +479,17 @@
     </div>
 
     <div style="margin-top:32px;display:flex;flex-direction:column;gap:24px">
-      <div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:12px">Treatments</div>
-        <div style="display:flex;flex-direction:column;gap:14px;padding-left:12px;border-left:1px solid rgba(184,146,93,0.3)">
-          <a href="#face" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:16px;letter-spacing:.1em;color:#ffffff">01 — Face Protocols</a>
-          <a href="#hair" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:16px;letter-spacing:.1em;color:#ffffff">02 — Hair Restoration</a>
-          <a href="#body" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:16px;letter-spacing:.1em;color:#ffffff">03 — Body Quality</a>
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:18px;margin-top:8px">
-        <a href="#prp" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff">The PRP Method</a>
-        <a href="#technology" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff">Technology Index</a>
-        <a href="#clinic" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff">Mayfair Clinic</a>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <a href="#top" onClick="{{ onCloseMobileMenu }}" style="font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff">Home</a>
+        <a href='/services' style='font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#C7A470'>Services</a>
+        <a href='/about' style='font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff'>About Us</a>
       </div>
     </div>
 
     <div style="margin-top:auto;padding-top:32px;border-top:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:14px">
       <a href="#consultation" onClick="{{ onCloseMobileMenu }}" style="display:block;width:100%;padding:16px 20px;background:#B8925D;color:#ffffff;text-align:center;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;box-sizing:border-box">Book Consultation</a>
       <a href="https://wa.me/442079987077" style="display:block;width:100%;padding:14px 20px;border:1px solid rgba(255,255,255,0.4);color:#ffffff;text-align:center;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;box-sizing:border-box">WhatsApp 020 7998 7077</a>
-      <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;color:rgba(255,255,255,0.5);text-align:center">22 SEYMOUR STREET · MAYFAIR W1H 7HY</div>
+      <div style="margin-top:12px;font-family:Jost,sans-serif;font-size:10px;letter-spacing:.18em;color:rgba(255,255,255,0.5);text-align:center">22 SEYMOUR STREET · MAYFAIR W1H 7HY</div>
     </div>
   </div>
 
@@ -392,39 +498,43 @@
 
       <!-- Full-bleed Background Hero Media Canvas (100% 60fps Frame-Exact Precision) -->
       <div data-hero-media="1" style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden">
-        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v8_4k') top center/cover no-repeat"></canvas>
+        <canvas data-hero-canvas="1" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;transform:translateZ(0);background:url('assets/hero-poster/hero-poster.webp?v=v9_4k') top center/cover no-repeat"></canvas>
       </div>
 
       <!-- Left Vertical Sequence Progress Rail (Anchors Left Space) -->
       <div data-rail="1" style="position:absolute;left:36px;top:50%;transform:translateY(-50%);z-index:10;pointer-events:auto;display:flex;flex-direction:column;gap:14px">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D;margin-bottom:2px">Sequence</div>
+        <div style="font-family:Jost,sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D;margin-bottom:2px">Sequence</div>
         <div data-rail-item="1" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.9">
           <span data-rail-bar="1" style="width:3px;height:18px;background:#081359;transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359;font-weight:600">01 Arrival</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359;font-weight:600">01 Reception</span>
         </div>
         <div data-rail-item="2" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="2" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">02 Consult</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">02 Consultation</span>
         </div>
         <div data-rail-item="3" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="3" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">03 PRP Method</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">03 Diagnostics</span>
         </div>
         <div data-rail-item="4" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="4" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">04 Body Quality</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">04 Hair Treatment</span>
         </div>
         <div data-rail-item="5" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="5" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">05 Hair Restoration</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">05 Body Treatment</span>
         </div>
         <div data-rail-item="6" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="6" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">06 Formulations</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">06 Hair Transplant</span>
         </div>
         <div data-rail-item="7" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
           <span data-rail-bar="7" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">07 Mayfair Coda</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">07 Products</span>
+        </div>
+        <div data-rail-item="8" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:0.55">
+          <span data-rail-bar="8" style="width:3px;height:12px;background:rgba(8,19,89,0.3);transition:background .3s,height .3s"></span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">08 Brands</span>
         </div>
       </div>
 
@@ -432,7 +542,7 @@
       <div data-hero-intro="1" style="position:absolute;right:4%;bottom:6%;max-width:500px;pointer-events:none;z-index:10;transition:opacity .4s ease,transform .4s ease;box-sizing:border-box">
         <div style="text-align:left">
           <!-- Award Pill Badge -->
-          <div style="display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid rgba(184,146,93,.45);background:rgba(255,255,255,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 6px 24px rgba(8,19,89,.06);margin-bottom:16px">
+          <div style="display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid rgba(184,146,93,.45);background:rgba(255,255,255,.94);box-shadow:0 6px 24px rgba(8,19,89,.06);margin-bottom:16px">
             <span style="width:6px;height:6px;background:#B8925D;border-radius:50%;display:inline-block"></span>
             <span style="font-family:Jost,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:#081359">Specialist Aesthetic Clinic of the Year 2026/27</span>
           </div>
@@ -450,7 +560,7 @@
 
           <!-- Minimalist Left-Aligned Scroll Cue -->
           <div style="display:flex;align-items:center;gap:12px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#081359;font-weight:600">Scroll to Explore</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#081359;font-weight:600">Scroll to Explore</span>
             <span style="display:block;width:36px;height:1.5px;background:#B8925D"></span>
           </div>
         </div>
@@ -458,20 +568,18 @@
 
       <!-- High-Contrast Floating Frame HUD Counter -->
       <div style="position:absolute;bottom:24px;left:36px;z-index:10;pointer-events:none">
-        <span data-frame="1" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.26em;color:#081359;background:rgba(255,255,255,0.85);padding:6px 14px;border:1px solid rgba(184,146,93,0.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:inline-block;box-shadow:0 4px 15px rgba(8,19,89,0.06)">FRAME 0001 / 1000</span>
+        <span data-frame="1" style="font-family:Jost,sans-serif;font-size:10.5px;letter-spacing:.26em;color:#081359;background:rgba(255,255,255,0.92);padding:6px 14px;border:1px solid rgba(184,146,93,0.4);display:inline-block;box-shadow:0 4px 15px rgba(8,19,89,0.06)">FRAME 0001 / 1000</span>
       </div>
 
-      <!-- Interactive Clickable Floating Service Hotspot Card -->
-      <div data-hero-hotspot-card="1" style="position:absolute;bottom:48px;right:48px;z-index:100;width:calc(100% - 96px);max-width:420px;padding:24px 28px;border:1px solid rgba(199,164,112,0.65);background:rgba(8,19,89,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 24px 60px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .35s ease,transform .35s cubic-bezier(0.16,1,0.3,1);box-sizing:border-box">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <span style="width:7px;height:7px;border-radius:50%;background:#C7A470;box-shadow:0 0 10px #C7A470;display:inline-block;flex:none"></span>
-          <span data-hotspot-tag style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.28em;text-transform:uppercase;color:#C7A470;white-space:nowrap">01 — CLINICAL DIAGNOSTICS</span>
-        </div>
-        <h3 data-hotspot-title style="margin:0 0 6px;font-family:Jost,sans-serif;font-weight:300;font-size:22px;line-height:1.2;color:#ffffff;letter-spacing:-.01em">Doctor-Led Consultation</h3>
-        <p data-hotspot-subtitle style="margin:0 0 18px;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.55;color:rgba(255,255,255,0.85)">Diagnostic treatment mapping & skin/scalp analysis</p>
-        <a data-hotspot-link href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#B8925D;border:1px solid #C7A470;color:#ffffff;font-family:Jost,sans-serif;font-size:11px;font-weight:500;letter-spacing:.26em;text-transform:uppercase;text-decoration:none;box-sizing:border-box;transition:background .25s ease,transform .2s ease">
-          <span data-hotspot-btn>Explore Service →</span>
-        </a>
+      <!-- Scroll-Synced Service Copy — dark ink straight onto the film, positioned
+           per-beat in whichever corner of the frame is actually empty (cell set by
+           JS from each HOTSPOTS entry). No card, no scrim: this footage is shot in
+           white rooms, so #242424 ink clears AA contrast on its own. -->
+      <div data-hero-hotspot-card="1" style="position:absolute;top:128px;right:5%;left:auto;bottom:auto;z-index:100;max-width:420px;text-align:right;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .35s ease,transform .35s cubic-bezier(0.16,1,0.3,1),top .5s ease,left .5s ease,right .5s ease,bottom .5s ease">
+        <span data-hotspot-tag style="display:block;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#836742;text-shadow:0 1px 16px rgba(255,255,255,.9),0 1px 3px rgba(255,255,255,.8)">01 — CLINICAL DIAGNOSTICS</span>
+        <h3 data-hotspot-title style="margin:16px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(26px,3.2vw,46px);line-height:1.08;letter-spacing:-.01em;color:#242424;text-wrap:balance;text-shadow:0 1px 20px rgba(255,255,255,.9),0 1px 4px rgba(255,255,255,.8)">Doctor-Led Consultation</h3>
+        <p data-hotspot-subtitle style="margin:16px 0 0;font-family:Jost,sans-serif;font-size:15px;line-height:1.75;color:#4A4A4A;text-wrap:pretty;text-shadow:0 1px 14px rgba(255,255,255,.9),0 1px 3px rgba(255,255,255,.8)">Diagnostic treatment mapping & skin/scalp analysis</p>
+        <div data-hotspot-links style="margin-top:22px;display:flex;flex-wrap:wrap;gap:8px 10px;justify-content:flex-end;pointer-events:auto"></div>
       </div>
 
       <!-- Progress Line -->
@@ -488,7 +596,7 @@
       <div data-reveal="1">
         <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#F8F6F3;border:1px solid rgba(184,146,93,0.3);margin-bottom:20px">
           <span style="width:5px;height:5px;background:#B8925D;border-radius:50%"></span>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">Philosophy</span>
+          <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">Philosophy</span>
         </div>
         <p style="margin:16px 0 0;font-family:Jost,sans-serif;font-size:15px;line-height:1.85;color:#5E5E5E;max-width:360px">Founded as The PRP Lab. The UK's premier clinic built entirely around natural regenerative plasma.</p>
         <div style="margin-top:32px;position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden;border:1px solid rgba(184,146,93,.25);box-shadow:0 16px 40px rgba(8,19,89,.06)">
@@ -503,17 +611,17 @@
         <h2 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(32px,3.6vw,56px);line-height:1.14;letter-spacing:-.01em;color:#081359;text-wrap:pretty">One treatment rarely changes a face. A <span style="font-weight:400;color:#B8925D">combination</span> of the right ones, sequenced correctly, always does.</h2>
         <div class="tplg2" style="margin-top:48px;display:grid;gap:20px">
           <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-left:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03);transition:transform .3s ease" style-hover="transform:translateY(-4px)">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">01</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">01</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#081359">Diagnose</div>
             <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Comprehensive imaging & scalp TrichoComp analysis before treatment.</p>
           </div>
           <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-left:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03);transition:transform .3s ease" style-hover="transform:translateY(-4px)">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">02</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">02</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#081359">Combine</div>
             <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Plasma layered with radiofrequency, lasers or exosomes for compounding results.</p>
           </div>
           <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-left:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03);transition:transform .3s ease" style-hover="transform:translateY(-4px)">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">03</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.24em;color:#B8925D;font-weight:600">03</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#081359">Sustain</div>
             <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Long-lasting results maintained on a structured annual calendar.</p>
           </div>
@@ -536,7 +644,7 @@
         </div>
         <div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">01 PROTOCOL</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">01 PROTOCOL</span>
             <span style="width:28px;height:1px;background:#B8925D"></span>
           </div>
           <h3 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(40px,5.4vw,84px);line-height:1;letter-spacing:-.01em;color:#081359">Face</h3>
@@ -563,7 +671,7 @@
       <div data-reveal="1" class="tplg5" style="display:grid;gap:64px;padding:88px 0;align-items:center">
         <div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">02 PROTOCOL</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">02 PROTOCOL</span>
             <span style="width:28px;height:1px;background:#B8925D"></span>
           </div>
           <h3 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(40px,5.4vw,84px);line-height:1;letter-spacing:-.01em;color:#081359">Hair</h3>
@@ -615,7 +723,7 @@
         </div>
         <div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">03 PROTOCOL</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;color:#B8925D;font-weight:600">03 PROTOCOL</span>
             <span style="width:28px;height:1px;background:#B8925D"></span>
           </div>
           <h3 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(40px,5.4vw,84px);line-height:1;letter-spacing:-.01em;color:#081359">Body</h3>
@@ -641,7 +749,7 @@
         <div>
           <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#ffffff;border:1px solid rgba(184,146,93,0.3);margin-bottom:20px">
             <span style="width:5px;height:5px;background:#B8925D;border-radius:50%"></span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">The Specialty</span>
+            <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">The Specialty</span>
           </div>
           <h2 style="margin:16px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(40px,5.6vw,88px);line-height:.98;letter-spacing:-.02em;color:#081359">Platelet<br /><span style="color:#B8925D">Rich Plasma</span></h2>
           <p style="margin:22px 0 0;font-family:Jost,sans-serif;font-size:15px;line-height:1.85;color:#5E5E5E;max-width:480px">Concentrated autologous plasma separated in-clinic to stimulate natural cellular regeneration. No synthetics. No fillers. Pure regenerative signals.</p>
@@ -666,7 +774,7 @@
 
       <div data-reveal="1" class="tplg7" style="margin-top:64px;display:grid;gap:20px">
         <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-top:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03)">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 01</div>
+          <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 01</div>
           <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:18px;letter-spacing:.02em;color:#081359">Draw</div>
           <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Standard blood draw conducted in-clinic by an experienced practitioner.</p>
         </div>
@@ -676,13 +784,13 @@
             <source src="assets/videos/prp-method/prp-plasma-separation-loop.mp4" type="video/mp4">
           </video>
           <div style="position:relative;z-index:2">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 02</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 02</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:18px;letter-spacing:.02em;color:#081359">Separate</div>
             <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Centrifuged to isolate high-concentration growth factors.</p>
           </div>
         </div>
         <div style="background:#FDFBF8;padding:32px 24px;border:1px solid rgba(184,146,93,.25);border-top:3px solid #B8925D;box-shadow:0 8px 24px rgba(8,19,89,.03)">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 03</div>
+          <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 03</div>
           <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:18px;letter-spacing:.02em;color:#081359">Activate</div>
           <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Formulated as plasma, PRF biofiller or exosome enhancement.</p>
         </div>
@@ -692,7 +800,7 @@
             <source src="assets/videos/prp-method/prp-syringe-drop-loop.mp4" type="video/mp4">
           </video>
           <div style="position:relative;z-index:2">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 04</div>
+            <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;color:#B8925D;font-weight:600">STEP 04</div>
             <div style="margin-top:14px;font-family:Jost,sans-serif;font-weight:400;font-size:18px;letter-spacing:.02em;color:#081359">Reintroduce</div>
             <p style="margin:10px 0 0;font-family:Jost,sans-serif;font-size:13.5px;line-height:1.75;color:#5E5E5E">Targeted delivery via microneedling or precision injection.</p>
           </div>
@@ -709,17 +817,17 @@
         <div>
           <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:#F8F6F3;border:1px solid rgba(184,146,93,0.3);margin-bottom:14px">
             <span style="width:5px;height:5px;background:#B8925D;border-radius:50%"></span>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">Equipments &amp; Devices</span>
+            <span style="font-family:Jost,sans-serif;font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:#081359">Equipments &amp; Devices</span>
           </div>
           <h2 style="margin:0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(34px,4.4vw,68px);line-height:1;letter-spacing:-.01em;color:#081359">Technology Index</h2>
         </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#B8925D">18 Advanced Clinical Technologies</div>
+        <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#B8925D">18 Advanced Clinical Technologies</div>
       </div>
       <div data-reveal="1" class="tplg8" style="display:grid;gap:0 72px">
         <div style="display:flex;flex-direction:column">
           <sc-for list="{{ techLeft }}" as="t" hint-placeholder-count="9">
             <div style="display:flex;align-items:center;gap:20px;padding:18px 8px;border-bottom:1px solid rgba(36,36,36,.08);transition:all .3s ease" style-hover="background:#FDFBF8;padding-left:16px">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;color:#B8925D;min-width:26px;font-weight:600">{{ t.n }}</span>
+              <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.16em;color:#B8925D;min-width:26px;font-weight:600">{{ t.n }}</span>
               <span style="font-family:Jost,sans-serif;font-weight:300;font-size:18px;letter-spacing:.01em;color:#081359;flex:1">{{ t.name }}</span>
               <span style="padding:4px 10px;background:#F8F6F3;border:1px solid rgba(184,146,93,0.3);font-family:Jost,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#081359">{{ t.tag }}</span>
             </div>
@@ -728,7 +836,7 @@
         <div style="display:flex;flex-direction:column">
           <sc-for list="{{ techRight }}" as="t" hint-placeholder-count="9">
             <div style="display:flex;align-items:center;gap:20px;padding:18px 8px;border-bottom:1px solid rgba(36,36,36,.08);transition:all .3s ease" style-hover="background:#FDFBF8;padding-left:16px">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;color:#B8925D;min-width:26px;font-weight:600">{{ t.n }}</span>
+              <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.16em;color:#B8925D;min-width:26px;font-weight:600">{{ t.n }}</span>
               <span style="font-family:Jost,sans-serif;font-weight:300;font-size:18px;letter-spacing:.01em;color:#081359;flex:1">{{ t.name }}</span>
               <span style="padding:4px 10px;background:#F8F6F3;border:1px solid rgba(184,146,93,0.3);font-family:Jost,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#081359">{{ t.tag }}</span>
             </div>
@@ -737,7 +845,7 @@
       </div>
       <div data-reveal="1" style="margin-top:36px;display:flex;align-items:center;gap:12px">
         <span style="width:6px;height:6px;background:#B8925D;display:inline-block;border-radius:50%"></span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">XERF™ appointments available from September</span>
+        <span style="font-family:Jost,sans-serif;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#081359">XERF™ appointments available from September</span>
       </div>
     </div>
   </section>
@@ -750,18 +858,18 @@
         <img src="assets/section-images-webp/section-clinic-portrait.webp" alt="TPL Clinic Mayfair premises" loading="lazy" fetchpriority="low" width="800" height="1000" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
         <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,19,89,.2) 0%,rgba(8,19,89,.82) 100%);pointer-events:none"></div>
         <div style="position:relative;z-index:3;height:100%;padding:44px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#E8C89A">Mayfair · London</div>
+          <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#E8C89A">Mayfair · London</div>
           <div>
             <div style="font-family:Jost,sans-serif;font-weight:200;font-size:clamp(32px,3.5vw,52px);line-height:1.05;color:#ffffff">22 Seymour Street<br /><span style="color:#E8C89A">London W1H 7HY</span></div>
             <div style="margin-top:20px;border-top:1px solid rgba(232,200,154,.4);padding-top:16px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.8)">By Appointment Only</span>
-              <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#E8C89A">TPL CLINIC MAYFAIR</span>
+              <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.8)">By Appointment Only</span>
+              <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#E8C89A">TPL CLINIC MAYFAIR</span>
             </div>
           </div>
         </div>
       </div>
       <div style="background:#FDFBF8;padding:48px 40px;border:1px solid rgba(184,146,93,.3);box-shadow:0 12px 35px rgba(8,19,89,.03)">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D;font-weight:600">The Clinic</div>
+        <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D;font-weight:600">The Clinic</div>
         <h2 style="margin:16px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(28px,2.8vw,42px);line-height:1.1;color:#081359">Mayfair,<br />London W1</h2>
         <div style="margin-top:28px;display:flex;flex-direction:column;gap:16px">
           <div style="border-top:1px solid rgba(184,146,93,.2);padding-top:14px">
@@ -786,20 +894,20 @@
   <section id="consultation" style="padding:120px 48px;background:#081359;color:#ffffff">
     <div class="tplg5" style="max-width:1280px;margin:0 auto;display:grid;gap:88px;align-items:start">
       <div data-reveal="1">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470">Consultation</div>
+        <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470">Consultation</div>
         <h2 style="margin:20px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(38px,4.6vw,72px);line-height:1.02;letter-spacing:-.01em;color:#ffffff">Every plan starts<br /><span style="color:#C7A470">in the room.</span></h2>
         <p style="margin:22px 0 0;max-width:460px;font-family:Jost,sans-serif;font-size:15px;line-height:1.8;color:rgba(255,255,255,.78)">Consultations are arranged by our medical team. Tell us what you'd like to address and we'll connect you with the right specialist.</p>
         <div style="margin-top:40px;display:flex;flex-direction:column;gap:16px;max-width:460px">
           <div style="display:flex;gap:16px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">01</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">01</span>
             <span style="font-family:Jost,sans-serif;font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.82)">Consultations paid in advance — 100% refundable up to 48 hours prior.</span>
           </div>
           <div style="display:flex;gap:16px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">02</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">02</span>
             <span style="font-family:Jost,sans-serif;font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.82)">Surgical hair transplant consultations booked directly with the operating surgeon.</span>
           </div>
           <div style="display:flex;gap:16px;border-top:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.18);padding:14px 0">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">03</span>
+            <span style="font-family:Jost,sans-serif;font-size:10px;color:#C7A470;letter-spacing:.18em;font-weight:600">03</span>
             <span style="font-family:Jost,sans-serif;font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.82)">Out of hours? Submit your details — we contact you next working morning.</span>
           </div>
         </div>
@@ -844,7 +952,7 @@
           <input type="checkbox" checked="{{ consent }}" onChange="{{ onConsent }}" style="margin-top:3px;width:14px;height:14px;accent-color:#B8925D" />
           <span style="font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:#5E5E5E">I consent to TPL Clinic contacting me regarding my enquiry.</span>
         </label>
-        <button onClick="{{ onSubmit }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">Send Enquiry →</button>
+        <button onClick="{{ onSubmit }}" style="margin-top:22px;width:100%;padding:16px 24px;background:#B8925D;color:#ffffff;border:1px solid #B8925D;border-radius:0;box-sizing:border-box;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease" style-hover="background:#081359;border-color:#081359">Send Enquiry →</button>
       </div>
     </div>
   </section>
@@ -865,6 +973,7 @@
           <a href="#hair" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">Hair Restoration</a>
           <a href="#body" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">Body Remodelling</a>
           <a href="#prp" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">The PRP Specialty</a>
+          <a href='/services' style-hover='color:#C7A470' style='font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease'>Services Index</a>
         </div>
       </div>
       <div>
@@ -873,28 +982,29 @@
           <span style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9)">22 Seymour Street, Mayfair W1H 7HY</span>
           <span style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9)">Telephone: 020 7998 7077</span>
           <span style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9)">Email: info@tplclinic.com</span>
+          <a href='/about' style-hover='color:#C7A470' style='font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease'>About Us</a>
           <a href="https://www.instagram.com/tplcliniclondon" target="_blank" rel="noopener" style="font-family:Jost,sans-serif;font-size:14.5px;color:#C7A470;text-decoration:none;transition:color .25s ease" style-hover="color:#ffffff">@tplcliniclondon →</a>
         </div>
       </div>
       <div>
         <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#C7A470;font-weight:600;margin-bottom:18px">Legal &amp; Policy</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <a href="#top" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">Terms &amp; Conditions</a>
-          <a href="#top" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">GDPR &amp; Privacy Policy</a>
+          <a href='/terms-conditions' style-hover='color:#C7A470' style='font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease'>Terms &amp; Conditions</a>
+          <a href='/gdpr' style-hover='color:#C7A470' style='font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease'>GDPR &amp; Privacy Policy</a>
           <a href="#consultation" style="font-family:Jost,sans-serif;font-size:14.5px;color:rgba(255,255,255,.9);text-decoration:none;transition:color .25s ease" style-hover="color:#C7A470">Consultation Policy</a>
         </div>
       </div>
     </div>
     <div style="max-width:1280px;margin:52px auto 0;padding-top:24px;border-top:1px solid rgba(255,255,255,.15);display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap">
-      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6)">© 2026 TPL CLINIC · MAYFAIR LONDON</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#C7A470">REGENERATIVE AESTHETICS</span>
+      <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6)">© 2026 TPL CLINIC · MAYFAIR LONDON</span>
+      <span style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#C7A470">REGENERATIVE AESTHETICS</span>
     </div>
   </footer>
 
   <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;inset:0;z-index:400;background:rgba(8,19,89,.55);display:flex;align-items:center;justify-content:center;padding:24px">
       <div style="background:#ffffff;max-width:520px;width:100%;padding:52px 46px;border-top:2px solid #B8925D">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D">Enquiry received</div>
+        <div style="font-family:Jost,sans-serif;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D">Enquiry received</div>
         <h3 style="margin:20px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:38px;line-height:1.1;color:#242424">Thank you. We will contact you.</h3>
         <p style="margin:18px 0 0;font-size:15px;line-height:1.85;color:#5E5E5E">A member of the TPL Clinic team will call you to arrange your consultation. If your enquiry is urgent, please call 020 7998 7077 or message us on WhatsApp.</p>
         <button onClick="{{ onClose }}" style="margin-top:32px;padding:15px 30px;background:#242424;color:#ffffff;border:1px solid #242424;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;cursor:pointer" style-hover="background:#B8925D;border-color:#B8925D">Close</button>
@@ -906,7 +1016,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;heroScrollDepth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1400,&quot;min&quot;:400,&quot;max&quot;:3000,&quot;step&quot;:50,&quot;unit&quot;:&quot;vh&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;showTechnologyIndex&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;revealAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
 class Component extends DCLogic {
-  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false };
+  state = { firstName:"", lastName:"", email:"", phone:"", area:"Face — skin & anti-ageing", message:"", consent:false, submitted:false, mobileMenuOpen:false, megaMenuOpen:false, servicesMenuOpen:false };
 
   componentDidMount() {
     this.TOTAL_FRAMES = 1000;
@@ -931,7 +1041,7 @@ class Component extends DCLogic {
 
     // Bind click events on Sequence Rail items to scrub directly to target video frames!
     if (this.railItems && this.railItems.length > 0) {
-      const beatTargetFrames = [1, 86, 230, 410, 670, 870, 960];
+      const beatTargetFrames = [1, 100, 205, 430, 580, 670, 900, 985];
       this.railItems.forEach((item, idx) => {
         item.style.cursor = 'pointer';
         item.addEventListener('click', () => {
@@ -962,7 +1072,7 @@ class Component extends DCLogic {
           } else {
             targetEl.scrollIntoView({ behavior: 'smooth' });
           }
-          this.setState({ mobileMenuOpen: false, megaMenuOpen: false });
+          this.setState({ mobileMenuOpen: false, megaMenuOpen: false, servicesMenuOpen: false });
         }
       });
     });
@@ -976,63 +1086,146 @@ class Component extends DCLogic {
     this.hotspotTag = document.querySelector('[data-hotspot-tag]');
     this.hotspotTitle = document.querySelector('[data-hotspot-title]');
     this.hotspotSubtitle = document.querySelector('[data-hotspot-subtitle]');
-    this.hotspotBtn = document.querySelector('[data-hotspot-btn]');
-    this.hotspotLink = document.querySelector('[data-hotspot-link]');
+    this.hotspotLinks = document.querySelector('[data-hotspot-links]');
     this.activeHotspot = null;
+    // Cell → position/alignment, matching the hv6 3x3-grid convention: text
+    // sits in whichever corner of THIS beat's frame is actually empty.
+    //
+    // Prathamesh's hv6 page has no persistent left-hand chrome, so his own
+    // "empty space" cells could hug the left edge (left: 5%) directly. Ours
+    // does — the SEQUENCE rail measures left:36px, right:186px, vertically
+    // centred (top:243px–476px on a 720px stage) — so a left-cell here MUST
+    // clear column x > 186px or it prints straight over the rail text, which
+    // is exactly the bug the client flagged. 260px clears it with a 74px
+    // margin — deliberately generous, not just "technically clear" — and
+    // reads as a normal two-column layout (nav + content) rather than two
+    // blocks fighting for the same strip. Fixed px, not ch: ch resolves
+    // against this wrapper's OWN font-size, which is never set here, so it
+    // would inherit whatever the surrounding context happens to cascade —
+    // px is the only value that is guaranteed to mean what it says.
+    this.HOTSPOT_CELLS = {
+      'top-left':  { top: '128px', bottom: 'auto', left: '260px', right: 'auto', textAlign: 'left', justify: 'flex-start', maxWidth: '380px' },
+      'top-right': { top: '128px', bottom: 'auto', left: 'auto', right: '5%', textAlign: 'right', justify: 'flex-end', maxWidth: '420px' },
+      'mid-left':  { top: '50%', bottom: 'auto', left: '260px', right: 'auto', textAlign: 'left', justify: 'flex-start', translateY: true, maxWidth: '380px' },
+      'mid-right': { top: '50%', bottom: 'auto', left: 'auto', right: '5%', textAlign: 'right', justify: 'flex-end', translateY: true, maxWidth: '420px' },
+      'bot-left':  { top: 'auto', bottom: '90px', left: '260px', right: 'auto', textAlign: 'left', justify: 'flex-start', maxWidth: '380px' },
+      'bot-right': { top: 'auto', bottom: '90px', left: 'auto', right: '5%', textAlign: 'right', justify: 'flex-end', maxWidth: '420px' }
+    };
     this.active = -1;
     this.targetProgress = 0;
     this.currentProgress = 0;
     this.isLooping = false;
 
-    // Scroll-synced service hotspots — mapped directly to exact visual beats in 1000-frame Hero V7 sequence
+    // Scroll-synced service copy — mapped to exact visual beats in the 1000-frame
+    // sequence. `cell` follows Prathamesh's hv6 3x3-grid convention (same source
+    // footage, measured empty-space-per-beat in hero-v7-spec.json): text sits in
+    // whichever corner of THIS beat's frame is actually empty. `links` are real
+    // per-service pages, not a single generic CTA.
+    //
+    // IMPORTANT: min/max are NOT the full visual span of each beat — they are
+    // the verified-SAFE sub-window inside it. Prathamesh's hv6 engine freezes
+    // scroll on one measured-safe frame per beat and shows copy only during
+    // that freeze; ours scrubs continuously, so the shot composition drifts
+    // under a fixed-position caption as the user keeps scrolling (confirmed:
+    // Diagnostics reads clean at frame 210 but the practitioner's shoulder has
+    // risen into the text by 263; Hair Transplant reads clean at 661 but is an
+    // unreadable extreme close-up by 719). Rather than guess a position that
+    // survives the whole beat, each window below is narrowed to the portion
+    // actually confirmed clear — the caption fades in once the shot settles
+    // and fades out again before it drifts, same as watching plain film the
+    // rest of the time. The rail highlight (a separate array, `activeIdx`
+    // below) still spans the FULL beat so navigation context never drops.
     this.HOTSPOTS = [
       {
-        min: 40, max: 160,
+        min: 70, max: 130,
+        cell: 'mid-right',
         tag: '02 — CONSULTATION',
-        title: 'Doctor-Led Consultation & Mapping',
-        subtitle: 'Bespoke diagnostic treatment mapping & scalp/facial analysis',
-        btn: 'Book Consultation →',
-        url: 'https://www.tplclinic.com/contact'
+        title: 'Not a Form. A Conversation.',
+        subtitle: 'One-to-one with a specialist who reads your case, not a checklist — before a single treatment is chosen',
+        links: [
+          { label: 'Consultation', url: 'https://www.tplclinic.com/contact' },
+          { label: 'Diagnostics', url: 'https://www.tplclinic.com/trichocomp' }
+        ]
       },
       {
-        min: 161, max: 300,
-        tag: '03 — PRP METHOD',
-        title: 'The PRP Diagnostic Method',
-        subtitle: 'High-concentration autologous growth factor fraction spun in-clinic',
-        btn: 'Explore PRP Method →',
-        url: 'https://www.tplclinic.com/services'
+        min: 175, max: 235,
+        cell: 'mid-right',
+        tag: '03 — DIAGNOSTICS',
+        title: 'The Cause, Not the Symptom',
+        subtitle: 'TrichoCOMP™ combines genetic testing, blood profiling & microscopic scalp analysis — so your plan treats the reason, not the guess',
+        links: [
+          { label: 'TrichoCOMP™', url: 'https://www.tplclinic.com/trichocomp' }
+        ]
       },
       {
-        min: 301, max: 520,
-        tag: '04 — BODY QUALITY',
-        title: 'Subdermal Skin Remodelling',
-        subtitle: 'Morpheus8® Burst & radiofrequency body skin tightening',
-        btn: 'Body Protocols →',
-        url: 'https://www.tplclinic.com/body'
+        min: 340, max: 515,
+        cell: 'bot-right',
+        tag: '04 — HAIR TREATMENT',
+        title: 'Your Own Biology, Concentrated',
+        subtitle: 'Platelet-rich plasma drawn, spun & re-delivered to the scalp — a regenerative signal your follicles already know how to answer',
+        links: [
+          { label: 'Enhanced PRP', url: 'https://www.tplclinic.com/enhanced-prp-mct' },
+          { label: 'Regenera Activa®', url: 'https://www.tplclinic.com/regenera-activa' },
+          { label: 'PRP', url: 'https://www.tplclinic.com/prp' }
+        ]
       },
       {
-        min: 521, max: 820,
-        tag: '05 — HAIR RESTORATION',
-        title: 'Follicular Restoration & Invisible Hair Transplant™',
-        subtitle: 'Doctor-led PRP, Exosomes & precision FUE graft placement',
-        btn: 'Hair Treatments & Surgery →',
-        url: 'https://www.tplclinic.com/hair'
+        min: 530, max: 630,
+        cell: 'mid-right',
+        tag: '05 — BODY TREATMENT',
+        title: 'Skin, Re-Engineered From Beneath',
+        subtitle: 'Morpheus8® pairs radiofrequency with microneedling to remodel skin below the surface — tightening, smoothing, renewing',
+        links: [
+          { label: 'Morpheus8®', url: 'https://www.tplclinic.com/morpheus-8' },
+          { label: 'Soprano Ice Titanium™', url: 'https://www.tplclinic.com/soprano-ice-titanium' },
+          { label: 'Mesotherapy', url: 'https://www.tplclinic.com/mesotherapy' }
+        ]
       },
       {
-        min: 821, max: 920,
-        tag: '06 — CLINICAL FORMULATIONS',
-        title: 'Physician Products & Serums',
-        subtitle: 'Active regenerative formulations for daily maintenance',
-        btn: 'View Formulations →',
-        url: 'https://www.tplclinic.com/services'
+        // This beat cuts wide → extreme close-up → wide again (confirmed on
+        // frames 661/797 wide, 719/757 close-up filling the frame edge to
+        // edge with no clear corner at any point). Two entries, same tag/
+        // copy, cover both wide windows so the caption is present through
+        // nearly the whole beat; only the ~80-frame close-up itself (700-780)
+        // is left uncaptioned because there is nowhere safe to put it.
+        min: 645, max: 698,
+        cell: 'mid-right',
+        tag: '06 — HAIR TRANSPLANT',
+        title: 'A Hairline, Not a Hint of Surgery',
+        subtitle: 'Doctor-led Invisible Hair Transplant™ — precision FUE graft placement built to disappear into your own hair',
+        links: [
+          { label: 'Invisible Hair Transplant™', url: 'https://www.tplclinic.com/hair' }
+        ]
       },
       {
-        min: 921, max: 1000,
-        tag: '07 — MAYFAIR CLINIC',
-        title: 'TPL Regenerative Excellence',
-        subtitle: '22 Seymour Street, Mayfair London',
-        btn: 'Contact Mayfair Clinic →',
-        url: 'https://www.tplclinic.com/contact'
+        min: 782, max: 820,
+        cell: 'mid-right',
+        tag: '06 — HAIR TRANSPLANT',
+        title: 'A Hairline, Not a Hint of Surgery',
+        subtitle: 'Doctor-led Invisible Hair Transplant™ — precision FUE graft placement built to disappear into your own hair',
+        links: [
+          { label: 'Invisible Hair Transplant™', url: 'https://www.tplclinic.com/hair' }
+        ]
+      },
+      {
+        min: 850, max: 955,
+        cell: 'mid-right',
+        tag: '07 — PHYSICIAN PRODUCTS',
+        title: 'The Regimen Between Visits',
+        subtitle: 'Physician-dispensed formulas chosen for your results, not the shelf — so what happens in clinic keeps happening at home',
+        links: [
+          { label: 'Skincare', url: 'https://www.tplclinic.com/services' }
+        ]
+      },
+      {
+        min: 965, max: 1000,
+        cell: 'mid-right',
+        tag: '08 — TRUSTED BRANDS',
+        title: "The Brands We'd Actually Recommend",
+        subtitle: 'SkinCeuticals, La Roche-Posay, CeraVe & considered Korean skincare — stocked because our doctors trust them, not because they\'re trending',
+        links: [
+          { label: 'Korean Skincare', url: 'https://www.tplclinic.com/korean-skin-care' }
+        ]
       }
     ];
 
@@ -1071,23 +1264,21 @@ class Component extends DCLogic {
       if (this.hero) this.hero.style.height = depth + 'vh';
 
       this.canvas = document.querySelector('[data-hero-canvas]');
-      this.ctx = this.canvas ? this.canvas.getContext('2d', { alpha: false, desynchronized: true }) : null;
-      this.frames = new Array(this.TOTAL_FRAMES + 1);
+      // desynchronized:true is a Chrome-oriented low-latency hint with no benefit
+      // here (frames update once per scroll-driven rAF tick, not per pointer
+      // move) and WebKit's support for it has documented black-frame/flicker
+      // bugs on Safari. Plain buffered 2D context is correct for this workload.
+      this.ctx = this.canvas ? this.canvas.getContext('2d', { alpha: false }) : null;
       this.lastDrawnFrame = -1;
       this.lastFrameText = -1;
 
       // Update & Cache Canvas dimensions once on init & resize
       this.updateCanvasDimensions();
 
-      // Instant 4K UHD Crisp Frame 1 Paint (3840x2160 native resolution)
-      const initialPoster = new Image();
-      initialPoster.onload = () => {
-        this.frames[1] = initialPoster;
-        if (this.lastDrawnFrame <= 1) {
-          this.drawFrameOnCanvas(1);
-        }
-      };
-      initialPoster.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
+      // (An `initialPoster` Image used to be loaded here into a `this.frames`
+      // array that nothing ever read — a second 200KB fetch of the poster on the
+      // critical path, for a value with no consumer. The poster is loaded and
+      // drawn by `this.posterImg` in preloadAppleSpritesLOD below.)
 
       // Initialize Lenis Smooth Scroll with butter-smooth easing & momentum
       if (typeof window.Lenis !== 'undefined') {
@@ -1152,7 +1343,7 @@ class Component extends DCLogic {
     row.setAttribute('data-hero-hotspot-row', '1');
     row.style.cssText = 'background:#081359;padding:22px 20px 28px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center';
     row.innerHTML = this.HOTSPOTS.map(h =>
-      '<a href="' + h.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid rgba(199,164,112,.45);background:rgba(255,255,255,.04);font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#E8C89A;text-decoration:none;white-space:nowrap"><span style="width:4px;height:4px;background:#C7A470;display:inline-block;flex:none"></span>' + (h.title || h.tag || '') + '</a>'
+      '<a href="' + h.url + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid rgba(199,164,112,.45);background:rgba(255,255,255,.04);font-family:Jost,sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#E8C89A;text-decoration:none;white-space:nowrap"><span style="width:4px;height:4px;background:#C7A470;display:inline-block;flex:none"></span>' + (h.title || h.tag || '') + '</a>'
     ).join('');
     this.hero.insertAdjacentElement('afterend', row);
   }
@@ -1163,8 +1354,15 @@ class Component extends DCLogic {
     const cssHeight = window.innerHeight;
     if (cssWidth <= 0 || cssHeight <= 0) return;
 
-    // Full 1:1 Native Retina 4K Display Pixel Ratio
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    // Capped at 2x, matching preloadAppleSpritesLOD's sprite-fetch tier cap
+    // (idealSheetW also uses Math.min(devicePixelRatio, 2)) below. A canvas
+    // backing store bigger than 2.5x used to outrun the actual source pixels
+    // available above 2x displays — Safari's Canvas2D scaling cost tracks
+    // destination pixel count, so that mismatch meant paying extra draw cost
+    // on every scroll-driven frame for a result that couldn't get any sharper
+    // than the source anyway. Capping both at the same value removes the
+    // wasted upscale.
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const targetW = Math.round(cssWidth * dpr);
     const targetH = Math.round(cssHeight * dpr);
@@ -1172,6 +1370,11 @@ class Component extends DCLogic {
     if (this.canvas.width !== targetW || this.canvas.height !== targetH) {
       this.canvas.width = targetW;
       this.canvas.height = targetH;
+      // Resizing a canvas resets its 2D context state, imageSmoothing* included,
+      // so the memoised value in drawFrameOnCanvas is no longer what the context
+      // actually holds. Invalidate it or the next draw silently keeps the
+      // browser default instead of the quality we asked for.
+      this._smoothing = null;
     }
     this.targetW = targetW;
     this.targetH = targetH;
@@ -1194,6 +1397,7 @@ class Component extends DCLogic {
     if (this.ctx) {
       this.ctx.imageSmoothingEnabled = true;
       this.ctx.imageSmoothingQuality = 'high';
+      this._smoothing = 'high';
     }
   }
 
@@ -1201,75 +1405,199 @@ class Component extends DCLogic {
     this.CDN_BASE_URL = 'https://ik.imagekit.io/dhiraj1995/';
     this.sprites = {};
 
+    // Viewport/DPR-aware sprite-sheet width. Each sheet is a 2x2 grid of
+    // 1920x1080 cells (3840x2160 total) — the canvas only ever draws ONE
+    // cell at a time, scaled to the CSS viewport, so full 3840 is wasted
+    // bytes on anything smaller than a large hi-DPI desktop. Snapped to a
+    // few discrete tiers (not a continuous per-visitor value) so the CDN
+    // edge cache stays effective across visitors instead of fragmenting
+    // into one unique URL per viewport width. Measured: q-75,f-auto,w-1920
+    // vs the previous q-90,f-webp at native size is a ~80% smaller download
+    // per sheet for anyone not on tier 3840 — across 250 sheets that's the
+    // difference between roughly 73MB and 14MB of total hero payload.
+    // Each sheet is 2 cells wide (2x2 grid), so the sheet's ideal resolution
+    // is 2x the single cell the canvas actually draws, not 1x — a sheet
+    // downscaled to less than 2x the viewport's raster width would blur the
+    // cell being displayed.
+    const idealSheetW = 2 * (window.innerWidth || 1280) * Math.min(window.devicePixelRatio || 1, 2);
+    const sheetTier = idealSheetW <= 1920 ? 1920 : (idealSheetW <= 2880 ? 2880 : 3840);
+    this.SPRITE_TR = sheetTier < 3840 ? `q-75,f-auto,w-${sheetTier}` : 'q-75,f-auto';
+
+    // ── Decoded-image budget ─────────────────────────────────────────────
+    // The tiering above optimises DOWNLOAD size (~115KB/sheet, ~28MB total).
+    // What actually costs memory is the DECODED bitmap: a 3840x2160 sheet is
+    // 3840*2160*4 = ~31.6MB of RAM once decoded, and img.decode() below forces
+    // every fetched sheet into exactly that state. Holding all 250 alive at
+    // once — which this did, nothing was ever released — is ~7.7GB of decoded
+    // bitmaps. Chrome's image cache silently evicts and re-decodes under that
+    // pressure, so it scrubbed fine there; WebKit does not cope the same way,
+    // and thrashes instead. That asymmetry is why this was smooth in Chrome
+    // and stuttery in Safari, and why it got worse the further you scrolled.
+    // Keep a bounded window around the playhead instead of the whole reel.
+    // Budget is a balance, not a minimum: too high and WebKit thrashes again,
+    // too low and a fast flick outruns the fetch-ahead and the sequence visibly
+    // sticks on a held frame. ~1GB keeps a 33-sheet (132-frame) window hot at
+    // the 3840 tier while staying an order of magnitude under the old 7.7GB.
+    const sheetBytes = 2.25 * sheetTier * sheetTier; // w * (w*9/16) * 4bpp
+    const isWebKit = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+    // See prepareSprite(): decode() + createImageBitmap(<img>) is the only path
+    // that keeps WebKit's image decoding off the main thread. Chrome is left on
+    // the plain <img> path, where it is already non-blocking and where
+    // createImageBitmap would introduce blocking instead.
+    this.useImageBitmap = isWebKit;
+    const DECODED_BUDGET = (isWebKit ? 896 : 1024) * 1024 * 1024;
+    this.MAX_SPRITES = Math.max(16, Math.min(120, Math.floor(DECODED_BUDGET / sheetBytes)));
+
     // Method 08: Preload 4K Hero Poster immediately on millisecond 0 for instant start frame paint
     this.posterImg = new Image();
     if ('fetchPriority' in this.posterImg) this.posterImg.fetchPriority = 'high';
     this.posterImg.onload = () => {
-      if (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1 || !this.sprites[1]) {
+      // Repaint whenever we are sitting on the opening frame: the poster is now
+      // the preferred source there, not just a stand-in for a missing sheet.
+      if (this.lastDrawnFrame <= 1) {
+        this.lastDrawnFrame = -1;      // defeat the "same frame, skip" guard
         this.drawFrameOnCanvas(1);
       }
     };
-    this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v8_4k';
+    this.posterImg.src = 'assets/hero-poster/hero-poster.webp?v=v9_4k';
+
+    this.inflight = new Set();
 
     const fetchSprite = (spriteIndex, priority = 'low') => {
       if (this.destroyed || this.sprites[spriteIndex]) return Promise.resolve();
+      if (this.inflight.has(spriteIndex)) return Promise.resolve();
+      this.inflight.add(spriteIndex);
       return new Promise((resolve) => {
-        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd&tr=q-90,f-webp`;
+        const src = `${this.CDN_BASE_URL}assets/hero-sprites-hd/sprite-hd-${String(spriteIndex).padStart(3, '0')}.webp?v=v8_hd&tr=${this.SPRITE_TR}`;
         const img = new Image();
         if (priority === 'high' && 'fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = async () => {
-          if (img.decode) {
-            try { await img.decode(); } catch(e) {}
-          }
-          this.sprites[spriteIndex] = img;
-          if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
-            this.drawFrameOnCanvas(1);
-          }
-          resolve();
+        img.onload = () => {
+          let settled = false;
+          const publish = (prepared) => {
+            if (settled) return; settled = true;
+            this.sprites[spriteIndex] = prepared || img;
+            this.inflight.delete(spriteIndex);
+            if (spriteIndex === 1 && (this.lastDrawnFrame === -1 || this.lastDrawnFrame === 1)) {
+              this.drawFrameOnCanvas(1);
+            }
+            resolve();
+          };
+          // Chrome can defer decode() indefinitely on a backgrounded tab; race
+          // it against a timeout so a hidden tab never stalls the gate.
+          const ready = img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+          ready.then(() => this.prepareSprite(img)).then(publish, () => publish());
+          // Safety net: a decode that never settles must not strand the sheet.
+          setTimeout(() => { if (!settled) this.prepareSprite(img).then(publish, () => publish()); }, 3000);
         };
-        img.onerror = () => resolve();
+        img.onerror = () => { this.inflight.delete(spriteIndex); resolve(); };
         img.src = src;
       });
     };
 
-    // Method 08: Preload Gate Progress Bar (Guarantees 1st scroll is 100% as smooth as 2nd scroll)
-    let pBar = document.getElementById('tpl-preload-bar');
-    if (!pBar) {
-      pBar = document.createElement('div');
-      pBar.id = 'tpl-preload-bar';
-      pBar.style.cssText = 'position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#B8925D,#DFC396);z-index:99999;width:0%;transition:width 0.2s ease, opacity 0.4s ease;pointer-events:none;box-shadow:0 0 10px rgba(184,146,93,0.8);';
-      document.body.appendChild(pBar);
-    }
+    // Full-screen loading gate: scroll stays locked until a whole-reel-spanning
+    // skeleton of sprites has loaded, so the first scroll a visitor makes is
+    // never faster than what has actually arrived. Gate set = dense opening
+    // (seen first, studied longest) + a skeleton every 12th sheet across the
+    // rest of the reel, so a fast flick or rail click can't land on a
+    // completely unloaded stretch either.
+    const loadingScreen = document.getElementById('tpl-loading-screen');
+    const percentEl = document.getElementById('tpl-loading-percent');
+    const barEl = document.getElementById('tpl-loading-bar');
 
-    // Millisecond 0: Eagerly fetch initial 25 sprites (100 frames) in parallel
-    let loadedCount = 0;
-    const initialPromises = [];
-    for (let s = 1; s <= 25; s++) {
-      initialPromises.push(
-        fetchSprite(s, 'high').then(() => {
-          loadedCount++;
-          if (pBar) pBar.style.width = Math.round((loadedCount / 25) * 100) + '%';
-        })
-      );
-    }
+    const GATE_DENSE = 30;
+    const gateSet = [];
+    for (let s = 1; s <= Math.min(GATE_DENSE, this.TOTAL_SPRITES); s++) gateSet.push(s);
+    for (let s = GATE_DENSE + 1; s <= this.TOTAL_SPRITES; s += 12) gateSet.push(s);
+    if (gateSet[gateSet.length - 1] !== this.TOTAL_SPRITES) gateSet.push(this.TOTAL_SPRITES);
 
-    Promise.all(initialPromises).then(async () => {
-      if (pBar) {
-        pBar.style.width = '100%';
-        setTimeout(() => { pBar.style.opacity = '0'; }, 300);
+    let released = false;
+    const releaseScroll = () => {
+      if (released || this.destroyed) return;
+      released = true;
+      if (this.lenis) this.lenis.start();
+      if (this._perf) { this._perf.worst = 0; this._perf.held = 0; }
+      document.documentElement.style.removeProperty('overflow');
+      if (percentEl) percentEl.textContent = '100%';
+      if (barEl) barEl.style.width = '100%';
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => { loadingScreen.style.display = 'none'; }, 700);
       }
+    };
+
+    // Lock scroll during the gate. A visible, honest wait beats an invisible
+    // one that stutters mid-scroll.
+    if (this.lenis) this.lenis.stop();
+    document.documentElement.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
+
+    // Never trap a visitor on a slow connection: release after 8s no matter
+    // what has loaded, and keep loading underneath them regardless.
+    const gateSafety = setTimeout(releaseScroll, 8000);
+
+    let loadedCount = 0;
+    Promise.all(gateSet.map(s => fetchSprite(s, 'high').then(() => {
+      loadedCount++;
+      const pct = Math.round((loadedCount / gateSet.length) * 100);
+      if (percentEl) percentEl.textContent = pct + '%';
+      if (barEl) barEl.style.width = pct + '%';
+    }))).then(async () => {
+      clearTimeout(gateSafety);
+      releaseScroll();
       if (this.destroyed) return;
 
-      // Rapidly stream remaining sprites (26 to 250) in parallel background batches of 8
-      for (let s = 26; s <= this.TOTAL_SPRITES; s += 8) {
-        if (this.destroyed) break;
-        const batch = [];
-        for (let j = s; j < Math.min(s + 8, this.TOTAL_SPRITES + 1); j++) {
-          batch.push(fetchSprite(j, 'low'));
-        }
-        await Promise.all(batch);
-      }
+      // The gate deliberately over-fetches so the first scroll is stutter-free,
+      // but that set alone is well past the decoded budget. Trim back to a
+      // window around the opening frame before the visitor can scroll.
+      // Deliberately NOT followed by a background fill of the remaining
+      // sheets: pulling all 250 into memory is what broke Safari, and every
+      // sheet stays in the HTTP cache anyway, so scrolling back into an
+      // evicted stretch is a cheap re-decode, not a re-download.
+      this.trimSpriteCache(1);
+    }).catch(() => {
+      clearTimeout(gateSafety);
+      releaseScroll();
     });
+  }
+
+  // Hold at most MAX_SPRITES decoded sheets, dropping the ones furthest from
+  // the playhead first — a viewer scrubbing the sequence returns to nearby
+  // frames constantly and distant ones almost never. Dropping the reference is
+  // what actually frees the decoded bitmap; the Image is not touched otherwise
+  // (assigning .src = '' would fire a spurious request for the page URL).
+  trimSpriteCache(centerSprite) {
+    const keys = Object.keys(this.sprites);
+    const overBy = keys.length - this.MAX_SPRITES;
+    if (overBy <= 0) return;
+    const dir = this.scrollDir || 1;
+    keys
+      .map(k => {
+        const offset = (Number(k) - centerSprite) * dir;   // >0 = ahead of travel
+        // Sheets behind the playhead are discounted 2:1 — still worth keeping
+        // for a reversal, but the first to go when space runs out.
+        return { k, dist: offset >= 0 ? offset : -offset * 2 };
+      })
+      .sort((a, b) => b.dist - a.dist)
+      .slice(0, overBy)
+      .forEach(({ k }) => {
+        const held = this.sprites[k];
+        delete this.sprites[k];
+        // Hand the ~31.6MB decoded bitmap back immediately instead of waiting
+        // for GC to get round to it. Only ImageBitmaps can be released this way.
+        if (held && typeof held.close === 'function') {
+          try { held.close(); } catch (e) {}
+        }
+      });
+  }
+
+  // Turn a loaded <img> into whatever this engine should actually hold for it.
+  // On WebKit that is an ImageBitmap (decoded off the main thread, and
+  // releasable); everywhere else the plain <img> is already the fast path.
+  prepareSprite(img) {
+    if (!this.useImageBitmap || typeof createImageBitmap !== 'function') {
+      return Promise.resolve(img);
+    }
+    return createImageBitmap(img).catch(() => img);
   }
 
   findNearestLoadedSprite(spriteIndex) {
@@ -1282,17 +1610,37 @@ class Component extends DCLogic {
     return null;
   }
 
+  posterReady() {
+    return !!(this.posterImg && this.posterImg.complete && (this.posterImg.naturalWidth || this.posterImg.width));
+  }
+
+  drawPoster() {
+    const pw = this.posterImg.naturalWidth || this.posterImg.width;
+    const ph = this.posterImg.naturalHeight || this.posterImg.height;
+    this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
+  }
+
   drawSingleFrame(frameNum) {
+    // Frame 1 is the resting frame — what every visitor stares at before they
+    // touch the scroll wheel. The 4K poster of it is already in memory and is
+    // measurably ~1.9x sharper than the 1920-wide sprite cell upscaled to a
+    // Retina canvas, so use it. Once the visitor scrolls off frame 1 the
+    // sequence takes over, and motion covers the handover.
+    if (frameNum <= 1 && this.posterReady()) {
+      this.drawPoster();
+      return;
+    }
+
     const targetSpriteIndex = Math.ceil(frameNum / 4);
     const spriteIndex = this.findNearestLoadedSprite(targetSpriteIndex);
     const spriteImg = spriteIndex !== null ? this.sprites[spriteIndex] : null;
+    // A "held" frame is the visitor asking for a sheet that has not arrived, so
+    // the sequence freezes on a neighbour. This is the stall people actually
+    // perceive, and it is the number worth watching (see the ?perf=1 panel).
+    if (this._perf && spriteIndex !== targetSpriteIndex) this._perf.held++;
 
     if (!spriteImg) {
-      if (this.posterImg && this.posterImg.complete && (this.posterImg.naturalWidth || this.posterImg.width)) {
-        const pw = this.posterImg.naturalWidth || this.posterImg.width;
-        const ph = this.posterImg.naturalHeight || this.posterImg.height;
-        this.ctx.drawImage(this.posterImg, 0, 0, pw, ph, this.offsetX, this.offsetY, this.drawW, this.drawH);
-      }
+      if (this.posterReady()) this.drawPoster();
       return;
     }
 
@@ -1305,14 +1653,35 @@ class Component extends DCLogic {
     const sw = 1920;
     const sh = 1080;
 
-    this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    // An ImageBitmap that has been close()d throws here. The eviction policy
+    // keeps the playhead's own sheet, so this should not happen -- but a broken
+    // frame must never take the whole sequence down with it.
+    try {
+      this.ctx.drawImage(spriteImg, sx, sy, sw, sh, this.offsetX, this.offsetY, this.drawW, this.drawH);
+    } catch (e) {
+      delete this.sprites[spriteIndex];
+      if (this.posterReady()) this.drawPoster();
+    }
   }
 
   drawFrameOnCanvas(frameNum) {
     if (!this.canvas || !this.ctx || !this.targetW) return;
 
-    this.ctx.imageSmoothingEnabled = true;
-    this.ctx.imageSmoothingQuality = 'high';
+    // WebKit's 'high' imageSmoothingQuality takes a materially slower resampling
+    // path than Chrome's for the same drawImage call — fine for one settled
+    // frame, costly when it runs on every scroll-driven frame during an active
+    // gesture. Match Apple's own product-page trick: cheap resampling while the
+    // sequence is actively scrubbing, sharpen back up once scrolling settles
+    // (this.isScrolling already flips false ~150ms after the last scroll event).
+    // Assigning imageSmoothingQuality invalidates cached graphics state in
+    // WebKit, so only touch it when the value actually changes rather than on
+    // every single draw.
+    const wantQuality = this.isScrolling ? 'low' : 'high';
+    if (wantQuality !== this._smoothing) {
+      this._smoothing = wantQuality;
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = wantQuality;
+    }
 
     this.drawSingleFrame(frameNum);
     this.lastDrawnFrame = frameNum;
@@ -1322,17 +1691,58 @@ class Component extends DCLogic {
     if (this.destroyed) return;
     const centerSprite = Math.ceil(centerFrame / 4);
     const baseUrl = this.CDN_BASE_URL || 'https://ik.imagekit.io/dhiraj1995/';
-    for (let sIdx = Math.max(1, centerSprite - 2); sIdx <= Math.min(this.TOTAL_SPRITES, centerSprite + 4); sIdx++) {
-      if (!this.sprites[sIdx]) {
-        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?tr=q-90,f-webp`;
+    const tr = this.SPRITE_TR || 'q-75,f-auto';
+    const dir = this.scrollDir || 1;
+    // How many frames of reel does the current gesture cross per rendered
+    // frame? Aim to stay ~25 rendered frames (~0.4s) ahead of the playhead,
+    // floored so a standing start still has runway and capped so a hard flick
+    // cannot ask for the whole reel at once.
+    const pxPerFrame = (this.m && this.m.heroScrollable > 0)
+      ? this.m.heroScrollable / this.TOTAL_FRAMES : 6;
+    const framesAhead = Math.min(120, Math.max(48, (this.scrollSpeed || 0) * 25 / pxPerFrame));
+    const aheadSheets = Math.ceil(framesAhead / 4);
+    const behindSheets = 4;   // enough to absorb a quick direction reversal
+
+    const lo = dir > 0 ? centerSprite - behindSheets : centerSprite - aheadSheets;
+    const hi = dir > 0 ? centerSprite + aheadSheets : centerSprite + behindSheets;
+
+    // Fetch nearest-first: if the connection cannot keep up, the frames the
+    // visitor is about to hit still arrive before the far end of the window.
+    const order = [];
+    for (let sIdx = Math.max(1, lo); sIdx <= Math.min(this.TOTAL_SPRITES, hi); sIdx++) order.push(sIdx);
+    order.sort((a, b) => Math.abs(a - centerSprite) - Math.abs(b - centerSprite));
+
+    const MAX_INFLIGHT = 8;
+    for (const sIdx of order) {
+      if (this.inflight.size >= MAX_INFLIGHT) break;
+      if (!this.sprites[sIdx] && !this.inflight.has(sIdx)) {
+        this.inflight.add(sIdx);
+        // Must match the gate's URL byte-for-byte (it includes v=v8_hd). These
+        // had drifted apart, so the same sheet occupied two separate HTTP cache
+        // entries and was downloaded twice — wasteful before, and actively
+        // harmful now that re-entering an evicted stretch depends on that cache.
+        const src = `${baseUrl}assets/hero-sprites-hd/sprite-hd-${String(sIdx).padStart(3, '0')}.webp?v=v8_hd&tr=${tr}`;
         const img = new Image();
         if ('fetchPriority' in img) img.fetchPriority = 'high';
-        img.onload = async () => {
-          if (img.decode) {
-            try { await img.decode(); } catch(e) {}
-          }
-          this.sprites[sIdx] = img;
+        img.onload = () => {
+          let settled = false;
+          const publish = (prepared) => {
+            if (settled) return; settled = true;
+            this.sprites[sIdx] = prepared || img;
+            this.inflight.delete(sIdx);
+            // Keep the decoded set bounded as the playhead moves, so the
+            // window follows the viewer instead of growing without limit.
+            this.trimSpriteCache(Math.ceil((this.lastDrawnFrame > 0 ? this.lastDrawnFrame : 1) / 4));
+          };
+          // Safari can hang decode() indefinitely on some images (unlike Chrome);
+          // race it against a timeout so a stalled decode never freezes the
+          // scroll mid-sequence.
+          const ready = img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+          ready.then(() => this.prepareSprite(img)).then(publish, () => publish());
+          // Safety net: a decode that never settles must not strand the sheet.
+          setTimeout(() => { if (!settled) this.prepareSprite(img).then(publish, () => publish()); }, 3000);
         };
+        img.onerror = () => { this.inflight.delete(sIdx); };
         img.src = src;
       }
     }
@@ -1343,40 +1753,161 @@ class Component extends DCLogic {
     this.currentProgress = 0;
     this.ticking = false;
 
+    // Re-measured on resize only. Reading offsetTop/offsetHeight mid-scroll
+    // forces the browser to re-run layout synchronously on every frame; caching
+    // them means a scroll tick does zero layout-forcing reads.
+    this.measureLayout = () => {
+      const vh = window.innerHeight;
+      const heroH = this.hero ? this.hero.offsetHeight : 0;
+      this.m = {
+        vh,
+        heroTop: this.hero ? (this.hero.getBoundingClientRect().top + window.scrollY) : 0,
+        heroH,
+        heroScrollable: heroH - vh,
+        heroEnd: heroH - vh - 40,
+        consultTop: this.consultSection ? this.consultSection.offsetTop : 99999,
+        consultBottom: this.consultSection ? this.consultSection.offsetTop + this.consultSection.offsetHeight : 0,
+        footerTop: this.footerSection ? this.footerSection.offsetTop : 99999,
+        footerBottom: this.footerSection ? this.footerSection.offsetTop + this.footerSection.offsetHeight : 0
+      };
+    };
+    this.measureLayout();
+    // Sections below the hero settle as lazy images and fonts land, so re-measure
+    // a few times after load rather than trusting the first-paint numbers.
+    window.addEventListener('load', () => this.measureLayout());
+    [400, 1200, 3000].forEach(ms => setTimeout(() => this.measureLayout(), ms));
+
     this.getScrollProgress = () => {
-      if (!this.hero) return 0;
-      const rect = this.hero.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
-      if (scrollableDistance <= 0) return 0;
-      const raw = -rect.top / scrollableDistance;
-      return Math.min(Math.max(raw, 0), 1);
+      const m = this.m;
+      if (!this.hero || !m || m.heroScrollable <= 0) return 0;
+      const raw = (this.scrollY - m.heroTop) / m.heroScrollable;
+      return raw < 0 ? 0 : (raw > 1 ? 1 : raw);
     };
 
-    this.onScroll = () => {
-      if (!this.hero) return;
-      this.isScrolling = true;
-      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-      this.scrollTimeout = setTimeout(() => { this.isScrolling = false; }, 150);
-
+    // One render pass. `y` comes straight from Lenis when Lenis is driving, so
+    // the image updates in the SAME frame the page moves in. The old path
+    // listened for the native `scroll` event and deferred to requestAnimationFrame,
+    // which meant the canvas was always exactly one frame (~16ms) behind the
+    // scroll position — the picture visibly trailing the gesture.
+    this.renderTick = (y) => {
+      const next = (y !== undefined && y !== null) ? y : window.scrollY;
+      if (next === this.scrollY) return;
+      // Which way is the visitor going, and how fast? The loader aims ahead of
+      // them; a fixed forward-biased window meant scrolling UP always outran it.
+      if (this.scrollY !== undefined) {
+        const delta = next - this.scrollY;
+        if (delta !== 0) this.scrollDir = delta > 0 ? 1 : -1;
+        this.scrollSpeed = (this.scrollSpeed || 0) * 0.7 + Math.abs(delta) * 0.3;
+      }
+      this.scrollY = next;
       const p = this.getScrollProgress();
       const targetFrame = Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
       const targetSpriteIndex = Math.ceil(targetFrame / 4);
       if (!this.sprites[targetSpriteIndex]) {
         this.fetchUrgentFrameChunk(targetFrame);
       }
-
       this.renderFrame(p);
+    };
+
+    this.markScrolling = () => {
+      this.isScrolling = true;
+      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = setTimeout(() => {
+        this.isScrolling = false;
+        // Force one more draw at settled (high-quality) resampling — the frame
+        // last painted mid-scroll used the cheap 'low' path and never gets
+        // sharpened up on its own since drawFrameOnCanvas only redraws when
+        // the target frame number changes.
+        if (this.lastDrawnFrame > 0) this.drawFrameOnCanvas(this.lastDrawnFrame);
+      }, 150);
+    };
+
+    // Lenis emits once per animation frame, so this is already frame-rate bound.
+    this.onLenisScroll = (y) => {
+      if (!this.hero) return;
+      this.markScrolling();
+      this.renderTick(y);
+    };
+
+    this.onScroll = () => {
+      if (!this.hero) return;
+      this.markScrolling();
+
+      // Safari's trackpad momentum scroll fires far more raw `scroll` events
+      // per second than Chrome does, which was re-running the full canvas
+      // draw + nav-state DOM work on every single one of them. Throttle to
+      // one render pass per animation frame regardless of event frequency.
+      if (this.ticking) return;
+      this.ticking = true;
+      const rafId = requestAnimationFrame(() => {
+        this.ticking = false;
+        this.renderTick();
+      });
+      // A requestAnimationFrame callback is NOT guaranteed to run: the browser
+      // drops it while the tab is backgrounded, and can skip it under load. The
+      // old code latched `ticking = true` and, if that callback never fired, every
+      // later scroll event returned early — the hero froze on whatever frame it
+      // was on and never recovered. (Reproduced: background the tab mid-hero,
+      // come back, and the sequence is dead.) This releases the latch if the
+      // frame never arrives.
+      clearTimeout(this._tickFallback);
+      this._tickFallback = setTimeout(() => {
+        if (!this.ticking) return;
+        this.ticking = false;
+        cancelAnimationFrame(rafId);
+        this.renderTick();
+      }, 250);
+    };
+
+    // Returning to the tab must re-sync the sequence to wherever the page now is.
+    this.onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      this.ticking = false;
+      this.scrollY = undefined;
+      this.renderTick();
     };
 
     this.onResize = () => {
       this.updateCanvasDimensions();
-      this.onScroll();
+      this.measureLayout();
+      this.scrollY = undefined;   // force a repaint: geometry changed, position did not
+      this.renderTick();
     };
 
     window.addEventListener('scroll', this.onScroll, { passive: true });
     window.addEventListener('touchmove', this.onScroll, { passive: true });
+    if (/[?&]perf=1/.test(location.search)) this.startPerfPanel();
+
     window.addEventListener('resize', this.onResize);
-    this.onScroll();
+    document.addEventListener('visibilitychange', this.onVisibility);
+    this.scrollY = undefined;
+    this.renderTick();
+  }
+
+  startPerfPanel() {
+    this._perf = { held: 0, frames: 0, worst: 0, last: performance.now() };
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:9999999;background:rgba(8,19,89,.92);color:#fff;font:12px/1.55 ui-monospace,Menlo,monospace;padding:10px 14px;border:1px solid #B8925D;white-space:pre;pointer-events:none;border-radius:4px';
+    document.body.appendChild(el);
+    const tick = (t) => {
+      if (this.destroyed) return;
+      const p = this._perf;
+      const dt = t - p.last; p.last = t; p.frames++;
+      if (dt > p.worst && p.frames > 5) p.worst = dt;
+      if (p.frames % 15 === 0) {
+        const cached = Object.keys(this.sprites || {}).length;
+        el.textContent =
+          'fps          ' + (1000 / Math.max(dt, 0.001)).toFixed(0) +
+          '\nworst frame  ' + p.worst.toFixed(0) + ' ms' +
+          '\nheld frames  ' + p.held + '   <- stalls' +
+          '\nsheets       ' + cached + ' / ' + this.MAX_SPRITES +
+          '\nin flight    ' + (this.inflight ? this.inflight.size : 0) +
+          '\nbitmaps      ' + (this.useImageBitmap ? 'on (WebKit)' : 'off (<img>)') +
+          '\nspeed        ' + (this.scrollSpeed || 0).toFixed(0) + ' px/f  dir ' + (this.scrollDir || 0);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   componentWillUnmount() {
@@ -1385,6 +1916,7 @@ class Component extends DCLogic {
       window.removeEventListener('scroll', this.onScroll);
       window.removeEventListener('touchmove', this.onScroll);
       window.removeEventListener('resize', this.onResize);
+      document.removeEventListener('visibilitychange', this.onVisibility);
     }
     if (this.lenis) {
       this.lenis.destroy();
@@ -1404,22 +1936,20 @@ class Component extends DCLogic {
     if (!this.hero) return;
 
     // Smart Glassmorphism Header (State-cached to prevent reflow lag)
+    const m = this.m || {};
+    const scrollY = (this.scrollY !== undefined) ? this.scrollY : window.scrollY;
+    // Unmeasured (mobile fallback path never builds the cache) counts as "still
+    // in the hero", so nothing is skipped on the strength of a missing number.
+    const isPastHero = !!this.m && scrollY >= m.heroEnd;
+
     if (this.nav) {
       const navHeight = 80;
-      const vh = window.innerHeight;
-      const heroFinishedScroll = (this.hero.offsetHeight - vh) - 40;
-      const isPastHero = window.scrollY >= heroFinishedScroll;
 
       let navState = 'transparent';
       if (isPastHero) {
-        const consultTop = this.consultSection ? this.consultSection.offsetTop : 99999;
-        const consultBottom = consultTop + (this.consultSection ? this.consultSection.offsetHeight : 0);
-        const footerTop = this.footerSection ? this.footerSection.offsetTop : 99999;
-        const footerBottom = footerTop + (this.footerSection ? this.footerSection.offsetHeight : 0);
-
-        const currentY = window.scrollY + navHeight;
-        const isOverConsultation = (currentY >= consultTop && window.scrollY <= consultBottom);
-        const isOverFooter = (currentY >= footerTop && window.scrollY <= footerBottom);
+        const currentY = scrollY + navHeight;
+        const isOverConsultation = (currentY >= m.consultTop && scrollY <= m.consultBottom);
+        const isOverFooter = (currentY >= m.footerTop && scrollY <= m.footerBottom);
 
         if (isOverConsultation || isOverFooter) {
           navState = 'dark';
@@ -1434,8 +1964,8 @@ class Component extends DCLogic {
         if (navState === 'dark') {
           this.nav.classList.remove('is-light');
           this.nav.style.background = 'rgba(8, 19, 89, 0.92)';
-          this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
-          this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.backdropFilter = 'blur(12px)';
+          this.nav.style.webkitBackdropFilter = 'blur(12px)';
           this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.35)';
           this.nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
           this.nav.style.padding = '14px 64px';
@@ -1470,8 +2000,8 @@ class Component extends DCLogic {
         } else if (navState === 'light') {
           this.nav.classList.add('is-light');
           this.nav.style.background = 'rgba(255, 255, 255, 0.9)';
-          this.nav.style.backdropFilter = 'blur(20px) saturate(180%)';
-          this.nav.style.webkitBackdropFilter = 'blur(20px) saturate(180%)';
+          this.nav.style.backdropFilter = 'blur(12px)';
+          this.nav.style.webkitBackdropFilter = 'blur(12px)';
           this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.3)';
           this.nav.style.boxShadow = '0 10px 30px rgba(8, 19, 89, 0.08)';
           this.nav.style.padding = '14px 64px';
@@ -1489,6 +2019,11 @@ class Component extends DCLogic {
       }
     }
 
+    // Past the hero the rail, hotspot card, canvas and progress rail are all
+    // off screen. Skip their per-frame work entirely instead of writing styles
+    // nobody can see.
+    if (isPastHero && !explicitFrame) return;
+
     if (this.progress) this.progress.style.transform = 'scaleX(' + p + ')';
 
     const targetFrame = explicitFrame || Math.max(1, Math.min(this.TOTAL_FRAMES, Math.round(p * (this.TOTAL_FRAMES - 1)) + 1));
@@ -1504,16 +2039,19 @@ class Component extends DCLogic {
       }
     }
 
-    // Sync Vertical Sequence Rail Highlighting with exact 7-beat video sequence
+    // Sync Vertical Sequence Rail Highlighting with exact 8-beat video sequence
     if (this.railItems && this.railItems.length > 0) {
       let activeIdx = 0;
-      if (targetFrame > 40 && targetFrame <= 160) activeIdx = 1;       // 02 CONSULTATION
-      else if (targetFrame > 160 && targetFrame <= 300) activeIdx = 2;  // 03 PRP METHOD
-      else if (targetFrame > 300 && targetFrame <= 520) activeIdx = 3; // 04 BODY QUALITY
-      else if (targetFrame > 520 && targetFrame <= 820) activeIdx = 4; // 05 HAIR RESTORATION
-      else if (targetFrame > 820 && targetFrame <= 920) activeIdx = 5; // 06 FORMULATIONS
-      else if (targetFrame > 920) activeIdx = 6;                      // 07 MAYFAIR CODA
+      if (targetFrame > 40 && targetFrame <= 160) activeIdx = 1;        // 02 CONSULTATION
+      else if (targetFrame > 160 && targetFrame <= 300) activeIdx = 2;  // 03 DIAGNOSTICS
+      else if (targetFrame > 300 && targetFrame <= 520) activeIdx = 3;  // 04 HAIR TREATMENT
+      else if (targetFrame > 520 && targetFrame <= 640) activeIdx = 4;  // 05 BODY TREATMENT
+      else if (targetFrame > 640 && targetFrame <= 820) activeIdx = 5;  // 06 HAIR TRANSPLANT
+      else if (targetFrame > 820 && targetFrame <= 960) activeIdx = 6;  // 07 PRODUCTS
+      else if (targetFrame > 960) activeIdx = 7;                       // 08 BRANDS
 
+      if (activeIdx !== this.lastRailIdx) {
+      this.lastRailIdx = activeIdx;
       this.railItems.forEach((item, idx) => {
         const bar = this.railBars[idx];
         if (idx === activeIdx) {
@@ -1524,26 +2062,56 @@ class Component extends DCLogic {
           if (bar) { bar.style.background = 'rgba(8,19,89,0.35)'; bar.style.height = '12px'; }
         }
       });
+      }
     }
 
     if (this.hotspotCard) {
       const match = this.HOTSPOTS.find(h => targetFrame >= h.min && targetFrame <= h.max) || null;
       if (match !== this.activeHotspot) {
+        const prev = this.activeHotspot;
         this.activeHotspot = match;
-        if (match) {
+        const card = this.hotspotCard;
+
+        const applyMatch = () => {
+          if (!match) return;
+          const cell = this.HOTSPOT_CELLS[match.cell] || this.HOTSPOT_CELLS['top-right'];
+          card.style.top = cell.top;
+          card.style.bottom = cell.bottom;
+          card.style.left = cell.left;
+          card.style.right = cell.right;
+          card.style.textAlign = cell.textAlign;
+          card.style.maxWidth = cell.maxWidth;
+          const base = cell.translateY ? 'translateY(-50%) ' : '';
+          card.dataset.baseTransform = base;
+
           if (this.hotspotTag) this.hotspotTag.textContent = match.tag;
           if (this.hotspotTitle) this.hotspotTitle.textContent = match.title;
           if (this.hotspotSubtitle) this.hotspotSubtitle.textContent = match.subtitle;
-          if (this.hotspotBtn) this.hotspotBtn.textContent = match.btn;
-          if (this.hotspotLink) this.hotspotLink.href = match.url;
+          if (this.hotspotLinks) {
+            this.hotspotLinks.style.justifyContent = cell.justify;
+            this.hotspotLinks.innerHTML = (match.links || []).map(l =>
+              `<a class="tpl-hotspot-pill" href="${l.url}" target="_blank" rel="noopener">${l.label}</a>`
+            ).join('');
+          }
+          card.style.opacity = '1';
+          card.style.pointerEvents = 'auto';
+          card.style.transform = base + 'translateY(0)';
+        };
 
-          this.hotspotCard.style.opacity = '1';
-          this.hotspotCard.style.pointerEvents = 'auto';
-          this.hotspotCard.style.transform = 'translateY(0)';
+        if (match && prev) {
+          // Cross-beat: fade out, reposition into the new beat's empty cell, fade
+          // back in — repositioning a still-visible card would read as a teleport.
+          card.style.opacity = '0';
+          card.style.pointerEvents = 'none';
+          clearTimeout(this._hotspotSwapTimer);
+          this._hotspotSwapTimer = setTimeout(applyMatch, 220);
+        } else if (match) {
+          applyMatch();
         } else {
-          this.hotspotCard.style.opacity = '0';
-          this.hotspotCard.style.pointerEvents = 'none';
-          this.hotspotCard.style.transform = 'translateY(14px)';
+          const base = card.dataset.baseTransform || '';
+          card.style.opacity = '0';
+          card.style.pointerEvents = 'none';
+          card.style.transform = base + 'translateY(14px)';
         }
       }
     }
@@ -1581,10 +2149,13 @@ class Component extends DCLogic {
       consent: this.state.consent, submitted: this.state.submitted,
       mobileMenuOpen: this.state.mobileMenuOpen,
       megaMenuOpen: this.state.megaMenuOpen,
+      servicesMenuOpen: this.state.servicesMenuOpen,
       onToggleMobileMenu: () => this.setState({ mobileMenuOpen: !this.state.mobileMenuOpen }),
       onCloseMobileMenu: () => this.setState({ mobileMenuOpen: false }),
       onToggleMegaMenu: () => this.setState({ megaMenuOpen: !this.state.megaMenuOpen }),
       onCloseMegaMenu: () => this.setState({ megaMenuOpen: false }),
+      onToggleServicesMenu: () => this.setState({ servicesMenuOpen: !this.state.servicesMenuOpen }),
+      onCloseServicesMenu: () => this.setState({ servicesMenuOpen: false }),
       onFirstName: this.set('firstName'), onLastName: this.set('lastName'),
       onEmail: this.set('email'), onPhone: this.set('phone'),
       onArea: this.set('area'), onMessage: this.set('message'),

@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- ══ TREATMENT PAGE HEAD — edit title + description per treatment ══ -->
+<title>Sofwave™ at TPL Clinic Mayfair · Lift, Tighten & Rejuvenate in One Session</title>
+<meta name="theme-color" content="#081359">
+<meta name="description" content="Sofwave™ ultrasound collagen lifting at TPL Clinic Mayfair. Brow, jawline and neck — usually one session, no downtime. Introductory offers. Combine with XERF™ for deeper remodelling.">
+<!-- ══ Runtime ══
+     React, ReactDOM and Lenis are served from this repo rather than unpkg.
+     They were render-blocking third-party requests on the critical path, and
+     because the whole page is built by the runtime, a CDN that failed to
+     answer left a phone looking at a blank white screen. __resources is the
+     dc runtime's own override hook — support.js reads it before it fetches. -->
+<script>
+  window.__resources = {
+    "https://unpkg.com/react@18.3.1/umd/react.production.min.js": "assets/vendor/react-18.3.1.production.min.js",
+    "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "assets/vendor/react-dom-18.3.1.production.min.js"
+  };
+  /* Lenis drives the desktop smooth-scroll. Phones scroll natively — the page
+     scripts gate it off there — so they are not asked to download it. The test
+     must match the one the page script uses to pick a hero engine, or a narrow
+     desktop window loads Lenis for a branch that never runs (and, worse, the
+     scrub engine runs without it). */
+  if (!(window.matchMedia('(max-width: 767px)').matches
+        || /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))) {
+    var l = document.createElement('script');
+    l.src = 'assets/vendor/lenis-1.1.18.min.js';
+    l.async = false;
+    document.head.appendChild(l);
+  }
+</script>
+<link rel="stylesheet" href="assets/css/tpl-mobile.css">
+<script src="./support.js"></script>
+<script src="assets/js/tpl-mobile.js?v=2" defer></script>
+<style>
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+  .lenis.lenis-smooth iframe { pointer-events: none; }
+</style>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" />
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #ffffff; color: #242424; font-family: Jost, "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #B8925D; text-decoration: none; }
+  a:hover { color: #B8925D; }
+  ::selection { background: #B8925D; color: #fff; }
+  input, select, textarea, button { font-family: inherit; }
+  /* ══ WhatsApp ══
+     The official mark, in brand green, on every WhatsApp call to action. The
+     label type is left in the site's own colours — the glyph carries the brand,
+     the type system is untouched. Inline SVG: no extra request, and it stays
+     sharp at any size.
+     Defined on every page rather than on prp.html alone, which is where it
+     started: the other six carried WhatsApp links with no mark at all, and
+     sofwave.html carried a mark with no rule to lay it out. */
+  .tpl-cta-wa {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .tpl-wa-mark { flex: none; display: block; }
+
+  /* Responsive & Mega Menu Layout — identical to index.html */
+  .tpl-desktop-nav { display: flex; align-items: center; gap: 32px; }
+  .tpl-mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 6px 0; align-items: center; gap: 10px; color: inherit; }
+  .tpl-has-mega { padding-bottom: 10px; margin-bottom: -10px; }
+  .tpl-mega-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-top: 14px;
+    width: min(1080px, calc(100vw - 48px));
+    background: rgba(8, 19, 89, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(184, 146, 93, 0.35);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    padding: 34px 38px 30px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 30px 28px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -8px);
+    transition: opacity .28s ease, transform .28s ease, visibility .28s;
+    pointer-events: none;
+    z-index: 199;
+    box-sizing: border-box;
+    text-align: left;
+  }
+  /* Invisible bridge over the header gap — without it the pointer drops out of
+     :hover between the trigger and the panel and the menu snaps shut. */
+  .tpl-mega-menu::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -22px;
+    height: 22px;
+  }
+  .tpl-has-mega:hover .tpl-mega-menu,
+  .tpl-has-mega:focus-within .tpl-mega-menu,
+  .tpl-mega-menu.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+  }
+  .tpl-mega-title { line-height: 1.4; min-height: 2.8em; }
+  .tpl-mega-link { text-decoration: none; }
+  .tpl-mega-link:hover { color: #C7A470 !important; }
+  .tpl-mega-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(184, 146, 93, 0.28);
+  }
+  header.is-light .tpl-mega-foot { border-top-color: rgba(8, 19, 89, 0.14); }
+  header.is-light .tpl-mega-foot div { color: #242424 !important; }
+  header.is-light .tpl-mega-foot [data-eyebrow] { color: #8A6F44 !important; }
+  @media (max-width: 1200px) {
+    .tpl-mega-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(640px, calc(100vw - 48px)); }
+  }
+  header.is-light .tpl-mega-menu {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(184, 146, 93, 0.3);
+    box-shadow: 0 20px 50px rgba(8, 19, 89, 0.14);
+  }
+  header.is-light .tpl-mega-title { color: #081359 !important; }
+  header.is-light .tpl-mega-link { color: #5E5E5E !important; }
+  header.is-light .tpl-mega-link:hover { color: #B8925D !important; }
+
+  /* Real brand logo — white ring over dark, gold ring over light */
+  .tpl-logo-img { height: 68px; width: auto; display: block; }
+  header[data-nav] > a:first-of-type { margin-left: clamp(0px, 3.5vw, 60px); }
+  /* Header height is locked so the brand mark has a fixed bar to sit in and
+     the chrome stays identical page to page. The header is position:fixed, so
+     this changes the bar only — no content below it moves. */
+  @media (min-width: 1024px) {
+    header[data-nav] {
+      box-sizing: border-box;
+      height: 92px;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+  }
+
+  .tpl-footer-logo { height: 92px; width: auto; display: block; }
+  .tpl-logo-light { display: none; }
+  header.is-light .tpl-logo-dark { display: none; }
+  header.is-light .tpl-logo-light { display: block; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SECTION HEADERS — the same system prp.html uses, ported verbatim so the
+     two treatment pages open their sections identically. This page had been
+     styling every heading inline, section by section, at four different sizes
+     with three different eyebrow treatments and two sections carrying no
+     eyebrow at all.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* The label is the section's name in the anchor bar, repeated in place. It
+     is the section's heading in practice, so it sits ABOVE the body scale —
+     centred, with a rule either side, so the header reads as one unit. */
+  .tpl-sec-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin: 0 0 22px;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size:18px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #836742;
+  }
+  .tpl-sec-label::before,
+  .tpl-sec-label::after {
+    content: "";
+    flex: none;
+    width: 64px;
+    height: 1px;
+    background: rgba(184, 146, 93, .38);
+  }
+  [data-dark] .tpl-sec-label { color: #C7A470; }
+  [data-dark] .tpl-sec-label::before,
+  [data-dark] .tpl-sec-label::after { background: rgba(232, 200, 154, .38); }
+  .tpl-sec-label--start { justify-content: flex-start; }
+  .tpl-sec-label--start::before { display: none; }
+
+  .tpl-sec-title {
+    margin: 0 auto;
+    max-width: 22ch;
+    text-align: center;
+    font-family: Jost, sans-serif;
+    font-weight: 200;
+    font-size:clamp(38px, 4.6vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -.022em;
+    color: #242424;
+  }
+  [data-dark] .tpl-sec-title { color: #ffffff; }
+  .tpl-sec-title em { font-style: normal; color: #B8925D; }
+  [data-dark] .tpl-sec-title em { color: #E8C89A; }
+  .tpl-sec-title--start { margin-inline: 0; max-width: none; text-align: left; }
+
+  .tpl-sec-lede {
+    margin: 26px auto 0;
+    max-width: 62ch;
+    text-align: center;
+    font-size:15.5px;
+    line-height: 1.8;
+    color: #5E5E5E;
+  }
+  [data-dark] .tpl-sec-lede { color: rgba(255, 255, 255, .72); }
+  .tpl-sec-lede--start { margin-inline: 0; max-width: 48ch; text-align: left; }
+
+  .tpl-card-copy { margin: 12px 0 0; font-size:15.5px; line-height: 1.75; color: #6E6E6E; }
+  [data-dark] .tpl-card-copy { color: rgba(255, 255, 255, .7); }
+
+  .tpl-sec-meta {
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size:12px;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: #6E6E6E;
+    white-space: nowrap;
+  }
+  [data-dark] .tpl-sec-meta { color: rgba(255, 255, 255, .55); }
+
+  .tpl-sec-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  /* One padding step for every section, so the page scrolls at an even beat. */
+  @media (min-width: 1024px) {
+    .tpl-sec { padding-top: 120px !important; padding-bottom: 120px !important; }
+    .tpl-sec--head { padding-top: 84px !important; }
+    .tpl-sec--foot { padding-bottom: 120px !important; }
+    .tpl-anchorbar a { font-size:11px; padding: 16px 0; }
+  }
+
+  .tpl-mobile-drawer {
+    position: fixed;
+    inset: 0;
+    background: #081359;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 24px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(100%);
+    transition: opacity .35s ease, transform .35s cubic-bezier(0.16, 1, 0.3, 1), visibility .35s;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+  .tpl-mobile-drawer.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  /* ══ Below 1024px ══
+     The mobile layout lives in assets/css/tpl-mobile.css — one file for the
+     whole phone and tablet layer, rather than a media query per page drifting
+     out of step with the others. What stays here is the one rule that has to:
+     swapping the desktop nav for the drawer toggle, which is what makes the
+     drawer reachable at all. */
+  @media (max-width: 1023px) {
+    .tpl-desktop-nav { display: none !important; }
+    .tpl-mobile-toggle { display: flex !important; }
+  }
+
+  /* In-page anchor bar */
+  .tpl-anchorbar {
+    position: sticky;
+    top: 92px;
+    z-index: 150;
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(36,36,36,.1);
+  }
+  /* Centred, as on prp.html — the bar names the sections, so it sits over the
+     page the way the section headers beneath it do. */
+  .tpl-anchorbar-inner { max-width: 1280px; margin: 0 auto; padding: 0 48px; display: flex; justify-content: center; gap: 34px; overflow-x: auto; }
+  .tpl-anchorbar a {
+    font-family: Jost, sans-serif; font-size:11px; letter-spacing: .22em; text-transform: uppercase;
+    color: #6E6E6E; padding: 15px 0; white-space: nowrap; border-bottom: 1px solid transparent;
+    transition: color .25s ease, border-color .25s ease;
+  }
+  .tpl-anchorbar a:hover { color: #8A6F44; border-bottom-color: #B8925D; }
+  /* Active section — set by the scroll-spy in componentDidMount */
+  .tpl-anchorbar a.is-current { color: #242424; border-bottom-color: #B8925D; }
+
+  /* Comparison table — the table scrolls, never the page */
+  /* ══ Comparison table ══
+     The header row follows you down the table. On a four-column comparison the
+     column meaning is the whole point, and by the third row it has scrolled off
+     — you are reading "Minimal / Mild" with nothing to say which is downtime and
+     which is discomfort.
+
+     Two things had to change for sticky to work at all. First, overflow:
+     `overflow-x: auto` makes the OTHER axis compute to `auto` as well, which
+     turns the wrapper into a scroll container — a sticky child then sticks to
+     that container, which is exactly as tall as the table, and therefore never
+     moves. The horizontal scroll is only needed where the table does not fit,
+     so it is now scoped to those widths and the desktop wrapper is left alone.
+     Second, the offset: the fixed header is 92px and the anchor rail below it
+     is 48px, so the row parks at 140px, directly under the rail.
+
+     The frosted fill is the anchor rail's, so the two bars read as one piece of
+     furniture rather than two competing strips. */
+  .tpl-compare-scroll { -webkit-overflow-scrolling: touch; }
+  @media (max-width: 1023px) {
+    .tpl-compare-scroll { overflow-x: auto; }
+  }
+  .tpl-compare-h {
+    position: sticky;
+    top: 140px;
+    z-index: 20;
+    padding: 20px 24px;
+    background: rgba(251, 250, 248, .94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(36, 36, 36, .12);
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: #8A8A8A;
+  }
+  /* Centred — but the value columns are centred WITH their headers, never the
+     header alone. A centred label over left-aligned data points at nothing.
+     Column 1 stays left because it is the row's name, not a value. */
+  .tpl-compare-h:not(:first-child),
+  .tpl-compare > div:nth-child(4n+2),
+  .tpl-compare > div:nth-child(4n+3),
+  .tpl-compare > div:nth-child(4n+4) { text-align: center; }
+
+  /* FAQ accordion */
+  .tpl-faq { border-bottom: 1px solid rgba(36,36,36,.1); }
+  /* Identical to prp.html: question centred on a three-track grid with the
+     marker held at the right edge, answer centred beneath on a tight measure.
+     Sizes were 19px/14.5px here against 22px/15px there — matched now. */
+  .tpl-faq-q {
+    width: 100%; background: none; border: none; cursor: pointer;
+    display: grid; grid-template-columns: 32px 1fr 32px; align-items: baseline; gap: 24px;
+    padding: 30px 6px; text-align: center;
+    transition: background .3s ease;
+  }
+  .tpl-faq-q:hover { background: #FAF8F5; }
+  .tpl-faq-q .q-text { grid-column: 2; font-family: Jost, sans-serif; font-weight: 300; font-size:20px; letter-spacing: .01em; color: #242424; }
+  .tpl-faq-q .q-mark { grid-column: 3; justify-self: end; font-family: Jost, sans-serif; font-size:15.5px; color: #836742; transition: transform .35s ease; flex: none; }
+  .tpl-faq.is-open .q-mark { transform: rotate(45deg); }
+  .tpl-faq-a { max-height: 0; overflow: hidden; transition: max-height .5s cubic-bezier(.22,1,.36,1); }
+  .tpl-faq-a p { margin: 0 auto; padding: 0 6px 30px; max-width: 68ch; text-align: center; font-size:15.5px; line-height: 1.8; color: #5E5E5E; }
+
+  /* ══ Pricing, de-emphasised ══
+     A narrow two-column list rather than the full-width three-column table
+     this was. The treatment name no longer competes with the section heading
+     (15.5px, not 20px), the standard price is a struck-through note beside the
+     introductory one instead of owning a column, and the uppercase column
+     headers are gone — with two columns they were labelling the obvious. */
+  .tpl-price-list { max-width: 560px; margin-inline: auto; }
+  .tpl-price-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 10px 6px;
+    border-bottom: 1px solid rgba(36,36,36,.07);
+  }
+  .tpl-price-line:last-child { border-bottom: 0; }
+  .tpl-price-name { font-size: 15.5px; line-height: 1.5; color: #242424; }
+  .tpl-price-val { flex: none; font-size: 15.5px; color: #242424; white-space: nowrap; }
+  .tpl-price-was { color: #9A9A9A; font-size:12px; margin-left: 5px; }
+  .tpl-price-qual { color: #8A6F44; font-size:12px; letter-spacing: .04em; }
+  .tpl-price-note-link { font-size:12px; color: #8A6F44; letter-spacing: .04em; border-bottom: 1px solid rgba(184,146,93,.4); }
+
+  /* ══ At a glance ══
+     The same six-disc opener prp.html carries, from the client's own site.
+     One definition, both pages — see prp.html for the reasoning. */
+  .tpl-glance {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 44px 20px;
+    align-items: start;
+  }
+  .tpl-glance-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  /* A fine gold ring on near-white, not a solid gold puck.
+     The disc was 118px of saturated #B8925D with a white icon dropped on it —
+     the heaviest, most saturated element on a page that is otherwise white,
+     navy and restraint. It also ignored the icon language the site already has:
+     services.html sets every treatment icon inside a thin gold ring on white,
+     and the signature panel does the same. Matching that makes the row lighter
+     AND consistent, which is most of what "premium" means here. */
+  .tpl-glance-disc {
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: #FBFAF8;
+    border: 1px solid rgba(184, 146, 93, .45);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .5s cubic-bezier(.22, 1, .36, 1), border-color .5s ease;
+  }
+  .tpl-glance-item:hover .tpl-glance-disc { transform: translateY(-5px); border-color: #B8925D; }
+  .tpl-glance-disc svg { width: 52px; height: 52px; display: block; }
+  .tpl-glance-key {
+    margin-top: 24px;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #6E6E6E;
+  }
+  .tpl-glance-val {
+    margin-top: 12px;
+    max-width: 18ch;
+    font-family: Jost, sans-serif;
+    font-weight: 500;
+    font-size: 15.5px;
+    line-height: 1.5;
+    color: #081359;
+  }
+
+  /* ══ Pricing and comparison measure ══
+     Both ran the full 1280px column. The client's note was that pricing "has
+     taken up the whole page" with "unnecessary space" either side of the
+     figures, and that the comparison table "could be a bit smaller". Holding
+     each to its own centred measure closes the gaps without shrinking the
+     type, which is what made the rows hard to pair left-to-right. */
+  .tpl-measure-compare { max-width: 980px; margin-inline: auto; }
+  .tpl-measure-compare .tpl-compare { min-width: 640px; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     SYMMETRY PASS
+     Every cell in a repeating grid centres its own content, so a row of
+     three or four reads as one symmetrical band instead of a set of ragged
+     left edges. Section headers and the at-a-glance discs were already
+     centred; this brings the remaining cells into line.
+
+     Kept left on purpose, because the alignment is doing work there: the
+     consultation form (a label must sit above the field it names), and the
+     hero headline, which is set against a photograph.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* The four figures on the navy band. */
+  .tpl-why > div { text-align: center; }
+
+  /* Footer link columns, under the already-centred mark. */
+  .tpl-m-footer--links > div { text-align: center; }
+  .tpl-m-footer--links > div > div { align-items: center; }
+</style>
+</helmet>
+
+<div style="width:100%;overflow-x:clip">
+
+  <!-- ═══════════════════════ SHARED CHROME — identical to index.html (links page-adjusted) ═══════════════════════ -->
+  <header data-nav="1" style="position:fixed;top:0;left:0;right:0;z-index:200;padding:22px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;background:rgba(8,19,89,0);border-bottom:1px solid rgba(184,146,93,0);transform:translateZ(0);will-change:background;transition:background .35s ease,border-color .35s ease,padding .35s ease,box-shadow .35s ease">
+    <a data-logo='1' href='/' style='display:flex;align-items:baseline;gap:10px;color:#ffffff;text-decoration:none'>
+      <img class="tpl-logo-img tpl-logo-dark" src="assets/brand/tpl-logo.png" alt="TPL Clinic" width="300" height="300" />
+      <img class="tpl-logo-img tpl-logo-light" src="assets/brand/tpl-logo-gold.png" alt="TPL Clinic" width="1000" height="1000" />
+    </a>
+
+    <nav class="tpl-desktop-nav">
+      <a data-nav-link='1' href='/' style-hover='color:#B8925D' style='font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:inherit;transition:color .35s ease;text-shadow:0 2px 10px rgba(0,0,0,0.5)'>Home</a>
+      <div class="tpl-has-mega" style="position:relative">
+        <a data-nav-link='1' href='/services' style='display:flex;align-items:center;gap:6px;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:inherit;transition:color .35s ease;text-shadow:0 2px 10px rgba(0,0,0,0.5)'>
+          <span>Services</span>
+          <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style="transition:transform .3s ease">
+            <path d="M1 1L4 4L7 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </a>
+        <div class="tpl-mega-menu">
+          <div>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">01 — Regenerative</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a class='tpl-mega-link' href='/prp' style='font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s'>Platelet Rich Plasma</a>
+              <a href="https://www.tplclinic.com/enhanced-prp-mct" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Enhanced PRP &amp; Exosomes</a>
+              <a href="https://www.tplclinic.com/prf-biofiller" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">PRF Biofiller</a>
+              <a href="https://www.tplclinic.com/regenera-activa" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Regenera Activa®</a>
+              <a href="https://treatment.tplclinic.com/hair-transplant/" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Invisible Hair Transplant™</a>
+            </div>
+          </div>
+          <div>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">02 — Energy &amp; Laser</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a class='tpl-mega-link' href='/sofwave' style='font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s'>Sofwave™</a>
+              <a href="https://www.tplclinic.com/morpheus-8" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Morpheus8® Burst</a>
+              <a href="https://www.xerf.clinic/london" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">XERF™</a>
+              <a href="https://www.tplclinic.com/lasemd-ultra" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">LaseMD Ultra®</a>
+              <a href="https://www.tplclinic.com/soprano-ice-titanium" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Soprano Ice Titanium™</a>
+            </div>
+          </div>
+          <div>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">03 — Injectables &amp; Resurfacing</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a href="https://www.tplclinic.com/botox" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Wrinkle Relaxation Injections</a>
+              <a href="https://www.tplclinic.com/dermal-fillers" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Dermal Fillers</a>
+              <a href="https://www.tplclinic.com/skin-boosters" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Skin Boosters</a>
+              <a href="https://www.tplclinic.com/microneedling" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Micro-needling</a>
+              <a href="https://www.tplclinic.com/chemical-peels-2" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Chemical Peels</a>
+            </div>
+          </div>
+          <div>
+            <div class="tpl-mega-title" style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470;margin-bottom:16px">04 — Skin Health &amp; Facials</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <a href="https://www.tplclinic.com/hydrafacial" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">HydraFacial®</a>
+              <a href="https://treatment.tplclinic.com/koreanstack/" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">Korean Glass Skin</a>
+              <a href="https://www.tplclinic.com/services" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">LDM Triple</a>
+              <a href="https://www.tplclinic.com/led-phototherapy" target="_blank" rel="noopener" class="tpl-mega-link" style="font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s">LED Phototherapy</a>
+              <a class='tpl-mega-link' href='/#consultation' style='font-size:14.5px;line-height:1.35;color:rgba(255,255,255,.85);transition:color .2s'>Consultation</a>
+            </div>
+          </div>
+          <div class="tpl-mega-foot">
+            <div>
+              <div data-eyebrow style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#C7A470">The full library</div>
+              <div style="font-family:Jost,sans-serif;font-weight:300;font-size:18px;line-height:1.25;color:#ffffff;margin-top:8px">Twenty treatments. One combined protocol.</div>
+            </div>
+            <a href='/services' style='flex:none;padding:12px 22px;background:#B8925D;color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;text-align:center;text-decoration:none'>Services Index</a>
+          </div>
+        </div>
+      </div>
+
+      <a data-nav-link='1' href='/about' style-hover='color:#B8925D' style='font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:inherit;transition:color .35s ease;text-shadow:0 2px 10px rgba(0,0,0,0.5)'>About us</a>
+    </nav>
+
+    <div style="display:flex;align-items:center;gap:14px">
+      <a href="https://wa.me/442079987077" class="tpl-desktop-nav tpl-cta-wa" style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.9);transition:color .35s ease;text-shadow:0 2px 10px rgba(0,0,0,0.5)" data-nav-link="1" style-hover="color:#B8925D"><svg class="tpl-wa-mark" viewBox="0 0 24 24" width="14" height="14" fill="#25D366" aria-hidden="true" focusable="false" style="filter:drop-shadow(0 2px 10px rgba(0,0,0,.5))"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WhatsApp</a>
+      <a href="#consultation" data-btn="1" style="display:inline-block;padding:12px 22px;border:1px solid #C7A470;background:rgba(8,19,89,.4);color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;transition:background .3s ease,color .3s ease,border-color .3s ease;backdrop-filter:blur(8px);white-space:nowrap" style-hover="background:#B8925D;border-color:#B8925D;color:#ffffff">Book Consultation</a>
+      <button class="tpl-mobile-toggle" aria-label="Toggle menu" style="color:inherit">
+        <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase">Menu</span>
+        <div style="display:flex;flex-direction:column;gap:4px;width:18px">
+          <span style="display:block;width:100%;height:1.5px;background:currentColor"></span>
+          <span style="display:block;width:100%;height:1.5px;background:currentColor"></span>
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div class="tpl-mobile-drawer">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:24px;border-bottom:1px solid rgba(184,146,93,0.3)">
+      <img src="assets/brand/tpl-logo.png" alt="TPL Clinic" width="300" height="300" style="height:52px;width:auto;display:block" />
+      <button style="background:none;border:none;color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <span>Close</span>
+        <span style="font-size:15.5px">✕</span>
+      </button>
+    </div>
+    <div style="margin-top:32px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <a href='/' onClick='{{ onCloseMobileMenu }}' style='font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff'>Home</a>
+        <a href='/services' onClick='{{ onCloseMobileMenu }}' style='font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#C7A470'>Services</a>
+        <a href='/about' onClick='{{ onCloseMobileMenu }}' style='font-family:Jost,sans-serif;font-size:20px;font-weight:300;letter-spacing:.15em;text-transform:uppercase;color:#ffffff'>About Us</a>
+      </div>
+      </div>
+    <div style="margin-top:auto;padding-top:32px;border-top:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:14px">
+      <a href="#consultation" style="display:block;width:100%;padding:16px 20px;background:#B8925D;color:#ffffff;text-align:center;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;box-sizing:border-box">Book Consultation</a>
+      <a class="tpl-cta-wa" href="https://wa.me/442079987077" style="width:100%;padding:14px 20px;border:1px solid rgba(255,255,255,0.4);color:#ffffff;text-align:center;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;box-sizing:border-box"><svg class="tpl-wa-mark" viewBox="0 0 24 24" width="16" height="16" fill="#25D366" aria-hidden="true" focusable="false"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WhatsApp 020 7998 7077</a>
+      <div style="margin-top:12px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;color:rgba(255,255,255,0.5);text-align:center">22 SEYMOUR STREET · MAYFAIR W1H 7HY</div>
+    </div>
+  </div>
+  <!-- ═══════════════════════ END SHARED CHROME ═══════════════════════ -->
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       TREATMENT CONTENT — edit everything between these fences when
+       cloning this file for another treatment
+       ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- Treatment Hero — navy band -->
+  <!-- One screen, exactly — the same fix services.html and about.html got. This
+       band was a fixed 180/100 pad stack, so its actual height had no relation
+       to the viewport: on a tall browser window the content ended and left dead
+       navy before the tab bar; on a short one it could run past the fold. It is
+       held to the viewport now the same way — vh-relative pads, flex column,
+       justify-content:center — so it always fills exactly one screen regardless
+       of window height. Unlike services.html and about.html this hero had no
+       dead width to fill beside the headline in the first place: the video
+       already occupies the second column, so no rail was needed here. -->
+  <section class="tpl-sec--hero" id="top" data-dark="1" style="background:#081359;padding:clamp(96px, 13vh, 140px) 48px clamp(26px, 4.5vh, 54px);color:#ffffff;position:relative;overflow:hidden;min-height:100vh;min-height:100svh;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center">
+    <div style="position:absolute;inset:0;background:radial-gradient(1100px 500px at 85% -10%,rgba(184,146,93,.16),transparent 60%);pointer-events:none"></div>
+    <div class="tpl-hero-grid" style="width:100%;max-width:1280px;margin:0 auto;position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:64px;align-items:center">
+      <div>
+        <div data-reveal="1" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#C7A470">Treatment 05 — Lifting · Ultrasound</span>
+          <span style="width:5px;height:5px;background:#B8925D;display:inline-block"></span>
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.6)">Face · Neck · Brow</span>
+        </div>
+        <h1 data-reveal="1" style="margin:clamp(18px, 2.4vh, 24px) 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:clamp(44px, 5.6vw, 88px);line-height:.98;letter-spacing:-.02em;color:#ffffff">Sofwave™</h1>
+        <p data-reveal="1" style="margin:clamp(18px, 2.8vh, 26px) 0 0;font-size:15.5px;line-height:1.85;color:rgba(255,255,255,.75)">Lift, tighten and rejuvenate — non-invasive ultrasound that rebuilds collagen, elastin and hyaluronic acid where ageing begins. Usually one session. No needles, no surgery.</p>
+        <div data-reveal="1" style="margin-top:clamp(22px, 3.4vh, 40px);display:flex;flex-wrap:wrap;gap:14px">
+          <a href="#consultation" style="display:inline-block;padding:15px 28px;background:#B8925D;border:1px solid #B8925D;color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:background .3s ease,border-color .3s ease" style-hover="background:#A07C4B;border-color:#A07C4B">Book Consultation</a>
+          <a class="tpl-cta-wa" href="https://wa.me/442079987077" style="display:inline-block;padding:15px 28px;border:1px solid rgba(255,255,255,.45);color:#ffffff;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:background .3s ease,border-color .3s ease" style-hover="border-color:#C7A470;background:rgba(184,146,93,.15)"><svg class="tpl-wa-mark" viewBox="0 0 24 24" width="16" height="16" fill="#25D366" aria-hidden="true" focusable="false"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>WhatsApp</a>
+        </div>
+        <div data-reveal="1" style="margin-top:clamp(22px, 3.4vh, 36px);font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#E8C89A">Introductory offers — save up to £1,000</div>
+      </div>
+      <div data-reveal="1" style="position:relative;aspect-ratio:16/10.5;background:linear-gradient(150deg,rgba(255,255,255,.06),rgba(255,255,255,.02));overflow:hidden">
+        <video autoplay loop muted playsinline preload="metadata" poster="assets/videos/sofwave/sofwave-poster.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+          <source src="assets/videos/sofwave/sofwave-treatment.webm" type="video/webm">
+          <source src="assets/videos/sofwave/sofwave-treatment.mp4" type="video/mp4">
+        </video>
+        <div style="position:absolute;inset:16px;border:1px solid rgba(184,146,93,.4);pointer-events:none;z-index:2"></div>
+        <div style="position:absolute;left:16px;bottom:16px;right:16px;padding:14px 16px;background:rgba(8,19,89,.55);backdrop-filter:blur(8px);z-index:3">
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#E8C89A">SUPERB™ synchronous ultrasound — the treatment, filmed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- In-page anchor bar -->
+  <nav class="tpl-anchorbar" aria-label="On this page">
+    <div class="tpl-anchorbar-inner">
+      <a href="#overview">Overview</a>
+      <a href="#compare">Comparison</a>
+      <a href="#surfxerf">Surf &amp; XERF™</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#results">Results</a>
+      <a href="#faqs">FAQs</a>
+    </div>
+  </nav>
+
+  <!-- ══ AT A GLANCE ══
+       The client's own six categories, in his own wording, carrying Sofwave's
+       answers. Identical treatment to prp.html so the two treatment pages open
+       the same way — see prp.html for the reasoning and the symbol set.
+
+       ⚠ COST is the introductory Brow Lifting price from the table below.
+       Confirm which figure should lead before launch. -->
+  <section class="tpl-sec--head" style="padding:72px 48px 0;background:#ffffff">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+      <symbol id="g-results" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="15.5"/>
+        <circle cx="24" cy="24" r="8"/>
+        <circle cx="24" cy="24" r="1.6" fill="#B8925D" stroke="none"/>
+      </symbol>
+      <symbol id="g-cost" viewBox="0 0 48 48">
+        <path d="M32 15.4A7.8 7.8 0 0 0 18.8 21v9c0 3.6-1.6 6.5-4.8 8.2"/>
+        <path d="M14 26.6h12.4"/>
+        <path d="M14 38.2h19.4"/>
+      </symbol>
+      <symbol id="g-time" viewBox="0 0 48 48">
+        <circle cx="24" cy="27.5" r="12.5"/>
+        <path d="M19.5 7.4h9"/>
+        <path d="M24 7.4V15"/>
+        <path d="M24 27.5 30.6 21.8"/>
+        <path d="m34.8 15.2 3-2.9"/>
+      </symbol>
+      <symbol id="g-work" viewBox="0 0 48 48">
+        <circle cx="30.2" cy="10" r="3.8"/>
+        <path d="M30.2 15.6 25.4 25.4"/>
+        <path d="M25.4 25.4 20.8 38.4"/>
+        <path d="m25.4 25.4 6.6 3.6 2 9.4"/>
+        <path d="m27.8 20.6 6.4 3"/>
+        <path d="M27.8 20.6 19.6 24.6"/>
+        <rect x="9.4" y="24.6" width="10.2" height="7.6" rx="1.2"/>
+        <path d="M12.8 24.6v-1.8h3.4v1.8"/>
+      </symbol>
+      <symbol id="g-anaesthetic" viewBox="0 0 48 48">
+        <g transform="rotate(45 24 24)">
+          <circle cx="18.8" cy="11" r="2.6"/>
+          <circle cx="29.2" cy="11" r="2.6"/>
+          <path d="M24 5.2v6.6"/>
+          <rect x="19.6" y="11.8" width="8.8" height="19.4" rx="1.2"/>
+          <path d="M21.8 16.8h3.4M21.8 21h3.4M21.8 25.2h3.4"/>
+          <path d="M24 31.2v3.4"/>
+          <path d="M24 34.6v8.2"/>
+        </g>
+      </symbol>
+      <symbol id="g-downtime" viewBox="0 0 48 48">
+        <circle cx="22.6" cy="27.4" r="11.6"/>
+        <path d="M22.6 20.2v7.2h5.6"/>
+        <path d="M28.6 9.4a17 17 0 0 1 9.6 9.2"/>
+        <path d="m33.2 18.4 5.2.8.8-5.2"/>
+      </symbol>
+    </defs></svg>
+
+    <div style="max-width:1280px;margin:0 auto">
+      <div data-reveal="1" class="tpl-sec-label">Sofwave™ at a glance</div>
+      <div data-reveal="1" class="tpl-glance" style="margin-top:12px">
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-results"/></svg></div>
+          <div class="tpl-glance-key">Best results</div>
+          <div class="tpl-glance-val">Usually one session</div>
+        </div>
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-cost"/></svg></div>
+          <div class="tpl-glance-key">Cost</div>
+          <div class="tpl-glance-val">From £1,000</div>
+        </div>
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-time"/></svg></div>
+          <div class="tpl-glance-key">Procedure time</div>
+          <div class="tpl-glance-val">30–40 minutes</div>
+        </div>
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-work"/></svg></div>
+          <div class="tpl-glance-key">Back to work</div>
+          <div class="tpl-glance-val">Immediately</div>
+        </div>
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-anaesthetic"/></svg></div>
+          <div class="tpl-glance-key">Anaesthetics</div>
+          <div class="tpl-glance-val">Topical anaesthetic cream</div>
+        </div>
+        <div class="tpl-glance-item">
+          <div class="tpl-glance-disc"><svg viewBox="0 0 48 48" fill="none" stroke="#B8925D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#g-downtime"/></svg></div>
+          <div class="tpl-glance-key">Downtime</div>
+          <div class="tpl-glance-val">None</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overview -->
+  <section class="tpl-sec" id="overview" style="padding:96px 48px;background:#ffffff;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <div data-reveal="1">
+        <!-- Label reads "Overview" to match the anchor bar, as on prp.html;
+             "What it is" named the same section by a different word. -->
+        <div class="tpl-sec-label">Overview</div>
+        <h2 class="tpl-sec-title">Going beyond <em>just collagen.</em></h2>
+        <p class="tpl-sec-lede">Synchronous ultrasound stimulates collagen, elastin and hyaluronic acid in the mid-dermis. Non-invasive, no downtime, and results that build for up to a year — usually from a single treatment.</p>
+        <div style="margin-top:34px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px">
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8A6F44;border:1px solid rgba(184,146,93,.4);padding:8px 14px">Face</span>
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8A6F44;border:1px solid rgba(184,146,93,.4);padding:8px 14px">Jawline</span>
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8A6F44;border:1px solid rgba(184,146,93,.4);padding:8px 14px">Neck</span>
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8A6F44;border:1px solid rgba(184,146,93,.4);padding:8px 14px">Brow lift</span>
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#8A6F44;border:1px solid rgba(184,146,93,.4);padding:8px 14px">Under-chin</span>
+        </div>
+      </div>
+      <!-- The result photograph was sharing the row with the copy at roughly
+           600px wide. Full width under a centred header it runs at 960px, so
+           the picture carries the weight the words were carrying alone.
+
+           16/9, not the 4/3 it was: at 960px wide, 4/3 made this 720px tall,
+           and the usable height here is the viewport minus the 92px header and
+           the 48px sticky anchor rail — so it needed a 860px-tall window just
+           to be seen whole, and was cut off on any laptop below that. 16/9
+           brings it to 540px, which clears the same chrome on a 680px window.
+           The max-height is a second guard: whatever the aspect ratio, this can
+           never grow past the space the fixed chrome leaves it. -->
+      <div data-reveal="1" style="position:relative;margin:56px auto 0;max-width:960px;aspect-ratio:16/9;max-height:calc(100svh - 200px);background:linear-gradient(150deg,#F8F6F3,#E9E5DE);overflow:hidden">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert treatment photograph</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Sofwave™ in the room</div>
+            </div>
+          </div>
+        <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        <div style="position:absolute;left:12px;bottom:12px;right:12px;padding:12px 14px;background:rgba(8,19,89,.5);backdrop-filter:blur(6px);z-index:3">
+          <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#E8C89A">Real TPL Clinic patient — individual results vary</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ COMPARISON — where Sofwave sits against the other tightening options ══ -->
+  <section class="tpl-sec" id="compare" style="background:#F7F5F2;padding:100px 48px;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <!-- Was a title-left / paragraph-right split with no eyebrow at all —
+           the same shape the Combinations header on prp.html was corrected
+           from. Centred stack, with the label the anchor bar uses. -->
+      <div data-reveal="1" style="border-bottom:1px solid rgba(36,36,36,.12);padding-bottom:44px">
+        <div class="tpl-sec-label">Comparison</div>
+        <h2 class="tpl-sec-title">Where Sofwave™ <em>sits</em></h2>
+        <p class="tpl-sec-lede">Each technology works at a different depth. Your practitioner recommends against your skin, your goals and your medical history.</p>
+      </div>
+
+      <!-- Wide table: scrolls inside its own container rather than the page.
+           Held to a 980px centred measure — at the full 1280px the four
+           columns spread far enough apart that reading one row left to right
+           meant tracking across empty space. -->
+      <div data-reveal="1" class="tpl-compare-scroll tpl-measure-compare" style="margin-top:44px">
+        <div class="tpl-compare" style="display:grid;grid-template-columns:minmax(170px,1fr) repeat(3,minmax(130px,1fr));gap:1px;background:rgba(36,36,36,.12);border:1px solid rgba(36,36,36,.12)">
+          <div class="tpl-compare-h">Technology</div>
+          <div class="tpl-compare-h">Effect</div>
+          <div class="tpl-compare-h">Downtime</div>
+          <div class="tpl-compare-h">Discomfort</div>
+
+          <div style="background:#081359;padding:28px 24px">
+            <div style="font-family:Jost,sans-serif;font-weight:300;font-size:20px;color:#ffffff">Sofwave™</div>
+            <div style="margin-top:8px;font-size:14.5px;color:rgba(232,200,154,.9)">Ultrasound</div>
+          </div>
+          <div style="background:#081359;padding:28px 24px;font-size:15.5px;line-height:1.7;color:rgba(255,255,255,.85)">Superficial skin tightening, collagen stimulation</div>
+          <div style="background:#081359;padding:28px 24px;font-size:15.5px;color:rgba(255,255,255,.85)">Minimal</div>
+          <div style="background:#081359;padding:28px 24px;font-size:15.5px;color:rgba(255,255,255,.85)">Mild</div>
+
+          <div style="background:#ffffff;padding:28px 24px">
+            <div style="font-family:Jost,sans-serif;font-weight:300;font-size:20px;color:#242424">XERF™</div>
+            <div style="margin-top:8px;font-size:14.5px;color:#8A6F44">Dual-frequency monopolar RF</div>
+          </div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;line-height:1.7;color:#5E5E5E">Deep skin tightening, collagen stimulation</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">Minimal</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">No discomfort</div>
+
+          <div style="background:#ffffff;padding:28px 24px">
+            <div style="font-family:Jost,sans-serif;font-weight:300;font-size:20px;color:#242424">Morpheus8®</div>
+            <div style="margin-top:8px;font-size:14.5px;color:#8A6F44">RF microneedling</div>
+          </div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;line-height:1.7;color:#5E5E5E">Fat coagulation, skin tightening, collagen stimulation</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">2–7 days</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">Mild</div>
+
+          <div style="background:#ffffff;padding:28px 24px">
+            <div style="font-family:Jost,sans-serif;font-weight:300;font-size:20px;color:#242424">Thermage®</div>
+            <div style="margin-top:8px;font-size:14.5px;color:#8A6F44">Monopolar radiofrequency</div>
+          </div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;line-height:1.7;color:#5E5E5E">Skin tightening, collagen stimulation, jawline &amp; neck</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">Minimal</div>
+          <div style="background:#ffffff;padding:28px 24px;font-size:15.5px;color:#5E5E5E">Moderate</div>
+        </div>
+      </div>
+      <div data-reveal="1" style="margin-top:22px;text-align:center;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A8A8A">Comparison is indicative · the right choice is set at consultation</div>
+    </div>
+  </section>
+
+  <!-- ══ SURF & XERF — the combination protocol, deliberately placed after
+       the comparison table. It is the advanced/upsell option, so it reads
+       better once Sofwave itself has been explained and positioned than it
+       did sitting third on the page, ahead of either. ══ -->
+  <!-- Light, like the rest of the page. This was the one navy band between two
+       light sections, which made the page break stride in the middle. data-dark
+       is gone with it: it is what told the header to switch to its dark theme
+       here, and a dark header over a white section is the collision this site
+       has already been bitten by twice. -->
+  <section class="tpl-sec" id="surfxerf" style="padding:110px 48px;background:#ffffff;color:#242424;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <div data-reveal="1">
+        <div class="tpl-sec-label">Surf &amp; XERF™</div>
+        <h2 class="tpl-sec-title">This or that? Why choose — <em>have both.</em></h2>
+        <p class="tpl-sec-lede">Not one or the other. Sofwave™ rebuilds collagen in the mid-dermis; XERF™ remodels deeper for jawline definition and laxity.</p>
+        <p class="tpl-sec-lede">Layered strategically, 6–8 weeks apart, the combination achieves rejuvenation neither modality reaches alone.</p>
+      </div>
+      <!-- Four figures, previously a 2×2 block in the right half of the row.
+           One row of four under a centred header, matching the same treatment
+           given to Why TPL on prp.html.
+
+           The numerals are navy, not gold. On the navy ground they were gold
+           because gold was the legible choice; on white the page's own
+           convention for a stat value is navy — see .tpl-glance-val, the same
+           treatment in the at-a-glance row above. Gold at this size would also
+           have measured 2.87:1, just under the 3:1 large-text floor. The gold
+           in this section is carried by the label and the title instead. -->
+      <div data-reveal="1" class="tpl-why" style="margin-top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(36,36,36,.12);border:1px solid rgba(36,36,36,.12)">
+          <div style="background:#ffffff;padding:30px 26px">
+            <div style="font-family:Jost,sans-serif;font-weight:200;font-size:38px;color:#081359">2 in 1</div>
+            <div style="margin-top:10px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#6E6E6E">Dual-modality tightening protocol</div>
+          </div>
+          <div style="background:#ffffff;padding:30px 26px">
+            <div style="font-family:Jost,sans-serif;font-weight:200;font-size:38px;color:#081359">2 depths</div>
+            <div style="margin-top:10px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#6E6E6E">Mid-dermis ultrasound + deep RF</div>
+          </div>
+          <div style="background:#ffffff;padding:30px 26px">
+            <div style="font-family:Jost,sans-serif;font-weight:200;font-size:38px;color:#081359">6–8 wks</div>
+            <div style="margin-top:10px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#6E6E6E">Between the two sessions</div>
+          </div>
+          <div style="background:#ffffff;padding:30px 26px">
+            <div style="font-family:Jost,sans-serif;font-weight:200;font-size:38px;color:#081359">£4,000</div>
+            <div style="margin-top:10px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#6E6E6E">Surf &amp; XERF™ — full face &amp; neck</div>
+          </div>
+      </div>
+      <div data-reveal="1" style="margin-top:56px;border-top:1px solid rgba(36,36,36,.12);padding-top:26px;display:flex;flex-wrap:wrap;justify-content:center;gap:16px 40px;align-items:center">
+        <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#836742">In the press</span>
+        <span style="font-size:14.5px;color:#5E5E5E">NewBeauty — "Kim and Khloé Kardashian are obsessed with this skin-tightening treatment."</span>
+        <a href='/services' style='font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#836742;border-bottom:1px solid rgba(232,200,154,.5);padding-bottom:2px'>See the full index →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <!-- Padding and header spacing pulled in with the table, so the section as a
+       whole recedes rather than a small list sitting in a large empty frame. -->
+  <section class="tpl-sec" id="pricing" style="padding:72px 48px;background:#ffffff;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <div data-reveal="1" style="border-bottom:1px solid rgba(36,36,36,.12);padding-bottom:28px">
+        <div class="tpl-sec-label">Pricing</div>
+        <div class="tpl-sec-head">
+          <h2 class="tpl-sec-title">What a session costs</h2>
+          <div class="tpl-sec-meta">Introductory offers · one session</div>
+        </div>
+      </div>
+      <!-- Compact list, not the three-column table this was. The client does not
+           want this much emphasis on price: the table gave each of six numbers a
+           20px name, its own column of struck-through standard price and a row of
+           uppercase headers, and ran to roughly 700px. Every number and every
+           saving is still published — the same six lines now read as a list, in
+           about a third of the height. -->
+      <div data-reveal="1" class="tpl-price-list">
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">Full Face <em style="font-style:normal;color:#9A9A9A">or</em> Full Neck</span>
+          <span class="tpl-price-val">£1,400 <s class="tpl-price-was">£2,000</s></span>
+        </div>
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">Full Face &amp; Neck</span>
+          <span class="tpl-price-val">£1,950 <s class="tpl-price-was">£2,950</s></span>
+        </div>
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">Brow Lifting</span>
+          <span class="tpl-price-val">£1,000 <s class="tpl-price-was">£1,600</s></span>
+        </div>
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">Body — Arms</span>
+          <span class="tpl-price-val">£2,450 <s class="tpl-price-was">£3,000</s></span>
+        </div>
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">PRP add-on <a class='tpl-price-note-link' href='/prp'>what is PRP?</a></span>
+          <span class="tpl-price-val">£350 <span class="tpl-price-qual">per treatment</span></span>
+        </div>
+        <div class="tpl-price-line">
+          <span class="tpl-price-name">Surf &amp; XERF™ — Full Face &amp; Neck</span>
+          <span class="tpl-price-val">£4,000 <span class="tpl-price-qual">bespoke</span></span>
+        </div>
+      </div>
+      <!-- The consultation-fee line that sat here is removed, as on prp.html.
+           The finance marker stays: it qualifies the prices above it. -->
+      <div data-reveal="1" style="margin-top:26px;display:flex;justify-content:center">
+        <span style="display:flex;align-items:center;gap:12px"><i style="width:5px;height:5px;background:#B8925D;display:inline-block"></i><span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#8A6F44">Finance options available, subject to application</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="tpl-sec--foot" id="results" style="padding:20px 48px 100px;background:#ffffff;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <div data-reveal="1" style="border-top:1px solid rgba(36,36,36,.12);padding-top:84px;padding-bottom:44px">
+        <div class="tpl-sec-label">Results</div>
+        <div class="tpl-sec-head">
+          <h2 class="tpl-sec-title">Before and after</h2>
+          <div class="tpl-sec-meta">Real TPL patients · results vary</div>
+        </div>
+      </div>
+      <div data-reveal="1" class="tpl-results" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert before &amp; after</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Pair 01</div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        </div>
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert before &amp; after</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Pair 02</div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        </div>
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert before &amp; after</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Pair 03</div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        </div>
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert before &amp; after</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Pair 04</div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        </div>
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center">
+            <div>
+              <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Insert before &amp; after</div>
+              <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Pair 05</div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none;z-index:2"></div>
+        </div>
+        <div style="position:relative;aspect-ratio:4/3;background:linear-gradient(150deg,#F8F6F3,#EBE7E0);overflow:hidden;display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;inset:12px;border:1px dashed rgba(184,146,93,.45);pointer-events:none"></div>
+          <div style="text-align:center;padding:20px">
+            <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:#8A6F44">Your result</div>
+            <div style="margin-top:8px;font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#A8A29A">Book a consultation to plan it</div>
+          </div>
+        </div>
+      </div>
+      <div data-reveal="1" style="margin-top:34px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px 36px">
+        <span style="font-size:14.5px;color:#5E5E5E">Best results typically appear after 6–12 weeks as collagen rebuilds — and can continue improving for up to a year.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQs -->
+  <section class="tpl-sec--foot" id="faqs" style="padding:0 48px 110px;background:#ffffff;scroll-margin-top:146px">
+    <div style="max-width:1280px;margin:0 auto">
+      <!-- Was a two-column split — heading left, questions right — while
+           prp.html runs one full-width stack. Matched to that, so both
+           treatment pages close the same way. -->
+      <div style="border-top:1px solid rgba(36,36,36,.12);padding-top:84px">
+        <div data-reveal="1" style="padding-bottom:44px">
+          <div class="tpl-sec-label">FAQs</div>
+          <h2 class="tpl-sec-title">Questions, <em>answered</em></h2>
+        </div>
+        <div data-reveal="1" style="border-top:1px solid rgba(36,36,36,.12)">
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">Does it hurt?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>Most patients describe it as mildly uncomfortable but very tolerable. A strong topical numbing cream is applied beforehand to keep the session comfortable.</p></div>
+          </div>
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">Is there any downtime?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>No — Sofwave™ is a no-downtime treatment. You can return to normal activities immediately after your session.</p></div>
+          </div>
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">How many treatments will I need?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>Usually only one session is required for best results — one of the reasons Sofwave™ stands apart from other tightening treatments.</p></div>
+          </div>
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">When will I see results?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>Some patients notice improvement within a few weeks, but the best results typically appear after 6–12 weeks as new collagen builds.</p></div>
+          </div>
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">How long do results last?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>Results can last 12 months or longer, depending on your skin and lifestyle. Maintenance sessions may be recommended.</p></div>
+          </div>
+          <div class="tpl-faq">
+            <button class="tpl-faq-q"><span class="q-text">Which areas can be treated?</span><span class="q-mark">+</span></button>
+            <div class="tpl-faq-a"><p>The face (cheeks, jawline, forehead), the neck, the brow area for lifting, and under the chin. Arms can also be treated for skin quality.</p></div>
+          </div>
+        </div>
+        <!-- The one line of prose the section keeps, carrying the WhatsApp CTA. -->
+        <div data-reveal="1" style="margin-top:44px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:18px 28px">
+          <a href="https://wa.me/442079987077" class="tpl-cta-wa" style="padding:14px 26px;border:1px solid rgba(184,146,93,.6);color:#836742;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:background .3s ease,border-color .3s ease" style-hover="background:#FAF8F5;border-color:#B8925D"><svg class="tpl-wa-mark" viewBox="0 0 24 24" width="16" height="16" fill="#25D366" aria-hidden="true" focusable="false"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Message on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       END TREATMENT CONTENT
+       ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ═══════════════════════ SHARED CHROME — consultation + footer + modal ═══════════════════════ -->
+  <section class="tpl-sec" id="consultation" data-dark="1" style="padding:120px 48px;background:#081359;color:#ffffff">
+    <!-- Lede and the three numbered policy lines removed on the client's
+         instruction: a title and the form, nothing else. With the copy column
+         gone the split had nothing in it, so the header centres over a single
+         centred form — same shape as prp.html. -->
+    <div style="max-width:760px;margin:0 auto">
+      <div data-reveal="1">
+        <div class="tpl-sec-label">Consultation</div>
+        <h2 class="tpl-sec-title">Speak to a <em>practitioner</em></h2>
+      </div>
+
+      <div data-reveal="1" style="margin-top:52px;background:#ffffff;padding:44px 40px 40px;color:#242424">
+        <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#8A8A8A">Request a call back</div>
+        <div class="tpl-m-form" style="margin-top:28px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px">
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">First name</span>
+            <input type="text" style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none" style-focus="border-color:#B8925D" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">Last name</span>
+            <input type="text" style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none" style-focus="border-color:#B8925D" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">Email</span>
+            <input type="email" style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none" style-focus="border-color:#B8925D" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">Telephone</span>
+            <input type="tel" style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none" style-focus="border-color:#B8925D" />
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px;grid-column:span 2">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">Area of interest</span>
+            <select style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none" style-focus="border-color:#B8925D">
+              <option>Sofwave™ consultation</option>
+              <option>Face — skin &amp; anti-ageing</option>
+              <option>Hair — thinning or loss</option>
+              <option>Body — skin quality</option>
+              <option>Invisible Hair Transplant™</option>
+              <option>Not sure yet</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px;grid-column:span 2">
+            <span style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6E6E6E">Message</span>
+            <textarea rows="4" style="padding:13px 12px;background:#FAFAFA;border:1px solid #A9A9A9;border-radius:0;font-size:15px;color:#242424;outline:none;resize:vertical" style-focus="border-color:#B8925D"></textarea>
+          </label>
+        </div>
+        <label style="margin-top:20px;display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" style="margin-top:3px;width:14px;height:14px;accent-color:#B8925D" />
+          <span style="font-size:14.5px;line-height:1.7;color:#6E6E6E">I consent to TPL Clinic contacting me about my enquiry, in line with the privacy policy.</span>
+        </label>
+        <button data-submit="1" style="margin-top:26px;width:100%;padding:17px 24px;background:#242424;color:#ffffff;border:1px solid #242424;border-radius:0;box-sizing:border-box;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;cursor:pointer;transition:background .3s ease,color .3s ease" style-hover="background:#B8925D;border-color:#B8925D">Send enquiry</button>
+      </div>
+    </div>
+  </section>
+
+  <footer style="background:#ffffff;padding:80px 48px 40px;border-top:1px solid rgba(36,36,36,.12)">
+    <!-- Mark centred on its own row above the link columns — see prp.html. -->
+    <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;padding-bottom:56px;border-bottom:1px solid rgba(36,36,36,.1)">
+      <img class="tpl-footer-logo" src="assets/brand/tpl-logo-gold.png" alt="TPL Clinic" width="1000" height="1000" />
+      <p style="margin:20px 0 0;max-width:46ch;font-size:15px;line-height:1.9;color:#6E6E6E">The UK's first clinic specialising in Platelet Rich Plasma. Specialist Aesthetic Clinic of the Year 2026/27.</p>
+    </div>
+
+    <div class="tpl-m-footer tpl-m-footer--links" style="max-width:1280px;margin:56px auto 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px">
+      <div>
+        <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#9A9A9A">Treatments</div>
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:11px">
+          <a href='/services' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>All services</a>
+          <a href='/prp' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>PRP — the signature</a>
+          <a href='/#face' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>Face</a>
+          <a href='/#hair' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>Hair</a>
+          <a href='/#body' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>Body</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#9A9A9A">Clinic</div>
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:11px">
+          <span style="font-size:14.5px;color:#242424">22 Seymour Street, W1H 7HY</span>
+          <span style="font-size:14.5px;color:#242424">020 7998 7077</span>
+          <span style="font-size:14.5px;color:#242424">info@tplclinic.com</span>
+          <a href="https://www.instagram.com/tplcliniclondon" style="font-size:14.5px;color:#242424" style-hover="color:#B8925D">@tplcliniclondon</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:Jost,sans-serif;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#9A9A9A">Legal</div>
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:11px">
+          <a href='/terms-conditions' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>Terms &amp; Conditions</a>
+          <a href='/gdpr' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>GDPR &amp; Privacy</a>
+          <a href='/terms-conditions#booking-fees' style-hover='color:#B8925D' style='font-size:14.5px;color:#242424'>Consultation policy</a>
+        </div>
+      </div>
+    </div>
+    <div style="max-width:1280px;margin:56px auto 0;padding-top:22px;border-top:1px solid rgba(36,36,36,.1);display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#9A9A9A">© 2026 TPL Clinic · London</span>
+      <span style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#9A9A9A">Regenerative aesthetics</span>
+    </div>
+  </footer>
+
+  <!-- Enquiry-received modal -->
+  <div id="tpl-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(8,19,89,.55);align-items:center;justify-content:center;padding:24px">
+    <div style="background:#ffffff;max-width:520px;width:100%;padding:52px 46px;border-top:2px solid #B8925D">
+      <div style="font-family:Jost,sans-serif;font-weight:500;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:#B8925D">Enquiry received</div>
+      <h3 style="margin:20px 0 0;font-family:Jost,sans-serif;font-weight:200;font-size:38px;line-height:1.1;color:#242424">Thank you. We will contact you.</h3>
+      <p style="margin:18px 0 0;font-size:15.5px;line-height:1.85;color:#5E5E5E">A member of the TPL Clinic team will call you to arrange your consultation. If your enquiry is urgent, please call 020 7998 7077 or message us on WhatsApp.</p>
+      <button data-modal-close="1" style="margin-top:32px;padding:15px 30px;background:#242424;color:#ffffff;border:1px solid #242424;border-radius:0;font-family:Jost,sans-serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;cursor:pointer" style-hover="background:#B8925D;border-color:#B8925D">Close</button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = {};
+
+  componentDidMount() {
+    this.nav = document.querySelector('[data-nav]');
+    this.darkSections = Array.from(document.querySelectorAll('[data-dark]'));
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobilePhone = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth < 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+
+    // Ambient loops are decoration, not content. Under prefers-reduced-motion they
+    // must not autoplay — drop the attribute before first play and hold the poster,
+    // which is exactly the frame the loop opens on.
+    if (prefersReducedMotion) {
+      document.querySelectorAll('video[autoplay]').forEach(v => {
+        v.removeAttribute('autoplay');
+        v.autoplay = false;
+        try { v.pause(); v.currentTime = 0; } catch (err) {}
+      });
+    }
+
+    if (!prefersReducedMotion && !isMobilePhone && typeof window.Lenis !== 'undefined') {
+      this.lenis = new window.Lenis({
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.6,
+      });
+      const lenisRaf = (time) => {
+        if (this.lenis) {
+          this.lenis.raf(time);
+          this.animId = requestAnimationFrame(lenisRaf);
+        }
+      };
+      this.animId = requestAnimationFrame(lenisRaf);
+
+      // Anchor links: Lenis owns scrolling, so native #hash jumps do nothing.
+      // Route every in-page anchor through lenis.scrollTo (the offset clears
+      // the fixed header). Registered ONCE, here — this block used to sit
+      // inside lenisRaf, which meant a new closure was bound as a click
+      // listener on every animation frame, for the life of the page.
+      this.onAnchorClick = (e) => {
+        const a = e.target.closest('a[href*="#"]');
+        if (!a) return;
+        const href = a.getAttribute('href') || '';
+        const hash = href.slice(href.indexOf('#'));
+        // ignore cross-page links (e.g. index.html#face when we're not on index)
+        const path = href.slice(0, href.indexOf('#'));
+        if (path && !location.pathname.endsWith(path)) return;
+        if (hash.length < 2) return;
+        const target = document.querySelector(hash);
+        if (!target) return;
+        e.preventDefault();
+        if (this.lenis) this.lenis.scrollTo(target, { offset: -90, duration: 1.2 });
+        else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', hash);
+      };
+      document.addEventListener('click', this.onAnchorClick);
+    }
+
+    // Nav theme — dark over navy [data-dark] bands, light otherwise
+    this.applyNavTheme = () => {
+      if (!this.nav) return;
+      const navHeight = 80;
+      const overDark = this.darkSections.some(s => {
+        const r = s.getBoundingClientRect();
+        return r.top <= navHeight && r.bottom >= 0;
+      });
+      // Is the HERO still behind the bar? This is the only place the header is
+      // allowed to be transparent — see the dark branch below.
+      const heroEl = document.querySelector('.tpl-sec--hero');
+      const inHero = heroEl ? heroEl.getBoundingClientRect().bottom > navHeight : false;
+      // ...and has the page actually moved? The bar is only allowed to disappear
+      // at rest on first paint; the moment the visitor scrolls, it has to become
+      // a bar again (see the dark branch below).
+      const atRest = (window.scrollY || window.pageYOffset || 0) <= 4;
+      const logo = this.nav.querySelector('[data-logo]');
+      const logoTpl = logo ? logo.querySelector('span:first-child') : null;
+      const logoClinic = logo ? logo.querySelector('span:last-child') : null;
+      // applyNavTheme rewrote roughly a dozen inline styles -- backdrop-filter,
+      // box-shadow and padding among them -- on EVERY scroll frame, whether or
+      // not the resolved theme had actually changed. Each pass dirtied style and
+      // layout for the whole header subtree, and the next frame's
+      // getBoundingClientRect reads then had to force a synchronous re-layout to
+      // answer. Bailing out when the state is unchanged removes both costs: no
+      // writes in the steady state means the reads are served from clean layout.
+      const navKey = overDark + '|' + inHero + '|' + (typeof atRest === 'undefined' ? '' : atRest);
+      if (navKey === this._navKey) return;
+      this._navKey = navKey;
+
+      const navLinks = this.nav.querySelectorAll('[data-nav-link="1"]');
+      const whatsappLink = this.nav.querySelector('a[href*="wa.me"]');
+      const btn = this.nav.querySelector('[data-btn]');
+      const toggleBtn = this.nav.querySelector('.tpl-mobile-toggle');
+
+      if (overDark) {
+        this.nav.classList.remove('is-light');
+        // The header may only be transparent while it is sitting, unscrolled, at
+        // the very top of the hero. The first version of this test was "is ANY
+        // dark band under the nav", with no reference to scroll position, so the
+        // bar stayed at alpha 0 over every mid-page navy section. Scoping it to
+        // the hero fixed the mid-page bands but not the hero itself: the whole
+        // hero is one navy field, so scrolling through it left the bar invisible
+        // and the nav labels ran straight into the headline. Both are the same
+        // bug — a transparent bar over moving content — so the transparency is
+        // now tied to being at rest, not to which section is underneath.
+        const floating = inHero && atRest;
+        this.nav.style.background = floating ? 'rgba(8,19,89,0)' : 'rgba(8,19,89,.94)';
+        this.nav.style.backdropFilter = floating ? 'none' : 'blur(12px)';
+        this.nav.style.webkitBackdropFilter = floating ? 'none' : 'blur(12px)';
+        this.nav.style.borderBottom = floating ? '1px solid rgba(184,146,93,0)' : '1px solid rgba(184,146,93,.32)';
+        this.nav.style.boxShadow = floating ? 'none' : '0 10px 30px rgba(4,10,38,.32)';
+        this.nav.style.padding = floating ? '22px 40px' : '16px 40px';
+        if (logoTpl) logoTpl.style.color = '#ffffff';
+        if (logoClinic) logoClinic.style.color = '#C7A470';
+        navLinks.forEach(link => { link.style.color = '#ffffff'; });
+        if (whatsappLink) whatsappLink.style.color = 'rgba(255,255,255,.9)';
+        if (toggleBtn) toggleBtn.style.color = '#ffffff';
+        if (btn) {
+          btn.style.background = 'rgba(8,19,89,.4)';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#C7A470';
+        }
+      } else {
+        this.nav.classList.add('is-light');
+        this.nav.style.background = 'rgba(255, 255, 255, 0.88)';
+        this.nav.style.backdropFilter = 'blur(12px)';
+        this.nav.style.webkitBackdropFilter = 'blur(12px)';
+        this.nav.style.borderBottom = '1px solid rgba(184, 146, 93, 0.3)';
+        this.nav.style.boxShadow = '0 10px 30px rgba(8, 19, 89, 0.08)';
+        this.nav.style.padding = '16px 40px';
+        if (logoTpl) logoTpl.style.color = '#242424';
+        if (logoClinic) logoClinic.style.color = '#B8925D';
+        navLinks.forEach(link => { link.style.color = '#242424'; });
+        if (whatsappLink) whatsappLink.style.color = '#242424';
+        if (toggleBtn) toggleBtn.style.color = '#242424';
+        if (btn) {
+          btn.style.background = '#081359';
+          btn.style.color = '#ffffff';
+          btn.style.borderColor = '#081359';
+        }
+      }
+    };
+    // Safari fires far more raw `scroll` events per gesture than Chrome does;
+    // calling applyNavTheme() (DOM reads + backdrop-filter writes) on every
+    // single one causes visible jank there even though Chrome absorbs it fine.
+    // Cap to one pass per animation frame, same pattern as the hero engine.
+    let navScrollTicking = false;
+    let navTickFallback = null;
+    this.onNavScroll = () => {
+      if (navScrollTicking) return;
+      navScrollTicking = true;
+      const rafId = requestAnimationFrame(() => { navScrollTicking = false; this.applyNavTheme(); });
+      // A requestAnimationFrame callback is not guaranteed to run (backgrounded
+      // tab, dropped frame under load). Without this, one missed callback latches
+      // navScrollTicking true forever and the header stops responding to scroll
+      // for the rest of the page's life.
+      clearTimeout(navTickFallback);
+      navTickFallback = setTimeout(() => {
+        if (!navScrollTicking) return;
+        navScrollTicking = false;
+        cancelAnimationFrame(rafId);
+        this.applyNavTheme();
+      }, 250);
+    };
+    window.addEventListener('scroll', this.onNavScroll, { passive: true });
+    window.addEventListener('resize', this.applyNavTheme);
+    this.applyNavTheme();
+
+    // Reveals — identical to the homepage
+    if ('IntersectionObserver' in window) {
+      // Three layers, all CSS + this one observer — no motion library.
+      //   1. siblings and grid children enter in sequence, not as one block
+      //   2. headings mask up from the baseline instead of fading with the body copy
+      //   3. framed media settles from a hair of over-scale (Tier S: 1.0 -> 1.04, no more)
+      // Under prefers-reduced-motion all three are dropped and it degrades to a plain fade.
+      const EASE = 'cubic-bezier(.22,1,.36,1)';
+      const calm = prefersReducedMotion;
+      const targets = Array.from(document.querySelectorAll('[data-reveal]'));
+
+      targets.forEach(el => {
+        const sibs = el.parentElement
+          ? Array.from(el.parentElement.children).filter(n => n.hasAttribute && n.hasAttribute('data-reveal'))
+          : [];
+        const delay = calm ? 0 : Math.min(Math.max(sibs.indexOf(el), 0) * 70, 420);
+        const after = [];
+
+        el.style.opacity = '0';
+        if (!calm) el.style.transform = 'translateY(26px)';
+        el.style.transition = 'opacity .9s ' + EASE + ' ' + delay + 'ms, transform .9s ' + EASE + ' ' + delay + 'ms';
+
+        if (!calm) {
+          // Cells of a grid that reveals as a single unit still arrive one after another.
+          if (/grid/.test(getComputedStyle(el).display)) {
+            Array.from(el.children).forEach((k, i) => {
+              if (k.hasAttribute('data-reveal')) return;
+              const d = delay + 60 + Math.min(i, 11) * 55;
+              k.style.opacity = '0';
+              k.style.transform = 'translateY(16px)';
+              k.style.transition = 'opacity .75s ' + EASE + ' ' + d + 'ms, transform .75s ' + EASE + ' ' + d + 'ms';
+              after.push(() => { k.style.opacity = '1'; k.style.transform = 'none'; });
+            });
+          }
+
+          // Headings — the argument beats, separated from the prose around them.
+          // Descendants only. When the reveal target IS the heading, masking it
+          // sets clip-path: inset(0 0 108% 0) on the very element the observer
+          // is watching, and Chrome then reports it as 0% intersecting — so it
+          // never settles, and only the 4s safety timer below rescues it. The
+          // legal pages' <h1> sat blank for four seconds because of this. A
+          // heading that is its own target gets the fade and rise, no mask.
+          const heads = Array.from(el.querySelectorAll('h1, h2'));
+          heads.forEach(h => {
+            h.style.clipPath = 'inset(0 0 108% 0)';
+            h.style.transition = 'clip-path 1.05s ' + EASE + ' ' + (delay + 40) + 'ms';
+            after.push(() => {
+              h.style.clipPath = 'inset(0 0 0% 0)';
+              // Then drop the mask entirely. The headings run line-height:1, so their box
+              // is a few px shorter than Jost's glyphs need, and a clip-path parked at 0%
+              // shaves the descender off g/y/p permanently ("Technology index" lost the
+              // tail of its g). Guard on propertyName: when the heading IS the reveal
+              // target it also transitions opacity, and clearing on that event would kill
+              // the sweep halfway. The timeout is the backstop if transitionend never fires.
+              const unmask = e => {
+                if (e && e.propertyName !== 'clip-path') return;
+                h.style.clipPath = 'none';
+                h.removeEventListener('transitionend', unmask);
+              };
+              h.addEventListener('transitionend', unmask);
+              setTimeout(unmask, delay + 40 + 1200);
+            });
+          });
+
+          // Framed media only — an image with no clipping frame is left alone.
+          Array.from(el.querySelectorAll('img')).forEach(img => {
+            const frame = img.parentElement && img.parentElement.closest('div');
+            if (!frame || getComputedStyle(frame).overflow !== 'hidden') return;
+            img.style.transform = 'scale(1.04)';
+            img.style.transition = 'transform 1.4s ' + EASE + ' ' + delay + 'ms';
+            after.push(() => { img.style.transform = 'none'; });
+          });
+        }
+
+        el._tplAfter = after;
+      });
+
+      const settle = el => {
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        (el._tplAfter || []).forEach(fn => fn());
+        el._tplAfter = null;
+      };
+
+      this.io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            settle(e.target);
+            this.io.unobserve(e.target);
+          }
+        });
+      }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
+      // threshold 0, not 0.08: a block taller than the viewport can never
+      // reach 8% intersection on a phone — the legal pages' 4,600px body
+      // peaked at 3% and waited out the safety timer instead of revealing.
+      targets.forEach(el => this.io.observe(el));
+      this.safety = setTimeout(() => targets.forEach(settle), 4000);
+    }
+
+    // ── Vanilla interactivity (the exported runtime is render-once) ──
+
+    // FAQ accordion
+    document.querySelectorAll('.tpl-faq').forEach(faq => {
+      const q = faq.querySelector('.tpl-faq-q');
+      const a = faq.querySelector('.tpl-faq-a');
+      q.addEventListener('click', () => {
+        const open = faq.classList.toggle('is-open');
+        a.style.maxHeight = open ? a.scrollHeight + 'px' : '0px';
+      });
+    });
+
+    // Mobile drawer
+    const drawer = document.querySelector('.tpl-mobile-drawer');
+    const toggleBtnEl = document.querySelector('.tpl-mobile-toggle');
+    const closeDrawer = () => drawer && drawer.classList.remove('is-open');
+    if (toggleBtnEl && drawer) {
+      toggleBtnEl.addEventListener('click', () => drawer.classList.toggle('is-open'));
+      drawer.querySelectorAll('a, button').forEach(el => el.addEventListener('click', closeDrawer));
+    }
+
+    // Mega menu (click-toggle for touch; hover handled by CSS)
+    // The trigger is the <a> inside .tpl-has-mega (there is no <button>).
+    // Hover is handled in CSS; this adds keyboard/touch toggling and click-outside close.
+    const megaWrap = document.querySelector('.tpl-has-mega');
+    const megaBtn = megaWrap ? megaWrap.querySelector(':scope > a') : null;
+    const megaMenu = document.querySelector('.tpl-mega-menu');
+    if (megaBtn && megaMenu) {
+      megaBtn.addEventListener('click', (e) => {
+        // On a fine pointer the link should still navigate to services.html.
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+        e.preventDefault();
+        e.stopPropagation();
+        megaMenu.classList.toggle('is-active');
+      });
+      document.addEventListener('click', (e) => {
+        if (!megaMenu.contains(e.target) && !megaBtn.contains(e.target)) megaMenu.classList.remove('is-active');
+      });
+      megaMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => megaMenu.classList.remove('is-active')));
+    }
+
+    // ── Anchor-bar scroll spy ──────────────────────────────────────────
+    // Marks the section currently under the header as .is-current.
+    // Uses scroll position rather than IntersectionObserver so that the
+    // *topmost visible* section wins rather than whichever fires last.
+    const barLinks = Array.from(document.querySelectorAll('.tpl-anchorbar a'));
+    if (barLinks.length) {
+      const spyTargets = barLinks
+        .map(a => {
+          const id = (a.getAttribute('href') || '').replace('#', '');
+          const el = id ? document.getElementById(id) : null;
+          return el ? { a, el } : null;
+        })
+        .filter(Boolean);
+
+      this.onSpy = () => {
+        const probe = window.scrollY + 150; // header + anchor bar height
+        let current = spyTargets[0];
+        for (const t of spyTargets) {
+          if (t.el.offsetTop <= probe) current = t;
+        }
+        spyTargets.forEach(t => t.a.classList.toggle('is-current', t === current));
+      };
+      let spyScrollTicking = false;
+      this.onSpyScroll = () => {
+        if (spyScrollTicking) return;
+        spyScrollTicking = true;
+        requestAnimationFrame(() => { spyScrollTicking = false; this.onSpy(); });
+      };
+      window.addEventListener('scroll', this.onSpyScroll, { passive: true });
+      window.addEventListener('resize', this.onSpy);
+      this.onSpy();
+    }
+
+    // Enquiry form → confirmation modal
+    const modal = document.getElementById('tpl-modal');
+    const submitBtn = document.querySelector('[data-submit]');
+    if (submitBtn && modal) {
+      submitBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+      modal.querySelectorAll('[data-modal-close]').forEach(b => b.addEventListener('click', () => { modal.style.display = 'none'; }));
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeDrawer(); if (modal) modal.style.display = 'none'; if (megaMenu) megaMenu.classList.remove('is-active'); }
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.onNavScroll) {
+      window.removeEventListener('scroll', this.onNavScroll);
+      window.removeEventListener('resize', this.applyNavTheme);
+    }
+    if (this.lenis) this.lenis.destroy();
+    if (this.animId) cancelAnimationFrame(this.animId);
+    if (this.onSpyScroll) {
+      window.removeEventListener('scroll', this.onSpyScroll);
+      window.removeEventListener('resize', this.onSpy);
+    }
+    if (this.io) this.io.disconnect();
+    if (this.safety) clearTimeout(this.safety);
+  }
+
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+/* ============================================================================
+   The scroll film — styling (currently Hero V7)
+   ----------------------------------------------------------------------------
+   Shared by index.html and hero-v7.html so the preview page and the live hero
+   cannot drift apart. The engine is assets/js/hero-film.js; the numbers behind
+   the copy zones are in hero-v7/hero-v7-spec.json.
+
+   There is no scrim. The film is shot in white rooms, so the copy is dark ink
+   straight onto the picture — measured 7.06:1 to 13.24:1 against the worst-case
+   pixel of every copy zone, all clearing WCAG AA with zero darkening. White text
+   would have needed a 0.44-0.53 black overlay, which is the full-frame scrim V5
+   carried and this hero exists to be rid of.
+   ========================================================================= */
+
+/* ══ The hero ══
+   .hv6 is the scroll track — the engine sets its height in vh from the
+   timeline. .hv6-stage is what you actually see: one sticky screen. */
+.hv6 { position: relative; width: 100%; }
+.hv6-stage {
+  position: sticky; top: 0; height: 100svh; width: 100%;
+  overflow: hidden; background: #F4F2EF;
+}
+.hv6-stage canvas, .hv6-fallback {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block; z-index: 1;
+}
+
+/* No scrim. Measured: dark ink clears AA on every copy zone with zero
+   darkening, 7.06:1 to 13.24:1. A scrim would cost 44-53% of the image to
+   make WHITE text legal, which is exactly what V6 is here to stop doing. */
+
+.hv6-grid {
+  position: absolute; inset: 0; z-index: 3;
+  display: grid;
+  /* minmax(0, 1fr), not 1fr. A bare 1fr is minmax(AUTO, 1fr): a block taller
+     than its third grows the track, the grid grows past the stage, and the
+     links on the lower beats end up below the fold — 600px below, in the case
+     of hair. Capping the minimum at 0 keeps the thirds honest and lets the
+     per-row alignment below decide which way a tall block spills. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  /* The top inset has to clear the fixed header, which is 92px. The floor was
+     84px, so on any viewport short enough for the clamp to bottom out, every
+     top-row beat started 8px UNDER the bar and had its kicker clipped. The floor
+     is now 112px: 92 for the header plus 20 of air, so the copy never touches
+     it. Bottom inset clears the scroll cue and the frame readout. */
+  padding: clamp(112px, 12vh, 148px) clamp(28px, 5vw, 88px) clamp(56px, 7vh, 96px);
+  pointer-events: none;
+}
+.hv6-cell {
+  display: flex; opacity: 0; pointer-events: none;
+  will-change: opacity, transform;
+}
+/* No CSS transition on opacity: the engine writes it every frame from scroll
+   position, so a transition would be a second animation fighting the first —
+   it lags the scroll by its own duration and smears the fade. Transitions are
+   for state changes; this is a scrubbed value. The phone and reduced-motion
+   paths set opacity once, so they get one there instead. */
+[data-hv6-mode="phone"] .hv6-cell,
+[data-hv6-mode="reduced"] .hv6-cell { transition: opacity .5s ease; }
+/* Vertical anchoring per row, horizontal per column, so a block sits in the
+   part of its cell nearest the frame edge rather than floating mid-cell. */
+.hv6-cell--top-left, .hv6-cell--top-centre, .hv6-cell--top-right { align-items: flex-start; }
+.hv6-cell--mid-left, .hv6-cell--centre, .hv6-cell--mid-right { align-items: center; }
+.hv6-cell--bot-left, .hv6-cell--bot-centre, .hv6-cell--bot-right { align-items: flex-end; }
+.hv6-cell--top-left, .hv6-cell--mid-left, .hv6-cell--bot-left { justify-content: flex-start; text-align: left; }
+.hv6-cell--top-centre, .hv6-cell--centre, .hv6-cell--bot-centre { justify-content: center; text-align: center; }
+.hv6-cell--top-right, .hv6-cell--mid-right, .hv6-cell--bot-right { justify-content: flex-end; text-align: right; }
+
+.hv6-block { max-width: 30ch; will-change: transform; }
+
+/* Each rendered line of a headline gets its own mask, so it can travel up from
+   its own baseline rather than the block sliding as one lump. The engine
+   splits the text into these at load and on resize. */
+.hv6-line { display: block; overflow: hidden; }
+.hv6-line-i { display: block; will-change: transform; }
+.hv6-kicker, .hv6-sub, .hv6-links { will-change: transform, opacity; }
+.hv6-cell--top-centre .hv6-block, .hv6-cell--centre .hv6-block, .hv6-cell--bot-centre .hv6-block { max-width: 34ch; }
+
+.hv6-kicker {
+  font-size: 12px; font-weight: 500; letter-spacing: .26em;
+  text-transform: uppercase; color: #836742;
+}
+/* Sized so a headline, a sub and three links still clear the fold when the
+   block sits in a bottom row. At 62px the hair block was 466px tall — more
+   than half the screen for one beat. */
+.hv6-headline {
+  margin: 16px 0 0; font-weight: 200;
+  font-size: clamp(28px, 3.4vw, 50px); line-height: 1.08;
+  letter-spacing: -.01em; color: #242424; text-wrap: balance;
+}
+/* The title card carries no sub and no links, so it can run larger — it is
+   the one beat with the room for it. */
+[data-beat="title"] .hv6-headline { font-size: clamp(32px, 3.9vw, 58px); }
+.hv6-sub {
+  margin: 18px 0 0; font-size: 16px; line-height: 1.75;
+  color: #4A4A4A; text-wrap: pretty;
+}
+.hv6-links { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px 12px; }
+.hv6-cell--top-centre .hv6-links, .hv6-cell--centre .hv6-links, .hv6-cell--bot-centre .hv6-links { justify-content: center; }
+.hv6-cell--top-right .hv6-links, .hv6-cell--mid-right .hv6-links, .hv6-cell--bot-right .hv6-links { justify-content: flex-end; }
+.hv6-link {
+  display: inline-block; padding: 11px 18px;
+  border: 1px solid rgba(36,36,36,.28);
+  background: rgba(255,255,255,.42);
+  font-size: 11px; font-weight: 500; letter-spacing: .16em;
+  text-transform: uppercase; color: #242424 !important;
+  transition: background .28s ease, border-color .28s ease, color .28s ease;
+}
+.hv6-link:hover { background: #081359; border-color: #081359; color: #fff !important; }
+.hv6-link:focus-visible { outline: 2px solid #B8925D; outline-offset: 3px; }
+
+/* The caption is a label, not a beat you are asked to read at length: no
+   sub, no links, and the headline sits a size down from a stop's. */
+.hv6-cell--caption .hv6-headline { font-size: clamp(24px, 2.6vw, 38px); font-weight: 300; }
+
+.hv6-frame {
+  position: absolute; right: clamp(20px, 4vw, 44px); bottom: clamp(18px, 3vh, 30px);
+  z-index: 4; font-size: 11px; font-weight: 500; letter-spacing: .26em;
+  color: rgba(36,36,36,.45); pointer-events: none;
+}
+.hv6-cue {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: clamp(18px, 3vh, 30px); z-index: 4;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; font-weight: 500; letter-spacing: .26em;
+  text-transform: uppercase; color: rgba(36,36,36,.5);
+  transition: opacity .4s ease; pointer-events: none;
+}
+.hv6-cue i { display: block; width: 34px; height: 1px; background: rgba(36,36,36,.4); }
+
+
+@media (max-width: 1023px) {
+  /* The film is 16:9 and a phone is not, so cover crops hard. Biasing up keeps
+     heads in frame rather than centring on a torso. A proper fix is a portrait
+     crop of the master for phones — noted as a follow-up, not solved here. */
+  .hv6-fallback { object-position: 50% 32%; }
+  .hv6-grid { grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 96px 24px 72px; }
+  .hv6-cell { grid-row: 1 !important; grid-column: 1 !important; align-items: flex-end !important; justify-content: flex-start !important; text-align: left !important; }
+  .hv6-block { max-width: none !important; }
+  .hv6-cell--top-right .hv6-links, .hv6-cell--bot-right .hv6-links, .hv6-cell--top-centre .hv6-links { justify-content: flex-start; }
+  /* These are the hero's calls to action, and on a phone they are the first
+     thing a thumb reaches for. The desktop padding builds a 36px pill, which is
+     under the 44px a finger needs — so the height is set outright rather than
+     left to fall out of the padding. */
+  .hv6-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 11px 18px;
+  }
+}
