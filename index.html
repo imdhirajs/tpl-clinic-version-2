@@ -1611,10 +1611,15 @@ class Component extends DCLogic {
     const cellCol = idxInSprite % 2;
     const cellRow = Math.floor(idxInSprite / 2);
 
-    const sx = cellCol * 1920;
-    const sy = cellRow * 1080;
-    const sw = 1920;
-    const sh = 1080;
+    const nw = spriteImg.naturalWidth || spriteImg.width || (spriteImg instanceof ImageBitmap ? spriteImg.width : 3840);
+    const nh = spriteImg.naturalHeight || spriteImg.height || (spriteImg instanceof ImageBitmap ? spriteImg.height : 2160);
+    const cellW = nw / 2;
+    const cellH = nh / 2;
+
+    const sx = cellCol * cellW;
+    const sy = cellRow * cellH;
+    const sw = cellW;
+    const sh = cellH;
 
     // An ImageBitmap that has been close()d throws here. The eviction policy
     // keeps the playhead's own sheet, so this should not happen -- but a broken
